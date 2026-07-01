@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 # Retrieve database connection string from environment
 DATABASE_URL = os.getenv(
     "DATABASE_URL", 
-    "postgresql://postgres:postgres@localhost:5432/git_analytics"
+    "postgresql://postgres:postgres@localhost:543 2/git_analytics"
 )
 
 # Create the SQLAlchemy engine.
