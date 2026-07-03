@@ -15,6 +15,7 @@ def count_todo_tags(file_path: str) -> int:
                 for tag in tags:
                     if tag in line_upper:
                         count += 1
+                        break
     except Exception:
         # If the file can't be read (e.g. binary), return 0 tags
         pass

@@ -1,26 +1,126 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #030303;
+  --foreground: #f3f4f6;
+  
+  --color-primary: #00f2fe;
+  --color-secondary: #7f00ff;
+  --color-accent: #ff0844;
+  --color-success: #00ff87;
+  
+  --card-bg: rgba(13, 13, 17, 0.45);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-glow-teal: rgba(0, 242, 254, 0.15);
+  --card-glow-purple: rgba(127, 0, 255, 0.15);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-bg-dark: #030303;
+  --color-card-dark: #0b0b0f;
+  --color-border-dark: rgba(255, 255, 255, 0.08);
+  --color-neon-teal: #00f2fe;
+  --color-neon-purple: #7f00ff;
+  --color-neon-pink: #ff0844;
+  --color-neon-green: #00ff87;
+  --color-neon-yellow: #ffb300;
+  
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-outfit);
 }
 
 body {
-  background: var(--background);
+  background-color: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  overflow-x: hidden;
+}
+
+/* Glassmorphism Styles */
+.glass-card {
+  background: rgba(13, 13, 17, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  border-color: rgba(0, 242, 254, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.06), 0 0 15px 0 rgba(0, 242, 254, 0.1) inset;
+  transform: translateY(-2px);
+}
+
+.glass-card-purple:hover {
+  border-color: rgba(127, 0, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(127, 0, 255, 0.06), 0 0 15px 0 rgba(127, 0, 255, 0.1) inset;
+}
+
+.glass-card-pink:hover {
+  border-color: rgba(255, 8, 68, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(255, 8, 68, 0.06), 0 0 15px 0 rgba(255, 8, 68, 0.1) inset;
+}
+
+.glass-input {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #00f2fe;
+  box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
+}
+
+/* Glowing text effects */
+.glow-text-teal {
+  text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+.glow-text-purple {
+  text-shadow: 0 0 10px rgba(127, 0, 255, 0.5);
+}
+
+.glow-text-pink {
+  text-shadow: 0 0 10px rgba(255, 8, 68, 0.5);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #030303;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00f2fe;
+}
+
+/* Custom animations */
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.25;
+    transform: scale(1.08);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 8s infinite ease-in-out;
 }

@@ -4,7 +4,8 @@ import shutil
 import git
 
 # Base upload directory inside the workspace/container
-UPLOADS_DIR = os.getenv("UPLOADS_DIR", "/app/uploads")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOADS_DIR = os.getenv("UPLOADS_DIR", os.path.join(BASE_DIR, "uploads"))
 
 def get_repo_dir(repo_id: str) -> str:
     """Returns the absolute path to a repository's storage directory."""

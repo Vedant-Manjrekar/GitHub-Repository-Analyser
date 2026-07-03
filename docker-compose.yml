@@ -30,6 +30,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/git_analytics
       - REDIS_URL=redis://redis:6379/0
+      - USE_CELERY=true
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     ports:
       - "8000:8000"
@@ -50,6 +51,7 @@ services:
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/git_analytics
       - REDIS_URL=redis://redis:6379/0
+      - USE_CELERY=true
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
     volumes:
       - ./backend:/app

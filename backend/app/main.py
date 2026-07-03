@@ -2,7 +2,8 @@ import os
 import uuid
 import shutil
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File as FastAPIFile, Form
+from fastapi import FastAPI, Depends, HTTPException, UploadFile, File as FastAPIFile, Form, Request, BackgroundTasks
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -15,7 +16,17 @@ from app.schemas import RepositoryCreate, RepositoryResponse, DashboardResponse,
 from app.workers.tasks import analyze_repository_task
 from app.analyzers.churn import calculate_churn_trends
 
-UPLOADS_DIR = os.getenv("UPLOADS_DIR", "/app/uploads")
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+UPLOADS_DIR = os.getenv("UPLOADS_DIR", os.path.join(BASE_DIR, "uploads"))
+
+USE_CELERY = os.getenv("USE_CELERY", "false").lower() == "true"
+
+def run_analysis_task(repo_id: str, background_tasks: BackgroundTasks, zip_path: str = None):
+    if USE_CELERY:
+        analyze_repository_task.delay(repo_id, zip_path)
+    else:
+        print(f"USE_CELERY=false. Running analysis task in FastAPI BackgroundTasks thread for repo: {repo_id}")
+        background_tasks.add_task(analyze_repository_task, repo_id, zip_path)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +53,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"Unhandled exception: {exc}")
+    response = JSONResponse(
+        status_code=500,
+        content={"detail": f"Database or Server Error: {str(exc)}"},
+    )
+    # Since Starlette exception handlers bypass standard middleware, manually append CORS headers here
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Git Repository Analytics API", "status": "active"}
@@ -49,7 +73,11 @@ def read_root():
 # --- Repository Endpoints ---
 
 @app.post("/repositories/clone", response_model=RepositoryResponse)
-def clone_new_repository(payload: RepositoryCreate, db: Session = Depends(get_db)):
+def clone_new_repository(
+    payload: RepositoryCreate, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """Clones a Git repository from a URL and triggers analysis in the background."""
     if not payload.repo_url:
         raise HTTPException(status_code=400, detail="Repository URL must be provided.")
@@ -64,12 +92,13 @@ def clone_new_repository(payload: RepositoryCreate, db: Session = Depends(get_db
     db.refresh(repo)
     
     # Enqueue background analysis task
-    analyze_repository_task.delay(str(repo.id))
+    run_analysis_task(str(repo.id), background_tasks)
     
     return repo
 
 @app.post("/repositories/upload", response_model=RepositoryResponse)
 def upload_repository_zip(
+    background_tasks: BackgroundTasks,
     name: str = Form(...),
     file: UploadFile = FastAPIFile(...),
     db: Session = Depends(get_db)
@@ -99,7 +128,7 @@ def upload_repository_zip(
     db.refresh(repo)
     
     # Enqueue background analysis task with ZIP path
-    analyze_repository_task.delay(str(repo.id), temp_zip_path)
+    run_analysis_task(str(repo.id), background_tasks, temp_zip_path)
     
     return repo
 
@@ -144,7 +173,11 @@ def get_analysis_status(repo_id: str, db: Session = Depends(get_db)):
     }
 
 @app.post("/analysis/{repo_id}")
-def restart_analysis(repo_id: str, db: Session = Depends(get_db)):
+def restart_analysis(
+    repo_id: str, 
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
     """Clears old metrics and restarts the analysis pipeline for an existing repository."""
     repo = db.query(Repository).filter(Repository.id == repo_id).first()
     if not repo:
@@ -161,7 +194,7 @@ def restart_analysis(repo_id: str, db: Session = Depends(get_db)):
     db.commit()
     
     # Enqueue background task (we assume files are already on disk)
-    analyze_repository_task.delay(str(repo.id))
+    run_analysis_task(str(repo.id), background_tasks)
     
     return {"message": "Analysis restarted.", "status": "pending"}
 
