@@ -81,8 +81,8 @@ The following files represent the highest risk. They have high cyclomatic comple
             churn = f.get("churn", 0)
             score = f.get("hotspot_score", 0.0)
             owner = f.get("owner", "Unknown")
-            markdown += f"""* **{path}** (Hotspot Score: `{score}/100`)
-  * *Complexity*: Average cyclomatic complexity/LOC is `{comp}`.
+            markdown += f"""* **{path}** (Hotspot Score: `{score:.2f}/100`)
+  * *Complexity*: Average cyclomatic complexity/LOC is `{comp:.2f}`.
   * *Change Frequency*: Modified `{churn}` times in git logs.
   * *Primary Owner*: `{owner}`
 """

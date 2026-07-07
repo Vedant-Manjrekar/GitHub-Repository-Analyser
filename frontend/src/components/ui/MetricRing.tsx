@@ -7,6 +7,7 @@ interface MetricRingProps {
   size?: number;
   strokeWidth?: number;
   className?: string;
+  lowerIsBetter?: boolean;
 }
 
 export function MetricRing({ 
@@ -14,17 +15,19 @@ export function MetricRing({
   max = 100, 
   size = 64, 
   strokeWidth = 6, 
-  className 
+  className,
+  lowerIsBetter = false
 }: MetricRingProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const percent = Math.max(0, Math.min(100, (score / max) * 100));
   const offset = circumference - (percent / 100) * circumference;
   
-  // Determine color based on score (assuming higher is better, like health score)
+  // Determine color based on score
   let strokeColor = "text-success";
-  if (percent < 50) strokeColor = "text-critical";
-  else if (percent < 75) strokeColor = "text-warning";
+  const colorPercent = lowerIsBetter ? 100 - percent : percent;
+  if (colorPercent < 50) strokeColor = "text-critical";
+  else if (colorPercent < 75) strokeColor = "text-warning";
   else strokeColor = "text-success";
 
   return (
