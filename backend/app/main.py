@@ -233,12 +233,12 @@ def get_dashboard_summary(repo_id: str, db: Session = Depends(get_db)):
     
     top_languages = [{"language": row[0], "count": row[1]} for row in lang_query]
     
-    # Get top 5 recent commits
+    # Get recent commits for activity mapping
     recent_commits = db.query(Commit).filter(
         Commit.repository_id == repo.id
     ).order_by(
         Commit.date.desc()
-    ).limit(5).all()
+    ).limit(150).all()
     
     return {
         "repository": repo,

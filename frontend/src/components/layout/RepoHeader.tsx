@@ -1,5 +1,5 @@
-import React from "react";
-import { GitBranch, Clock, Database, Calendar, Users2, FileCode, CheckCircle2 } from "lucide-react";
+import React, { useState } from "react";
+import { GitBranch, Clock, Database, Calendar, Users2, FileCode, CheckCircle2, User } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 
 interface RepoHeaderProps {
@@ -9,6 +9,7 @@ interface RepoHeaderProps {
 
 export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
   const repo = dashboard?.repository || {};
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Extract owner from repo_url
   const getOwner = (url?: string) => {
@@ -26,6 +27,13 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
   const ownerName = getOwner(repo.repo_url);
   const contributorNames = contributors.map(c => c.name).filter(Boolean);
 
+  const getContributorsText = () => {
+    if (contributorNames.length === 0) return "None";
+    if (contributorNames.length === 1) return contributorNames[0];
+    if (contributorNames.length === 2) return `${contributorNames[0]}, ${contributorNames[1]}`;
+    return `${contributorNames[0]}, ${contributorNames[1]} +${contributorNames.length - 2}`;
+  };
+
   const stats = [
     { label: "Total Commits", value: dashboard?.total_commits || 0, icon: GitBranch },
     { label: "Total Files", value: dashboard?.total_files || 0, icon: FileCode },
@@ -38,11 +46,10 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 pb-8 border-b border-border-strong">
         
         {/* Repo Title & Meta */}
-        <div className="flex items-center gap-5">
-          <div className="w-16 h-16 rounded-[22px] bg-accent/5 flex items-center justify-center font-display text-2xl font-black text-accent shadow-subtle ring-4 ring-accent/5 shrink-0">
-            {repo.name ? repo.name.substring(0, 2).toUpperCase() : "GR"}
-          </div>
-          <div className="space-y-1.5 min-w-0">
+        <div className="flex-1 min-w-0 space-y-4">
+          {/* Header Description Info */}
+          <div className="space-y-2">
+            <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Repository Name</span>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-display font-black text-text-primary tracking-tight">
                 {repo.name || "Git Repository"}
@@ -57,31 +64,72 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
             <p className="text-sm text-text-secondary font-medium max-w-xl">
               {repo.description || "Comprehensive architectural code reviews, risk analysis, and technical debt visualization for engineering teams."}
             </p>
-            {(ownerName || contributorNames.length > 0) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 pt-1">
-                {ownerName && (
-                  <span className="inline-flex items-center gap-1 text-xs bg-accent/5 text-accent border border-accent/10 px-2 py-0.5 rounded-lg font-medium">
-                    Owner: @{ownerName}
-                  </span>
-                )}
-                {contributorNames.length > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs bg-surface-2 text-text-secondary border border-border-base px-2 py-0.5 rounded-lg max-w-[500px]">
-                    <span className="text-text-tertiary font-medium">Contributors:</span>
-                    <span className="font-semibold text-text-primary truncate" title={contributorNames.join(", ")}>
-                      {contributorNames.join(", ")}
-                    </span>
-                  </span>
-                )}
+          </div>
+
+          <div className="border-t border-border-base/50 pt-4 w-full">
+            <div className="flex flex-wrap items-center gap-6">
+              {/* Owner */}
+              {ownerName && (
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-accent/5 flex items-center justify-center text-accent border border-accent/10 shrink-0">
+                    <User className="w-4.5 h-4.5" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Repository Owner</p>
+                    <p className="text-xs font-bold text-text-primary">@{ownerName}</p>
+                  </div>
+                </div>
+              )}
+
+              {ownerName && <div className="h-6 w-px bg-border-base hidden sm:block"></div>}
+
+              {/* Contributors */}
+              {contributorNames.length > 0 && (
+                <div 
+                  onClick={() => setIsModalOpen(true)}
+                  className="flex items-center gap-3 max-w-[280px] cursor-pointer hover:bg-surface-2 p-1.5 rounded-xl transition-all duration-200"
+                  title="Click to view all contributors"
+                >
+                  <div className="w-9 h-9 rounded-full bg-indigo-500/5 flex items-center justify-center text-indigo-500 border border-indigo-500/10 shrink-0">
+                    <Users2 className="w-4.5 h-4.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[9px] uppercase font-mono font-bold text-text-tertiary flex items-center gap-1.5">
+                      Contributors 
+                      <span className="text-[8px] font-sans font-semibold bg-indigo-500/10 text-indigo-500 px-1 rounded hover:bg-indigo-500/15">View List</span>
+                    </p>
+                    <p className="text-xs font-bold text-text-primary truncate">
+                      {getContributorsText()}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {contributorNames.length > 0 && <div className="h-6 w-px bg-border-base hidden sm:block"></div>}
+
+              {/* Language */}
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-emerald-500/5 flex items-center justify-center text-emerald-500 border border-emerald-500/10 shrink-0">
+                  <FileCode className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Language</p>
+                  <p className="text-xs font-bold text-text-primary">{repo.language || "TypeScript"}</p>
+                </div>
               </div>
-            )}
-            <div className="flex items-center gap-3 text-xs text-text-tertiary font-semibold pt-1">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5" /> Last analyzed: {new Date().toLocaleDateString()}
-              </span>
-              <span>•</span>
-              <span className="flex items-center gap-1 font-mono text-accent">
-                Language: {repo.language || "TypeScript"}
-              </span>
+
+              <div className="h-6.5 w-px bg-border-base hidden sm:block"></div>
+
+              {/* Last Analyzed */}
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-rose-500/5 flex items-center justify-center text-rose-500 border border-rose-500/10 shrink-0">
+                  <Calendar className="w-4.5 h-4.5" />
+                </div>
+                <div>
+                  <p className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Last Analyzed</p>
+                  <p className="text-xs font-bold text-text-primary">{new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -102,6 +150,67 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
         </div>
 
       </div>
+
+      {/* Contributors Detail Dialog Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200">
+          {/* Backdrop Overlay */}
+          <div 
+            onClick={() => setIsModalOpen(false)}
+            className="absolute inset-0 bg-black/40 backdrop-blur-[2px] transition-opacity duration-300"
+          ></div>
+          
+          {/* Modal Content container */}
+          <div className="bg-surface-1 border border-border-strong rounded-[20px] shadow-floating max-w-sm w-full overflow-hidden z-10 animate-in zoom-in-95 duration-200 flex flex-col">
+            <div className="p-4 border-b border-border-subtle flex items-center justify-between bg-surface-2">
+              <div className="flex items-center gap-2">
+                <Users2 className="w-4.5 h-4.5 text-accent" />
+                <h3 className="font-display font-bold text-text-primary text-sm">
+                  Repository Contributors
+                </h3>
+              </div>
+              <Badge variant="outline" className="font-mono text-[10px] px-2 py-0.5 bg-surface-3">
+                {contributors.length} active
+              </Badge>
+            </div>
+            
+            <div className="p-4 max-h-[300px] overflow-y-auto space-y-2.5 custom-scrollbar">
+              {contributors.map((c, idx) => {
+                const initial = c.name ? c.name.substring(0, 2).toUpperCase() : "DV";
+                return (
+                  <div key={idx} className="flex items-center justify-between p-2.5 bg-surface-2/40 border border-border-base rounded-xl hover:bg-surface-2/70 transition-colors">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-accent/5 border border-accent/10 flex items-center justify-center text-accent font-bold font-display text-[10px] shrink-0">
+                        {initial}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-xs text-text-primary truncate">{c.name}</p>
+                        {c.email && (
+                          <p className="text-[10px] text-text-tertiary truncate font-mono">{c.email}</p>
+                        )}
+                      </div>
+                    </div>
+                    {c.commits !== undefined && (
+                      <span className="text-[9px] font-mono font-bold bg-surface-3 px-1.5 py-0.5 rounded-md border border-border-base shrink-0 text-text-secondary">
+                        {c.commits} commits
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="p-3 border-t border-border-subtle bg-surface-2 flex justify-end">
+              <button 
+                onClick={() => setIsModalOpen(false)}
+                className="px-4 py-1.5 rounded-lg bg-accent text-white font-bold text-[11px] hover:bg-accent-hover transition-colors shadow-subtle"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

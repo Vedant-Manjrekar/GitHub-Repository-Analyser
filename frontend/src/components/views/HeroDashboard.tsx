@@ -7,9 +7,12 @@ import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { RepoHeader } from "@/components/layout/RepoHeader";
 import { 
   Activity, Shield, Cpu, Users, Wrench, AlertTriangle, 
-  CheckCircle2, ChevronRight, Zap, Target, BookOpen, AlertCircle, ArrowUpRight, ArrowDownRight, Info 
+  CheckCircle2, ChevronRight, Zap, Target, BookOpen, AlertCircle, ArrowUpRight, ArrowDownRight, Info,
+  ChevronDown, Sparkles
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
+import { cn } from "@/lib/utils";
 
 interface HeroDashboardProps {
   dashboard: any;
@@ -26,6 +29,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
   };
 
   const risk = getRiskLevel(techDebt?.health_score || 100);
+  const [rangeFilter, setRangeFilter] = useState<"7d" | "30d" | "90d" | "custom">("7d");
 
   // Mock trend data
   const healthTrend = [65, 70, 75, 82, 80, 85, techDebt?.health_score || 90];
@@ -258,10 +262,263 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
 
   const parsedAI = parseAISummary(techDebt?.ai_summary);
 
+  const getFilteredCommitActivity = () => {
+    const recent = dashboard?.recent_commits || [];
+    
+    // Set baseline date 'now' to the latest commit date if available, otherwise fallback to current date
+    let now = new Date();
+    if (recent.length > 0) {
+      now = new Date(recent[0].date);
+    }
+    
+    let daysCount = 7;
+    if (rangeFilter === "30d") daysCount = 30;
+    if (rangeFilter === "90d") daysCount = 90;
+    if (rangeFilter === "custom") daysCount = 14;
+
+    const days: any[] = [];
+    for (let i = daysCount - 1; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      days.push({
+        dateObj: d,
+        dayLabel: d.toLocaleDateString(undefined, { day: "numeric" }),
+        fullDateLabel: d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }),
+        thisPeriod: 0,
+        prevPeriod: 0
+      });
+    }
+
+    recent.forEach((c: any) => {
+      const cDate = new Date(c.date);
+      const diffTime = now.getTime() - cDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays >= 0 && diffDays < daysCount) {
+        const targetIndex = (daysCount - 1) - diffDays;
+        if (days[targetIndex]) days[targetIndex].thisPeriod += 1;
+      } else if (diffDays >= daysCount && diffDays < daysCount * 2) {
+        const targetIndex = (daysCount * 2 - 1) - diffDays;
+        if (days[targetIndex]) days[targetIndex].prevPeriod += 1;
+      }
+    });
+
+    return days;
+  };
+
+  const commitActivityData = getFilteredCommitActivity();
+
+  // Summary Metrics calculations
+  const totalCommitsThisPeriod = commitActivityData.reduce((acc, d) => acc + d.thisPeriod, 0);
+  const totalCommitsPrevPeriod = commitActivityData.reduce((acc, d) => acc + d.prevPeriod, 0);
+  const avgDailyCommits = totalCommitsThisPeriod / commitActivityData.length;
+  
+  let peakCommits = -1;
+  let peakDayLabel = "N/A";
+  commitActivityData.forEach(d => {
+    if (d.thisPeriod > peakCommits) {
+      peakCommits = d.thisPeriod;
+      peakDayLabel = d.dateObj.toLocaleDateString(undefined, { weekday: "long" });
+    }
+  });
+
+  let trendPercentage = 0;
+  if (totalCommitsPrevPeriod > 0) {
+    trendPercentage = Math.round(((totalCommitsThisPeriod - totalCommitsPrevPeriod) / totalCommitsPrevPeriod) * 100);
+  } else if (totalCommitsThisPeriod > 0) {
+    trendPercentage = 100;
+  }
+
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       {/* Repository Header */}
       <RepoHeader dashboard={dashboard} contributors={contributors} />
+
+      {/* Commit Activity Performance Section */}
+      <section className="bg-[#18181b] border border-zinc-800 shadow-floating rounded-[20px] p-6 space-y-6 overflow-visible text-white">
+        
+        {/* Title and Segmented Control Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <h3 className="text-[20px] font-display font-bold text-zinc-100 tracking-tight">
+              Commit Activity
+            </h3>
+            <p className="text-xs text-zinc-400">
+              Repository commit velocity compared with the previous period.
+            </p>
+          </div>
+          
+          <div className="flex items-center gap-1 bg-[#27272a] p-1 rounded-xl border border-zinc-800 self-start sm:self-auto">
+            {(["7d", "30d", "90d", "custom"] as const).map((r) => {
+              const label = r === "7d" ? "7 Days" : r === "30d" ? "30 Days" : r === "90d" ? "90 Days" : "Custom";
+              return (
+                <button
+                  key={r}
+                  onClick={() => setRangeFilter(r)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200",
+                    rangeFilter === r
+                      ? "bg-[#3f3f46] text-white shadow-sm border border-zinc-700/60"
+                      : "text-zinc-450 hover:text-zinc-200 text-zinc-400"
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Dynamic Summary stats grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-zinc-800 pb-6 pt-2">
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-mono font-bold text-zinc-550 text-zinc-500">Total Commits</span>
+            <p className="text-xl font-bold font-display text-zinc-100">{totalCommitsThisPeriod}</p>
+            <p className="text-[10px] text-zinc-500">Active commits in range</p>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-mono font-bold text-zinc-550 text-zinc-500">Avg Daily Activity</span>
+            <p className="text-xl font-bold font-display text-zinc-100">{avgDailyCommits.toFixed(1)} / day</p>
+            <p className="text-[10px] text-zinc-500">Velocity per 24 hours</p>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-mono font-bold text-zinc-550 text-zinc-500">Peak Day</span>
+            <p className="text-xl font-bold font-display text-zinc-100">{peakDayLabel}</p>
+            <p className="text-[10px] text-zinc-500">Most active pushed interval</p>
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-[10px] uppercase font-mono font-bold text-zinc-550 text-zinc-500">Period Trend</span>
+            <div className="flex items-center gap-1.5">
+              <p className={cn(
+                "text-xl font-bold font-display", 
+                trendPercentage >= 0 ? "text-success" : "text-critical"
+              )}>
+                {trendPercentage >= 0 ? `+${trendPercentage}%` : `${trendPercentage}%`}
+              </p>
+              {trendPercentage >= 0 ? (
+                <ArrowUpRight className="w-4 h-4 text-success" />
+              ) : (
+                <ArrowDownRight className="w-4 h-4 text-critical" />
+              )}
+            </div>
+            <p className="text-[10px] text-zinc-500">Compared to previous period</p>
+          </div>
+        </div>
+
+        {/* Legend block in top right of graph */}
+        <div className="flex justify-end gap-4 text-xs font-semibold text-zinc-300 pr-2">
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#2DA44E] block"></span>
+            <span>Current Period</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#9CA3AF] block"></span>
+            <span>Previous Period</span>
+          </div>
+        </div>
+
+        {/* Area Chart Container */}
+        <div className="h-64 w-full text-xs overflow-visible relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={commitActivityData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorPrimary" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#2DA44E" stopOpacity={0.12}/>
+                  <stop offset="95%" stopColor="#2DA44E" stopOpacity={0.005}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+              <XAxis dataKey="dayLabel" stroke="#71717a" tickLine={false} axisLine={false} dy={8} className="font-medium" />
+              <YAxis stroke="#71717a" tickLine={false} axisLine={false} dx={-8} className="font-medium" />
+              
+              <Tooltip 
+                cursor={{ stroke: '#3f3f46', strokeWidth: 1.5, strokeDasharray: '3 3' }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const data = payload[0].payload;
+                    const diff = data.thisPeriod - data.prevPeriod;
+                    let pct = 0;
+                    if (data.prevPeriod > 0) {
+                      pct = Math.round((diff / data.prevPeriod) * 100);
+                    } else if (data.thisPeriod > 0) {
+                      pct = 100;
+                    }
+                    
+                    const pctText = pct >= 0 ? `+${pct}%` : `${pct}%`;
+                    const changeWord = pct >= 0 ? "increased" : "decreased";
+                    const insight = `Commit activity ${changeWord} by ${Math.abs(pct)}%.`;
+
+                    // Calculate comparative date in the previous period
+                    const curDate = data.dateObj;
+                    const daysOffset = rangeFilter === "30d" ? 30 : rangeFilter === "90d" ? 90 : rangeFilter === "custom" ? 14 : 7;
+                    const prevDate = new Date(curDate);
+                    prevDate.setDate(curDate.getDate() - daysOffset);
+                    const prevDateLabel = prevDate.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+                    
+                    return (
+                      <div className="bg-[#18181b] border border-zinc-800 p-4 rounded-xl shadow-floating text-zinc-300 text-[11px] w-64 space-y-3 pointer-events-none select-none font-mono">
+                        <p className="font-bold text-white uppercase tracking-wider text-[10px] text-zinc-400">Date Comparison</p>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#2DA44E] inline-block"></span>
+                              <span className="text-white font-semibold">{data.fullDateLabel}</span>
+                            </div>
+                            <span className="font-mono font-bold text-white">{data.thisPeriod} commits</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full bg-[#9CA3AF] inline-block"></span>
+                              <span className="text-zinc-400 font-semibold">{prevDateLabel}</span>
+                            </div>
+                            <span className="font-mono font-semibold text-zinc-400">{data.prevPeriod} commits</span>
+                          </div>
+                          <div className="flex items-center justify-between border-t border-zinc-800 pt-1.5 mt-1.5 text-[10px]">
+                            <span className="text-zinc-500">Period Delta</span>
+                            <span className={cn("font-bold", pct >= 0 ? "text-success" : "text-critical")}>
+                              {pctText}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-lg p-2.5 flex items-start gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                          <p className="text-[10px] text-success leading-normal font-medium">
+                            {insight}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+
+              {/* Smooth comparative lines with stroke animations */}
+              <Area 
+                type="monotone" 
+                dataKey="thisPeriod" 
+                stroke="#2DA44E" 
+                strokeWidth={2} 
+                fillOpacity={1} 
+                fill="url(#colorPrimary)" 
+                isAnimationActive={true}
+                animationDuration={700}
+                activeDot={{ r: 5, stroke: '#2DA44E', strokeWidth: 2, fill: '#fff' }}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="prevPeriod" 
+                stroke="#9CA3AF" 
+                strokeWidth={2} 
+                fill="none" 
+                isAnimationActive={true}
+                animationDuration={750}
+                activeDot={{ r: 4, stroke: '#9CA3AF', strokeWidth: 1.5, fill: '#fff' }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </section>
 
       {/* 1. Executive Summary Grid - 12 Columns Layout */}
       <section className="space-y-6">
