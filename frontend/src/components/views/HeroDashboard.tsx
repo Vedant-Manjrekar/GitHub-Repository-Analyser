@@ -8,7 +8,7 @@ import { RepoHeader } from "@/components/layout/RepoHeader";
 import { 
   ChartLine, Shield, Cpu, Users, Wrench, Warning, 
   CheckCircle, CaretRight, Lightning, Target, BookOpen, WarningCircle, ArrowUpRight, ArrowDownRight, Info,
-  CaretDown, Sparkle, Bus
+  CaretDown, Sparkle, Bus, BracketsCurly
 } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
@@ -780,8 +780,13 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                     Calculated based on average nesting depth, duplicate blocks, and total cyclomatic complexity.
                   </p>
                 </div>
-                <div className="w-16 h-16 rounded-xl bg-accent/5 text-accent flex items-center justify-center shadow-subtle shrink-0">
-                  <ChartLine className="w-7 h-7" />
+                <div className={cn(
+                  "w-16 h-16 rounded-xl flex items-center justify-center shadow-subtle shrink-0 border",
+                  techDebt?.health_score && techDebt.health_score > 80 
+                    ? "bg-emerald-500/5 text-emerald-500 border-emerald-500/10" 
+                    : "bg-amber-500/5 text-amber-500 border-amber-500/10"
+                )}>
+                  <BracketsCurly className="w-7 h-7" />
                 </div>
               </div>
             </div>
