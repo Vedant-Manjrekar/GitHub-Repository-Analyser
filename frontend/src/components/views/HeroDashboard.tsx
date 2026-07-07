@@ -533,8 +533,21 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* Health Score - Spans 4 columns */}
-          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
-            <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
+          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 to-emerald-500/[0.015]">
+            {/* Background design container */}
+            <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+              <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-emerald-500/[0.1] blur-2xl opacity-80" />
+              <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                <defs>
+                  <pattern id="grid-health" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                    <path d="M.5 16V.5H16" fill="none" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-health)" />
+              </svg>
+            </div>
+
+            <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px] relative z-10">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -575,8 +588,21 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Technical Debt - Spans 4 columns */}
-          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
-            <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
+          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 to-amber-500/[0.015]">
+            {/* Background design container */}
+            <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+              <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-amber-500/[0.1] blur-2xl opacity-80" />
+              <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                <defs>
+                  <pattern id="grid-debt" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                    <path d="M.5 16V.5H16" fill="none" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-debt)" />
+              </svg>
+            </div>
+
+            <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px] relative z-10">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -616,8 +642,21 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Bus Factor - Spans 4 columns */}
-          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
-            <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
+          <Card className={`md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 ${busFactor?.bus_factor <= 1 ? "to-rose-500/[0.015]" : "to-indigo-500/[0.015]"}`}>
+            {/* Background design container */}
+            <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+              <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${busFactor?.bus_factor <= 1 ? "bg-rose-500/[0.1]" : "bg-indigo-500/[0.1]"}`} />
+              <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                <defs>
+                  <pattern id="grid-bus" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                    <path d="M.5 16V.5H16" fill="none" />
+                  </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-bus)" />
+              </svg>
+            </div>
+
+            <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px] relative z-10">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
@@ -672,48 +711,78 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             
             {/* Risk Level */}
-            <div className="bg-surface-1 rounded-xl p-6 shadow-subtle flex items-center justify-between border border-border-base relative hover:z-30 focus-within:z-30">
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Overall Risk Level</span>
-                  <InfoTooltip 
-                    title="Overall Risk Level"
-                    whatIsIt="A synthesized status reflecting regression risks based on commit frequency, complex branching, and code coverage."
-                    whyItMatters="Highlights parts of the repository that are highly vulnerable to bugs when modified."
-                  />
-                </div>
-                <h4 className="text-2xl font-display font-black text-text-primary">
-                  {risk.label} Risk
-                </h4>
-                <p className="text-xs text-text-secondary leading-relaxed max-w-sm">
-                  Evaluated using files' complexity metrics, frequency of updates, and developer ownership metrics.
-                </p>
+            <div className={`bg-gradient-to-br from-surface-1 ${risk.color === "success" ? "to-emerald-500/[0.015]" : risk.color === "warning" ? "to-amber-500/[0.015]" : "to-rose-500/[0.015]"} rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible hover:z-30 focus-within:z-30`}>
+              {/* Background design container */}
+              <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+                <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${risk.color === "success" ? "bg-emerald-500/[0.1]" : risk.color === "warning" ? "bg-amber-500/[0.1]" : "bg-rose-500/[0.1]"}`} />
+                <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                  <defs>
+                    <pattern id="grid-risk" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                      <path d="M.5 16V.5H16" fill="none" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid-risk)" />
+                </svg>
               </div>
-              <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${risk.badgeColor} shadow-subtle shrink-0`}>
-                <Shield className="w-7 h-7" />
+
+              <div className="relative z-10 flex items-center justify-between w-full">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Overall Risk Level</span>
+                    <InfoTooltip 
+                      title="Overall Risk Level"
+                      whatIsIt="A synthesized status reflecting regression risks based on commit frequency, complex branching, and code coverage."
+                      whyItMatters="Highlights parts of the repository that are highly vulnerable to bugs when modified."
+                    />
+                  </div>
+                  <h4 className="text-2xl font-display font-black text-text-primary">
+                    {risk.label} Risk
+                  </h4>
+                  <p className="text-xs text-text-secondary leading-relaxed max-w-sm">
+                    Evaluated using files' complexity metrics, frequency of updates, and developer ownership metrics.
+                  </p>
+                </div>
+                <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${risk.badgeColor} shadow-subtle shrink-0`}>
+                  <Shield className="w-7 h-7" />
+                </div>
               </div>
             </div>
 
             {/* Maintainability Index placeholder */}
-            <div className="bg-surface-1 rounded-xl p-6 shadow-subtle flex items-center justify-between border border-border-base relative hover:z-30 focus-within:z-30">
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Code Maintainability</span>
-                  <InfoTooltip 
-                    title="Maintainability Index"
-                    whatIsIt="An index measuring how easily the codebase can be modified, refactored, and updated."
-                    whyItMatters="High maintainability guarantees future developers can onboard rapidly and work without fear of side-effects."
-                  />
-                </div>
-                <h4 className="text-2xl font-display font-black text-text-primary">
-                  {techDebt?.health_score ? (techDebt.health_score > 80 ? "High" : "Moderate") : "High"}
-                </h4>
-                <p className="text-xs text-text-secondary leading-relaxed max-w-sm">
-                  Calculated based on average nesting depth, duplicate blocks, and total cyclomatic complexity.
-                </p>
+            <div className={`bg-gradient-to-br from-surface-1 ${techDebt?.health_score && techDebt.health_score > 80 ? "to-emerald-500/[0.015]" : "to-amber-500/[0.015]"} rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible hover:z-30 focus-within:z-30`}>
+              {/* Background design container */}
+              <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+                <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${techDebt?.health_score && techDebt.health_score > 80 ? "bg-emerald-500/[0.1]" : "bg-amber-500/[0.1]"}`} />
+                <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                  <defs>
+                    <pattern id="grid-maint" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                      <path d="M.5 16V.5H16" fill="none" />
+                    </pattern>
+                  </defs>
+                  <rect width="100%" height="100%" fill="url(#grid-maint)" />
+                </svg>
               </div>
-              <div className="w-16 h-16 rounded-xl bg-accent/5 text-accent flex items-center justify-center shadow-subtle shrink-0">
-                <ChartLine className="w-7 h-7" />
+
+              <div className="relative z-10 flex items-center justify-between w-full">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Code Maintainability</span>
+                    <InfoTooltip 
+                      title="Maintainability Index"
+                      whatIsIt="An index measuring how easily the codebase can be modified, refactored, and updated."
+                      whyItMatters="High maintainability guarantees future developers can onboard rapidly and work without fear of side-effects."
+                    />
+                  </div>
+                  <h4 className="text-2xl font-display font-black text-text-primary">
+                    {techDebt?.health_score ? (techDebt.health_score > 80 ? "High" : "Moderate") : "High"}
+                  </h4>
+                  <p className="text-xs text-text-secondary leading-relaxed max-w-sm">
+                    Calculated based on average nesting depth, duplicate blocks, and total cyclomatic complexity.
+                  </p>
+                </div>
+                <div className="w-16 h-16 rounded-xl bg-accent/5 text-accent flex items-center justify-center shadow-subtle shrink-0">
+                  <ChartLine className="w-7 h-7" />
+                </div>
               </div>
             </div>
 
