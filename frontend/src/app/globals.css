@@ -1,93 +1,105 @@
 @import "tailwindcss";
 
 :root {
-  --background: #030303;
-  --foreground: #f3f4f6;
+  /* Premium Airy Light Theme (Stripe, Linear, Apple inspired) */
+  --bg-base: #f8fafc;
+  --bg-surface-1: #ffffff;
+  --bg-surface-2: #f1f5f9;
+  --bg-surface-3: #e2e8f0;
+  --bg-surface-4: #cbd5e1;
   
-  --color-primary: #00f2fe;
-  --color-secondary: #7f00ff;
-  --color-accent: #ff0844;
-  --color-success: #00ff87;
+  --border-subtle: #f8fafc;
+  --border-base: #f1f5f9;
+  --border-strong: #e2e8f0;
   
-  --card-bg: rgba(13, 13, 17, 0.45);
-  --card-border: rgba(255, 255, 255, 0.08);
-  --card-glow-teal: rgba(0, 242, 254, 0.15);
-  --card-glow-purple: rgba(127, 0, 255, 0.15);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  
+  /* Brand Indigo */
+  --color-accent: #4f46e5;
+  --color-accent-hover: #4338ca;
+  --color-accent-subtle: rgba(79, 70, 229, 0.04);
+  
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-critical: #ef4444;
+  
+  /* Soft, diffuse shadows (borderless layout feel) */
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  --shadow-elevated: 0 4px 6px -1px rgba(15, 23, 42, 0.03), 0 2px 4px -2px rgba(15, 23, 42, 0.03), 0 12px 24px -4px rgba(15, 23, 42, 0.04);
+  --shadow-floating: 0 20px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.05);
+}
+
+.dark {
+  /* Fallback dark theme, but primary focus is clean premium light mode */
+  --bg-base: #0b0f19;
+  --bg-surface-1: #111827;
+  --bg-surface-2: #1f2937;
+  --bg-surface-3: #374151;
+  --bg-surface-4: #4b5563;
+  
+  --border-subtle: #111827;
+  --border-base: #1f2937;
+  --border-strong: #374151;
+  
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  
+  --color-accent: #6366f1;
+  --color-accent-hover: #4f46e5;
+  --color-accent-subtle: rgba(99, 102, 241, 0.1);
+  
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-critical: #f87171;
+  
+  --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+  --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  --shadow-floating: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.5);
 }
 
 @theme {
-  --color-bg-dark: #030303;
-  --color-card-dark: #0b0b0f;
-  --color-border-dark: rgba(255, 255, 255, 0.08);
-  --color-neon-teal: #00f2fe;
-  --color-neon-purple: #7f00ff;
-  --color-neon-pink: #ff0844;
-  --color-neon-green: #00ff87;
-  --color-neon-yellow: #ffb300;
+  --color-bg-base: var(--bg-base);
+  --color-surface-1: var(--bg-surface-1);
+  --color-surface-2: var(--bg-surface-2);
+  --color-surface-3: var(--bg-surface-3);
+  --color-surface-4: var(--bg-surface-4);
   
-  --font-sans: var(--font-inter);
-  --font-display: var(--font-outfit);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-base: var(--border-base);
+  --color-border-strong: var(--border-strong);
+  
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-subtle: var(--color-accent-subtle);
+  
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-critical: var(--color-critical);
+  
+  --shadow-subtle: var(--shadow-subtle);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-floating: var(--shadow-floating);
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Glassmorphism Styles */
-.glass-card {
-  background: rgba(13, 13, 17, 0.55);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.glass-card:hover {
-  border-color: rgba(0, 242, 254, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.06), 0 0 15px 0 rgba(0, 242, 254, 0.1) inset;
-  transform: translateY(-2px);
-}
-
-.glass-card-purple:hover {
-  border-color: rgba(127, 0, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(127, 0, 255, 0.06), 0 0 15px 0 rgba(127, 0, 255, 0.1) inset;
-}
-
-.glass-card-pink:hover {
-  border-color: rgba(255, 8, 68, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(255, 8, 68, 0.06), 0 0 15px 0 rgba(255, 8, 68, 0.1) inset;
-}
-
-.glass-input {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  transition: all 0.2s ease-in-out;
-}
-
-.glass-input:focus {
-  outline: none;
-  background: rgba(255, 255, 255, 0.06);
-  border-color: #00f2fe;
-  box-shadow: 0 0 10px rgba(0, 242, 254, 0.2);
-}
-
-/* Glowing text effects */
-.glow-text-teal {
-  text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
-}
-
-.glow-text-purple {
-  text-shadow: 0 0 10px rgba(127, 0, 255, 0.5);
-}
-
-.glow-text-pink {
-  text-shadow: 0 0 10px rgba(255, 8, 68, 0.5);
+/* Accessibility & Focus States */
+*:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* Custom Scrollbars */
@@ -95,32 +107,37 @@ body {
   width: 6px;
   height: 6px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #030303;
+  background: transparent;
 }
-
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
+  background: var(--bg-surface-3);
+  border-radius: 9999px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: #00f2fe;
+  background: var(--bg-surface-4);
 }
 
-/* Custom animations */
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Typographic enhancements */
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em;
+}
+
+/* Animation utilities */
 @keyframes pulse-slow {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.25;
-    transform: scale(1.08);
-  }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
 }
 
 .animate-pulse-slow {
-  animation: pulse-slow 8s infinite ease-in-out;
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
