@@ -127,11 +127,21 @@ export default function Home() {
 
   const handleCloneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cloneName || !cloneUrl) return;
+    if (!cloneUrl) return;
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await cloneRepository(cloneName, cloneUrl);
+      // Extract repository name from URL
+      let cleanUrl = cloneUrl.trim().replace(/\/+$/, "");
+      if (cleanUrl.endsWith(".git")) {
+        cleanUrl = cleanUrl.slice(0, -4);
+      }
+      const parts = cleanUrl.split("/");
+      const repoName = parts[parts.length - 1] || "repository";
+      
+      setCloneName(repoName);
+
+      const res = await cloneRepository(repoName, cloneUrl);
       setSelectedRepoId(res.id);
       setStatus(res.status);
       setView("loading");
@@ -188,7 +198,7 @@ export default function Home() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
-            {tab === "overview" && <HeroDashboard dashboard={dashboard} techDebt={techDebt} busFactor={busFactor} />}
+            {tab === "overview" && <HeroDashboard dashboard={dashboard} techDebt={techDebt} busFactor={busFactor} contributors={contributors} />}
             {tab === "hotspots" && <RiskMap hotspots={hotspots} />}
             {tab === "debt" && <TechDebtVisualizer techDebt={techDebt} complexityFiles={complexityFiles} />}
             {tab === "contributors" && <ContributorIntel contributors={contributors} busFactor={busFactor} />}
@@ -256,17 +266,6 @@ export default function Home() {
                     <p className="text-sm text-text-secondary mb-8">Analyze any public repository directly by pasting its HTTPS clone address.</p>
                     
                     <form onSubmit={handleCloneSubmit} className="space-y-5">
-                      <div>
-                        <label className="text-xs font-semibold text-text-primary block mb-2">Project Name</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. react-hooks-demo" 
-                          value={cloneName}
-                          onChange={e => setCloneName(e.target.value)}
-                          className="w-full bg-surface-2 border border-border-base rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-text-primary"
-                          required
-                        />
-                      </div>
                       <div>
                         <label className="text-xs font-semibold text-text-primary block mb-2">Repository URL</label>
                         <input 

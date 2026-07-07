@@ -15,9 +15,10 @@ interface HeroDashboardProps {
   dashboard: any;
   techDebt: any;
   busFactor: any;
+  contributors?: any[];
 }
 
-export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardProps) {
+export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [] }: HeroDashboardProps) {
   const getRiskLevel = (score: number) => {
     if (score >= 90) return { label: "Low", color: "success", badgeColor: "bg-emerald-500/10 text-emerald-500" };
     if (score >= 70) return { label: "Moderate", color: "warning", badgeColor: "bg-amber-500/10 text-amber-500" };
@@ -260,7 +261,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardP
   return (
     <div className="space-y-12 animate-in fade-in duration-700">
       {/* Repository Header */}
-      <RepoHeader dashboard={dashboard} />
+      <RepoHeader dashboard={dashboard} contributors={contributors} />
 
       {/* 1. Executive Summary Grid - 12 Columns Layout */}
       <section className="space-y-6">
@@ -275,7 +276,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardP
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* Health Score - Spans 4 columns */}
-          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible">
+          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible relative hover:z-30 focus-within:z-30">
             <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -317,7 +318,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardP
           </Card>
 
           {/* Technical Debt - Spans 4 columns */}
-          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible">
+          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible relative hover:z-30 focus-within:z-30">
             <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -358,7 +359,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardP
           </Card>
 
           {/* Bus Factor - Spans 4 columns */}
-          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible">
+          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible relative hover:z-30 focus-within:z-30">
             <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -404,7 +405,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardP
           <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             
             {/* Risk Level */}
-            <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle flex items-center justify-between ring-1 ring-border-base/50">
+            <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle flex items-center justify-between ring-1 ring-border-base/50 relative hover:z-30 focus-within:z-30">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Overall Risk Level</span>
@@ -427,7 +428,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor }: HeroDashboardP
             </div>
 
             {/* Maintainability Index placeholder */}
-            <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle flex items-center justify-between ring-1 ring-border-base/50">
+            <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle flex items-center justify-between ring-1 ring-border-base/50 relative hover:z-30 focus-within:z-30">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Code Maintainability</span>
