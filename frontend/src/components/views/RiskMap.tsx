@@ -5,9 +5,9 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { 
-  ShieldAlert, FileCode, GitCommit, User, Activity, Info, Search, Filter, HelpCircle, 
-  TrendingUp, Code, Sparkles, AlertTriangle, Users2, Calendar, ChevronRight 
-} from "lucide-react";
+  ShieldWarning, FileCode, GitCommit, User, ChartLine, Info, MagnifyingGlass, Funnel, Question, 
+  TrendUp, Code, Sparkle, Warning, Users, Calendar, CaretRight 
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface RiskMapProps {
@@ -126,7 +126,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
             onClick={() => setShowHowToRead(!showHowToRead)}
             className="flex items-center gap-2 text-xs font-bold text-accent hover:text-accent-hover transition-colors px-3 py-1.5 rounded-xl bg-accent-subtle"
           >
-            <HelpCircle className="w-4 h-4" />
+            <Question className="w-4 h-4" />
             <span>{showHowToRead ? "Hide Guide" : "How to read"}</span>
           </button>
         </div>
@@ -134,7 +134,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
 
       {/* Guide Banner */}
       {showHowToRead && (
-        <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle ring-1 ring-border-base flex flex-col md:flex-row gap-6 justify-between animate-in fade-in duration-300">
+        <div className="bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base flex flex-col md:flex-row gap-6 justify-between animate-in fade-in duration-300">
           <div className="space-y-2">
             <h4 className="font-display font-bold text-text-primary text-sm flex items-center gap-2">
               <Info className="w-4 h-4 text-accent" /> Visual Landscape Guide
@@ -162,8 +162,8 @@ export function RiskMap({ hotspots }: RiskMapProps) {
               <p className="text-2xl font-display font-black text-rose-600">{criticalFilesCount} files</p>
               <p className="text-[10px] text-text-tertiary">Score &gt;= 70 (Refactor immediately)</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-600 shrink-0">
-              <AlertTriangle className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 border border-rose-500/20 shrink-0">
+              <Warning className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -176,7 +176,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
               <p className="text-[10px] text-text-tertiary">Score 45-69 (Monitor activity)</p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0">
-              <Activity className="w-5 h-5" />
+              <ChartLine className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -188,8 +188,8 @@ export function RiskMap({ hotspots }: RiskMapProps) {
               <p className="text-2xl font-display font-black text-text-primary">{avgRiskScore.toFixed(1)}/100</p>
               <p className="text-[10px] text-text-tertiary">Weighted project risk average</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-surface-2 flex items-center justify-center text-text-secondary shrink-0">
-              <ShieldAlert className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 border border-rose-500/20 shrink-0">
+              <ShieldWarning className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -208,27 +208,26 @@ export function RiskMap({ hotspots }: RiskMapProps) {
         </Card>
       </div>
 
-      {/* Filters & Control Panel */}
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-1 p-4 rounded-3xl shadow-subtle ring-1 ring-border-base/50">
+      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-1 p-4 rounded-xl border border-border-base shadow-subtle w-full">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
+          <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
           <input 
             type="text" 
             placeholder="Filter files by path..."
             value={searchFilter}
             onChange={e => setSearchFilter(e.target.value)}
-            className="w-full bg-bg-base border-none rounded-2xl pl-10 pr-4 py-2 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle transition-all"
+            className="w-full bg-surface-1 border border-border-strong rounded-xl pl-10 pr-4 py-2 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle placeholder:text-text-tertiary/60"
           />
         </div>
         
         <div className="flex items-center gap-2">
-          <Filter className="w-3.5 h-3.5 text-text-tertiary" />
+          <Funnel className="w-3.5 h-3.5 text-text-tertiary" />
           <span className="text-xs text-text-secondary font-semibold mr-2">Severity:</span>
           {(["all", "high", "moderate", "low"] as const).map(sev => (
             <button
               key={sev}
               onClick={() => setSeverityFilter(sev)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${severityFilter === sev ? "bg-accent text-white shadow-subtle" : "bg-bg-base text-text-secondary hover:bg-surface-2"}`}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${severityFilter === sev ? "bg-accent text-white border-accent shadow-subtle" : "bg-surface-1 text-text-secondary border-border-strong hover:bg-surface-2"}`}
             >
               {sev.toUpperCase()}
             </button>
@@ -241,7 +240,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
         
         {/* Left Side: Dynamic Chart Panel */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-subtle ring-1 ring-border-base/50 rounded-3xl overflow-visible bg-surface-1">
+          <Card className="shadow-subtle border border-border-base rounded-xl overflow-visible bg-surface-1">
             <CardContent className="p-6 h-[550px] w-full text-xs overflow-visible relative">
               {filteredHotspots.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -388,9 +387,9 @@ export function RiskMap({ hotspots }: RiskMapProps) {
 
                               {/* Action Recommendation */}
                               <div className="bg-accent/5 border border-accent/15 rounded-xl p-3 space-y-1">
-                                <div className="flex items-center gap-1.5 text-accent font-bold text-[10px] uppercase tracking-wider">
-                                  <Sparkles className="w-3.5 h-3.5" /> Recommendation
-                                </div>
+                                <span className="flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded-lg">
+                                  <Sparkle className="w-3.5 h-3.5" /> Recommendation
+                                </span>
                                 <p className="text-[10px] text-text-secondary leading-relaxed font-medium">
                                   {data.hotspot_score >= 70 
                                     ? "Critical hotspot: Refactor immediately by extracting dense branching into clean utility classes." 
@@ -467,8 +466,8 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-text-tertiary">
-                  <ShieldAlert className="w-12 h-12 opacity-30 mb-2" />
-                  <p className="font-semibold text-sm">No hotspots found matching criteria.</p>
+                  <ShieldWarning className="w-12 h-12 opacity-30 mb-2" />
+                  <p className="text-sm font-semibold text-text-secondary">Select a hotspot coordinate</p>
                 </div>
               )}
             </CardContent>
@@ -504,10 +503,10 @@ export function RiskMap({ hotspots }: RiskMapProps) {
 
         {/* Right Side: Rankings list of Top Hotspots */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="shadow-subtle ring-1 ring-border-base/50 rounded-3xl overflow-hidden bg-surface-1">
+          <Card className="shadow-subtle border border-border-base rounded-xl overflow-hidden bg-surface-1">
             <div className="p-5 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldAlert className="w-4.5 h-4.5 text-rose-500" />
+                <ShieldWarning className="w-4.5 h-4.5 text-rose-500" />
                 <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wider">Top Hotspots</h3>
               </div>
               <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-surface-3">Ranked</Badge>
@@ -590,7 +589,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
             
             <div className="bg-surface-2 rounded-2xl p-5 border border-border-base flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedFile.hotspot_score >= 70 ? 'bg-critical/10 text-critical border border-critical/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
-                <ShieldAlert className="w-6 h-6" />
+                <ShieldWarning className="w-6 h-6" />
               </div>
               <div>
                 <p className="text-[10px] uppercase font-mono tracking-wider text-text-tertiary">Refactor Risk Priority</p>
@@ -606,7 +605,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                   <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Complexity Score</p>
                   <p className="font-mono font-bold text-text-primary text-xl">{selectedFile.complexity}</p>
                 </div>
-                <Activity className="w-4 h-4 text-text-tertiary mt-2 self-end" />
+                <ChartLine className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
               <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
@@ -634,7 +633,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                     {Math.max(1, Math.min(6, Math.floor(selectedFile.churn / 3) + 1))}
                   </p>
                 </div>
-                <Users2 className="w-4 h-4 text-text-tertiary mt-2 self-end" />
+                <Users className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
               <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base col-span-2 flex items-center justify-between">

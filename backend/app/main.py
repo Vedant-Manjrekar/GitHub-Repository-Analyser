@@ -159,6 +159,108 @@ def delete_repository(repo_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Repository {repo_id} deleted successfully."}
 
+# --- Branch Management ---
+
+from pydantic import BaseModel
+
+class SwitchBranchPayload(BaseModel):
+    branch: str
+
+@app.get("/repositories/{repo_id}/branches")
+def get_repository_branches(repo_id: str, db: Session = Depends(get_db)):
+    """Lists all available local and remote branches for a repository."""
+    repo = db.query(Repository).filter(Repository.id == repo_id).first()
+    if not repo:
+        raise HTTPException(status_code=404, detail="Repository not found.")
+        
+    from app.git.clone import get_repo_dir
+    repo_dir = get_repo_dir(str(repo.id))
+    
+    if not os.path.exists(repo_dir) or not os.path.exists(os.path.join(repo_dir, ".git")):
+        return {"branches": ["main"]}
+        
+    import git
+    try:
+        git_repo = git.Repo(repo_dir)
+        try:
+            for remote in git_repo.remotes:
+                remote.fetch()
+        except Exception:
+            pass
+            
+        branches = []
+        # Local heads
+        for head in git_repo.heads:
+            branches.append(head.name)
+            
+        # Remote refs
+        for ref in git_repo.references:
+            if isinstance(ref, git.RemoteReference):
+                name = ref.name.split("/")[-1]
+                if name != "HEAD" and name not in branches:
+                    branches.append(name)
+                    
+        if not branches:
+            branches = ["main"]
+            
+        return {"branches": sorted(branches)}
+    except Exception as e:
+        print(f"Error fetching branches: {e}")
+        return {"branches": ["main"]}
+
+@app.post("/repositories/{repo_id}/branch")
+def switch_repository_branch(
+    repo_id: str,
+    payload: SwitchBranchPayload,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db)
+):
+    """Switches the active analysis branch of a repository and schedules analysis."""
+    repo = db.query(Repository).filter(Repository.id == repo_id).first()
+    if not repo:
+        raise HTTPException(status_code=404, detail="Repository not found.")
+        
+    from app.git.clone import get_repo_dir
+    repo_dir = get_repo_dir(str(repo.id))
+    
+    if not os.path.exists(repo_dir) or not os.path.exists(os.path.join(repo_dir, ".git")):
+        raise HTTPException(status_code=400, detail="Cannot switch branch of a non-git project.")
+        
+    import git
+    try:
+        git_repo = git.Repo(repo_dir)
+        try:
+            git_repo.git.reset('--hard')
+            git_repo.git.clean('-fd')
+        except Exception:
+            pass
+            
+        try:
+            git_repo.git.checkout(payload.branch)
+        except Exception:
+            try:
+                git_repo.git.checkout('-b', payload.branch, f'origin/{payload.branch}')
+            except Exception as err:
+                raise HTTPException(status_code=400, detail=f"Failed to checkout branch: {str(err)}")
+                
+        # Update repo branch & trigger analysis rebuild
+        repo.branch = payload.branch
+        repo.status = "pending"
+        repo.error_message = None
+        db.commit()
+        
+        # Clear child tables
+        db.query(Contributor).filter(Contributor.repository_id == repo.id).delete()
+        db.query(Commit).filter(Commit.repository_id == repo.id).delete()
+        db.query(ModelFile).filter(ModelFile.repository_id == repo.id).delete()
+        db.query(RepositoryScore).filter(RepositoryScore.repository_id == repo.id).delete()
+        db.commit()
+        
+        run_analysis_task(str(repo.id), background_tasks)
+        return {"message": f"Switched to branch {payload.branch}.", "status": "pending"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to checkout branch: {str(e)}")
+
 # --- Ingestion Status ---
 
 @app.get("/analysis/{repo_id}/status")

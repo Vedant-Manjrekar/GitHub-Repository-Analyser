@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Bell, Settings, ArrowLeft, Command } from "lucide-react";
+import { MagnifyingGlass, Bell, ArrowLeft } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface TopCommandBarProps {
@@ -27,7 +27,7 @@ export function TopCommandBar({ repoName, onBackToWorkspace, className }: TopCom
         {/* Cmd+K input */}
         <button className="flex items-center gap-2 px-3 py-2 rounded-xl border border-border-strong bg-bg-base hover:bg-surface-2 text-text-tertiary hover:text-text-secondary transition-all text-xs font-medium w-48 sm:w-64 justify-between group">
           <div className="flex items-center gap-2">
-            <Search className="w-3.5 h-3.5 text-text-tertiary group-hover:text-text-secondary transition-colors" />
+            <MagnifyingGlass className="w-3.5 h-3.5 text-text-tertiary group-hover:text-text-secondary transition-colors" />
             <span>Search anything...</span>
           </div>
           <kbd className="text-[9px] font-mono bg-surface-3 px-1.5 py-0.5 rounded text-text-tertiary font-bold shadow-subtle">⌘K</kbd>

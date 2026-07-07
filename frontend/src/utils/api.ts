@@ -81,3 +81,24 @@ export async function getTechnicalDebtData(repoId: string) {
   if (!res.ok) throw new Error("Failed to load technical debt details.");
   return res.json();
 }
+
+export async function getRepositoryBranches(repoId: string) {
+  const res = await fetch(`${API_BASE_URL}/repositories/${repoId}/branches`);
+  if (!res.ok) throw new Error("Failed to load branches.");
+  return res.json();
+}
+
+export async function switchRepositoryBranch(repoId: string, branch: string) {
+  const res = await fetch(`${API_BASE_URL}/repositories/${repoId}/branch`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ branch }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to switch branch.");
+  }
+  return res.json();
+}

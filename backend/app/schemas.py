@@ -20,6 +20,7 @@ class RepositoryResponse(BaseSchema):
     status: str
     error_message: Optional[str] = None
     created_at: datetime
+    branch: Optional[str] = "main"
 
 # --- Contributor Schemas ---
 class ContributorResponse(BaseSchema):

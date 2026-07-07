@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Info, HelpCircle } from "lucide-react";
+import { Info, Question } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +73,7 @@ export function InfoTooltip({
         className="ml-1.5 p-0.5 rounded-full text-text-tertiary hover:text-accent hover:bg-accent-subtle transition-colors focus:outline-none focus:ring-2 focus:ring-accent"
         aria-label={`Learn more about ${title}`}
       >
-        {icon === "info" ? <Info className="w-3.5 h-3.5" /> : <HelpCircle className="w-3.5 h-3.5" />}
+        {icon === "info" ? <Info className="w-3.5 h-3.5" /> : <Question className="w-3.5 h-3.5" />}
       </button>
 
       <AnimatePresence>

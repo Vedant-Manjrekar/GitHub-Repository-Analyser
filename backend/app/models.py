@@ -14,6 +14,7 @@ class Repository(Base):
     language = Column(String, nullable=True)
     status = Column(String, default="pending", nullable=False)  # pending, cloning, analyzing, completed, failed
     error_message = Column(Text, nullable=True)
+    branch = Column(String, default="main", nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

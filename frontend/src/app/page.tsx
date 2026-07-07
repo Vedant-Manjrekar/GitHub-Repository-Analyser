@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { GitBranch, DownloadCloud, Activity, AlertTriangle, RefreshCw, ChevronRight, CheckCircle2, ArrowRight } from "lucide-react";
+import { GitBranch, CloudArrowDown, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // Backend APIs
@@ -66,6 +66,15 @@ export default function Home() {
       } catch (e) {
         console.error(e);
       }
+    }
+    
+    // Sync repoId query param
+    const params = new URLSearchParams(window.location.search);
+    const repoId = params.get("repoId");
+    if (repoId) {
+      setSelectedRepoId(repoId);
+      setView("loading");
+      setStatus("pending");
     }
   }, []);
 
@@ -143,6 +152,11 @@ export default function Home() {
 
       const res = await cloneRepository(repoName, cloneUrl);
       setSelectedRepoId(res.id);
+      
+      const url = new URL(window.location.href);
+      url.searchParams.set("repoId", res.id);
+      window.history.pushState({}, "", url.toString());
+
       setStatus(res.status);
       setView("loading");
     } catch (err: any) {
@@ -160,6 +174,11 @@ export default function Home() {
     try {
       const res = await uploadRepositoryZip(zipName, zipFile);
       setSelectedRepoId(res.id);
+
+      const url = new URL(window.location.href);
+      url.searchParams.set("repoId", res.id);
+      window.history.pushState({}, "", url.toString());
+
       setStatus(res.status);
       setView("loading");
     } catch (err: any) {
@@ -172,6 +191,11 @@ export default function Home() {
   const handleRecentClick = async (repoId: string, name: string) => {
     setSelectedRepoId(repoId);
     setCloneName(name); // Temporarily store to display if needed
+
+    const url = new URL(window.location.href);
+    url.searchParams.set("repoId", repoId);
+    window.history.pushState({}, "", url.toString());
+
     setStatus("analyzing");
     setView("loading");
   };
@@ -187,7 +211,12 @@ export default function Home() {
         activeTab={tab} 
         onTabChange={(t) => setTab(t as TabMode)} 
         repoName={dashboard?.repository?.name}
-        onBackToWorkspace={() => setView("landing")}
+        onBackToWorkspace={() => {
+          const url = new URL(window.location.href);
+          url.searchParams.delete("repoId");
+          window.history.pushState({}, "", url.toString());
+          setView("landing");
+        }}
       >
         <AnimatePresence mode="wait">
           <motion.div
@@ -249,7 +278,7 @@ export default function Home() {
                 
                 {submitError && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 p-4 rounded-xl border border-critical/20 bg-critical/10 text-critical text-sm flex items-center justify-center gap-2 max-w-md mx-auto">
-                    <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                    <Warning className="w-5 h-5 flex-shrink-0" />
                     <span>{submitError}</span>
                   </motion.div>
                 )}
@@ -257,29 +286,29 @@ export default function Home() {
 
               <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 {/* Clone Panel */}
-                <Card className="bg-surface-1/50 backdrop-blur-xl border-border-base hover:border-border-strong transition-colors">
+                <Card className="bg-surface-1 border border-border-base shadow-subtle">
                   <CardContent className="p-8">
-                    <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border-base flex items-center justify-center mb-6">
-                      <GitBranch className="w-6 h-6 text-text-primary" />
+                    <div className="w-12 h-12 rounded-xl bg-accent-subtle/40 border border-accent/10 flex items-center justify-center mb-6">
+                      <GitBranch className="w-5 h-5 text-accent" />
                     </div>
-                    <h3 className="font-display font-bold text-xl mb-2 text-text-primary">Clone Repository</h3>
-                    <p className="text-sm text-text-secondary mb-8">Analyze any public repository directly by pasting its HTTPS clone address.</p>
+                    <h3 className="font-display font-bold text-lg mb-2 text-text-primary tracking-tight">Clone Repository</h3>
+                    <p className="text-sm text-text-secondary mb-8 leading-relaxed">Analyze any public repository directly by pasting its HTTPS clone address.</p>
                     
                     <form onSubmit={handleCloneSubmit} className="space-y-5">
                       <div>
-                        <label className="text-xs font-semibold text-text-primary block mb-2">Repository URL</label>
+                        <label className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block mb-2">Repository URL</label>
                         <input 
                           type="url" 
                           placeholder="https://github.com/username/repo.git" 
                           value={cloneUrl}
                           onChange={e => setCloneUrl(e.target.value)}
-                          className="w-full bg-surface-2 border border-border-base rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-text-primary"
+                          className="w-full bg-surface-1 border border-border-strong rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 text-text-primary transition-all duration-150 placeholder:text-text-tertiary/60 shadow-subtle"
                           required
                         />
                       </div>
                       
                       <Button type="submit" disabled={isSubmitting} className="w-full h-12 mt-2">
-                        {isSubmitting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <>Run Analysis <ArrowRight className="w-4 h-4 ml-2" /></>}
+                        {isSubmitting ? <ArrowsCounterClockwise className="w-4 h-4 animate-spin" /> : <>Run Analysis <ArrowRight className="w-4 h-4 ml-2" /></>}
                       </Button>
                     </form>
                   </CardContent>
@@ -287,7 +316,7 @@ export default function Home() {
 
                 {/* Upload Panel */}
                 <Card 
-                  className={`bg-surface-1/50 backdrop-blur-xl transition-all ${dragOver ? "border-accent bg-accent-subtle/20 scale-[1.02]" : "border-border-base hover:border-border-strong"}`}
+                  className={`bg-surface-1 shadow-subtle border transition-all duration-200 ${dragOver ? "border-accent bg-accent-subtle/10 scale-[1.01]" : "border-border-base"}`}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => {
@@ -301,26 +330,26 @@ export default function Home() {
                   }}
                 >
                   <CardContent className="p-8">
-                    <div className="w-12 h-12 rounded-xl bg-surface-2 border border-border-base flex items-center justify-center mb-6">
-                      <DownloadCloud className="w-6 h-6 text-text-primary" />
+                    <div className="w-12 h-12 rounded-xl bg-accent-subtle/40 border border-accent/10 flex items-center justify-center mb-6">
+                      <CloudArrowDown className="w-5 h-5 text-accent" />
                     </div>
-                    <h3 className="font-display font-bold text-xl mb-2 text-text-primary">Upload ZIP Codebase</h3>
-                    <p className="text-sm text-text-secondary mb-8">Drag and drop or select a ZIP bundle containing your repository files.</p>
+                    <h3 className="font-display font-bold text-lg mb-2 text-text-primary tracking-tight">Upload ZIP Codebase</h3>
+                    <p className="text-sm text-text-secondary mb-8 leading-relaxed">Drag and drop or select a ZIP bundle containing your repository files.</p>
                     
                     <form onSubmit={handleZipSubmit} className="space-y-5">
                       <div>
-                        <label className="text-xs font-semibold text-text-primary block mb-2">Project Name</label>
+                        <label className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block mb-2">Project Name</label>
                         <input 
                           type="text" 
                           placeholder="e.g. legacy-backend" 
                           value={zipName}
                           onChange={e => setZipName(e.target.value)}
-                          className="w-full bg-surface-2 border border-border-base rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-text-primary"
+                          className="w-full bg-surface-1 border border-border-strong rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 text-text-primary transition-all duration-150 placeholder:text-text-tertiary/60 shadow-subtle"
                           required
                         />
                       </div>
                       
-                      <div className="border border-dashed border-border-strong rounded-xl p-8 text-center cursor-pointer transition-colors relative hover:bg-surface-2">
+                      <div className="border border-dashed border-border-strong rounded-xl p-8 text-center cursor-pointer transition-all duration-150 relative hover:bg-surface-2/50 hover:border-accent">
                         <input 
                           type="file" 
                           accept=".zip" 
@@ -333,16 +362,16 @@ export default function Home() {
                             }
                           }}
                         />
-                        <DownloadCloud className="w-6 h-6 text-text-tertiary mx-auto mb-3" />
+                        <CloudArrowDown className="w-5 h-5 text-text-tertiary mx-auto mb-3" />
                         {zipFile ? (
-                          <p className="text-sm font-medium text-text-primary truncate">{zipFile.name}</p>
+                          <p className="text-xs font-semibold text-text-primary truncate">{zipFile.name}</p>
                         ) : (
-                          <p className="text-sm text-text-tertiary">Drop ZIP file here</p>
+                          <p className="text-xs text-text-tertiary">Drop ZIP file here or click to browse</p>
                         )}
                       </div>
                       
                       <Button variant="secondary" type="submit" disabled={isSubmitting || !zipFile} className="w-full h-12 mt-2">
-                        {isSubmitting ? <RefreshCw className="w-5 h-5 animate-spin" /> : "Upload & Analyze"}
+                        {isSubmitting ? <ArrowsCounterClockwise className="w-4 h-4 animate-spin" /> : "Upload & Analyze"}
                       </Button>
                     </form>
                   </CardContent>
@@ -350,17 +379,17 @@ export default function Home() {
               </div>
 
               {recentRepos.length > 0 && (
-                <div className="max-w-4xl mx-auto mt-12">
-                  <h4 className="text-sm font-semibold text-text-secondary mb-4 px-1">Recent Projects</h4>
+                <div className="max-w-4xl mx-auto mt-12 animate-in fade-in duration-300">
+                  <h4 className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider mb-4 px-1">Recent Projects</h4>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {recentRepos.map(repo => (
-                      <Card key={repo.id} interactive onClick={() => handleRecentClick(repo.id, repo.name)} className="bg-surface-2 hover:bg-surface-3">
+                      <Card key={repo.id} interactive onClick={() => handleRecentClick(repo.id, repo.name)} className="bg-surface-1 hover:bg-surface-2/45 border border-border-base shadow-subtle">
                         <CardContent className="p-4 flex items-center justify-between">
                           <div className="truncate">
-                            <p className="font-semibold text-sm text-text-primary truncate">{repo.name}</p>
-                            <p className="text-[10px] text-text-tertiary mt-1">{repo.date}</p>
+                            <p className="font-bold text-xs text-text-primary truncate">{repo.name}</p>
+                            <p className="text-[9px] font-mono text-text-tertiary mt-1">{repo.date}</p>
                           </div>
-                          <ChevronRight className="w-4 h-4 text-text-tertiary shrink-0" />
+                          <CaretRight className="w-4 h-4 text-text-tertiary shrink-0" />
                         </CardContent>
                       </Card>
                     ))}
@@ -373,27 +402,27 @@ export default function Home() {
           {view === "loading" && (
             <motion.div 
               key="loading"
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-xl bg-surface-1 border border-border-base rounded-3xl p-10 shadow-floating text-center"
+              exit={{ opacity: 0, scale: 1.03 }}
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full max-w-xl bg-surface-1 border border-border-base rounded-xl p-8 shadow-floating text-center"
             >
-              <div className="relative w-24 h-24 mx-auto mb-8">
+              <div className="relative w-20 h-20 mx-auto mb-8">
                 <svg className="animate-spin w-full h-full text-border-strong" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" strokeWidth="2" stroke="currentColor" />
                   <circle cx="50" cy="50" r="45" fill="none" strokeWidth="4" stroke="var(--color-accent)" strokeDasharray="70 210" strokeLinecap="round" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Activity className="w-8 h-8 text-text-primary animate-pulse" />
+                  <ChartLine className="w-6 h-6 text-accent animate-pulse" />
                 </div>
               </div>
 
-              <h3 className="font-display font-bold text-3xl text-text-primary mb-2">Analyzing Repository</h3>
-              <p className="text-text-secondary mb-10">Mining history logs, evaluating complexities, and extracting AI intelligence.</p>
+              <h3 className="font-display font-bold text-2xl text-text-primary mb-2 tracking-tight">Analyzing Repository</h3>
+              <p className="text-sm text-text-secondary mb-10 max-w-sm mx-auto">Mining Git history logs, evaluating code complexities, and extracting AI intelligence.</p>
 
               {/* Animated Pipeline Visualization */}
-              <div className="space-y-4 text-left">
+              <div className="space-y-3 text-left max-w-md mx-auto">
                 {pipelineSteps.map((step, idx) => {
                   const isActive = currentStepIndex === idx;
                   const isDone = currentStepIndex > idx || status === "failed";
@@ -402,18 +431,18 @@ export default function Home() {
                     <div key={step} className="flex items-center gap-4">
                       <div className="relative flex items-center justify-center w-8 h-8 shrink-0">
                         {isDone ? (
-                          <CheckCircle2 className="w-6 h-6 text-success" />
+                          <CheckCircle className="w-5 h-5 text-success" />
                         ) : isActive ? (
                           <>
-                            <span className="absolute inline-flex h-full w-full rounded-full bg-accent opacity-20 animate-ping"></span>
-                            <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
+                            <span className="absolute inline-flex h-5 w-5 rounded-full bg-accent/20 animate-ping"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                           </>
                         ) : (
                           <div className="w-2 h-2 rounded-full bg-border-strong"></div>
                         )}
                       </div>
-                      <div className={`flex-1 p-4 rounded-xl border transition-all ${isActive ? "bg-surface-2 border-accent" : isDone ? "bg-surface-1 border-border-base" : "bg-transparent border-transparent opacity-50"}`}>
-                        <span className={`font-semibold text-sm capitalize ${isActive ? "text-accent" : isDone ? "text-text-primary" : "text-text-tertiary"}`}>
+                      <div className={`flex-1 p-3 rounded-xl border transition-all duration-200 ${isActive ? "bg-accent-subtle/25 border-accent/20" : isDone ? "bg-surface-1 border-border-base" : "bg-transparent border-transparent opacity-40"}`}>
+                        <span className={`font-semibold text-xs capitalize ${isActive ? "text-accent" : isDone ? "text-text-primary" : "text-text-tertiary"}`}>
                           {step === "pending" ? "Job Queued" : step}
                         </span>
                       </div>
@@ -425,7 +454,7 @@ export default function Home() {
               {errorMessage && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 p-6 rounded-xl border border-critical/20 bg-critical/10 text-left">
                   <div className="flex items-center gap-2 text-critical font-semibold mb-3">
-                    <AlertTriangle className="w-5 h-5" /> Analysis Failed
+                    <Warning className="w-5 h-5" /> Analysis Failed
                   </div>
                   <p className="font-mono bg-bg-base p-3 rounded-lg border border-critical/10 text-xs text-text-secondary max-h-32 overflow-y-auto mb-4">
                     {errorMessage}

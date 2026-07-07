@@ -50,7 +50,7 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
             if os.path.exists(zip_path):
                 os.remove(zip_path)
         elif repo.repo_url:
-            repo_dir = clone_repository(repo.repo_url, str(repo_id))
+            repo_dir = clone_repository(repo.repo_url, str(repo_id), branch=repo.branch)
         else:
             raise ValueError("No repository source (URL or ZIP upload) was provided.")
             

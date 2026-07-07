@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Drawer } from "@/components/ui/Drawer";
-import { Users, AlertTriangle, CheckCircle2, GitCommit, Info, User, Mail, ShieldAlert, Cpu } from "lucide-react";
+import { Users, Warning, CheckCircle, GitCommit, Info, User, Envelope, ShieldWarning, Cpu } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -12,6 +12,12 @@ interface ContributorIntelProps {
   contributors: any[];
   busFactor: any;
 }
+
+const getLossRiskLabel = (score: number) => {
+  if (score > 70) return "High";
+  if (score > 40) return "Medium";
+  return "Low";
+};
 
 export function ContributorIntel({ contributors, busFactor }: ContributorIntelProps) {
   const [selectedAuthor, setSelectedAuthor] = useState<any>(null);
@@ -64,10 +70,10 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
         <motion.div 
           initial={{ opacity: 0, y: -5 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-3xl bg-rose-500/[0.03] border border-rose-500/10 flex items-start gap-4 shadow-subtle"
+          className="p-6 rounded-xl bg-rose-500/[0.03] border border-rose-500/10 flex items-start gap-4 shadow-subtle"
         >
-          <div className="p-2.5 bg-rose-500/10 rounded-2xl text-critical shrink-0 mt-1">
-            <AlertTriangle className="w-6 h-6" />
+          <div className="p-2.5 bg-rose-500/10 rounded-xl text-critical shrink-0 mt-1">
+            <Warning className="w-6 h-6" />
           </div>
           <div>
             <h4 className="font-bold text-text-primary text-base font-display flex items-center gap-1.5">
@@ -86,9 +92,9 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
           </div>
         </motion.div>
       ) : (
-        <div className="p-6 rounded-3xl bg-emerald-500/[0.03] border border-emerald-500/10 flex items-start gap-4 shadow-subtle">
-          <div className="p-2.5 bg-emerald-500/10 rounded-2xl text-success shrink-0 mt-1">
-            <CheckCircle2 className="w-6 h-6" />
+        <div className="p-6 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 flex items-start gap-4 shadow-subtle">
+          <div className="p-2.5 bg-emerald-500/10 rounded-xl text-success shrink-0 mt-1">
+            <CheckCircle className="w-6 h-6" />
           </div>
           <div>
             <h4 className="font-bold text-text-primary text-base font-display">Resilient Knowledge Share</h4>
@@ -103,7 +109,7 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Recharts Commit distribution bar chart - Spans 8 Columns */}
-        <div className="lg:col-span-8 flex flex-col h-[450px] bg-surface-1 rounded-3xl p-6 shadow-subtle ring-1 ring-border-base/50">
+        <div className="lg:col-span-8 flex flex-col h-[450px] bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base">
           <div className="flex items-center justify-between border-b border-border-base pb-3 mb-4">
             <h3 className="text-base font-display font-bold text-text-primary">Contribution Timeline Distribution</h3>
             <Badge variant="outline" className="rounded-lg bg-bg-base">Commits Share</Badge>
@@ -207,20 +213,20 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
               </div>
               <div className="space-y-0.5">
                 <h4 className="font-display font-bold text-text-primary text-base">{selectedAuthor.name}</h4>
-                <p className="text-xs text-text-tertiary flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5" /> {selectedAuthor.email}
+                <p className="text-xs text-text-tertiary flex items-center gap-1.5 mt-1 font-mono">
+                  <Envelope className="w-3.5 h-3.5" /> {selectedAuthor.email}
                 </p>
               </div>
             </div>
 
-            {/* Quick stats grid */}
+            {/* Critical Stats */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex items-center justify-between">
+              <div className="bg-surface-2 rounded-2xl p-4 border border-border-base flex items-center justify-between">
                 <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Knowledge Concentration</p>
-                  <p className="font-mono font-bold text-text-primary text-lg">{authorDetails.riskScore}%</p>
+                  <p className="text-[10px] uppercase font-mono text-text-tertiary">Loss Impact Risk</p>
+                  <p className="text-lg font-bold font-display text-text-primary mt-0.5">{getLossRiskLabel(authorDetails.riskScore)}</p>
                 </div>
-                <ShieldAlert className={`w-5 h-5 ${authorDetails.riskScore > 70 ? 'text-critical' : 'text-warning'}`} />
+                <ShieldWarning className={`w-5 h-5 ${authorDetails.riskScore > 70 ? 'text-critical' : 'text-warning'}`} />
               </div>
 
               <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex items-center justify-between">

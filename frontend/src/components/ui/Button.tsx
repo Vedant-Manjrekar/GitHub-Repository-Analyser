@@ -9,28 +9,26 @@ interface ButtonProps extends HTMLMotionProps<"button"> {
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = "primary", size = "md", children, ...props }, ref) => {
-    const baseStyles = "inline-flex items-center justify-center rounded-2xl font-semibold transition-all focus:outline-none focus:ring-4 focus:ring-accent-subtle disabled:opacity-50 disabled:pointer-events-none";
+    const baseStyles = "inline-flex items-center justify-center rounded-xl font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-accent-subtle disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]";
     
     const variants = {
-      // Vibrant gradient for primary action, typical of Stripe
-      primary: "bg-gradient-to-b from-accent-hover to-accent text-white shadow-elevated hover:shadow-floating hover:from-accent hover:to-accent-hover",
-      // Soft secondary button
-      secondary: "bg-surface-2 text-text-primary hover:bg-surface-3 hover:shadow-subtle",
-      outline: "border-2 border-border-base text-text-primary hover:border-border-strong hover:bg-surface-1",
+      primary: "bg-accent hover:bg-accent-hover text-white shadow-subtle border border-accent/10",
+      secondary: "bg-surface-2 text-text-primary hover:bg-surface-3 border border-border-base",
+      outline: "border border-border-strong text-text-primary hover:bg-surface-2",
       ghost: "text-text-secondary hover:text-text-primary hover:bg-surface-2",
-      danger: "bg-critical text-white shadow-elevated hover:bg-red-600"
+      danger: "bg-critical hover:bg-critical/95 text-white shadow-subtle border border-critical/10"
     };
     
     const sizes = {
-      sm: "h-9 px-4 text-xs",
+      sm: "h-9 px-3.5 text-xs",
       md: "h-11 px-5 text-sm",
-      lg: "h-14 px-8 text-base"
+      lg: "h-13 px-7 text-base"
     };
 
     return (
       <motion.button
         ref={ref}
-        whileTap={{ scale: 0.96 }}
+        whileTap={{ scale: 0.98 }}
         className={cn(baseStyles, variants[variant], sizes[size], className)}
         {...props}
       >

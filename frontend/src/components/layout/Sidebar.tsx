@@ -1,5 +1,4 @@
-import React from "react";
-import { Activity, ShieldAlert, Cpu, Users, FolderTree, Settings, Command, ChevronRight } from "lucide-react";
+import { ChartLine, ShieldWarning, Cpu, Users, FolderSimple, Gear, Command, CaretRight } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
@@ -10,11 +9,11 @@ interface SidebarProps {
 }
 
 const navItems = [
-  { id: "overview", label: "Executive Summary", icon: Activity },
-  { id: "hotspots", label: "Risk Landscape", icon: ShieldAlert },
+  { id: "overview", label: "Executive Summary", icon: ChartLine },
+  { id: "hotspots", label: "Risk Landscape", icon: ShieldWarning },
   { id: "debt", label: "Technical Debt", icon: Cpu },
   { id: "contributors", label: "Contributor Intel", icon: Users },
-  { id: "explorer", label: "Repository Explorer", icon: FolderTree },
+  { id: "explorer", label: "Repository Explorer", icon: FolderSimple },
 ];
 
 export function Sidebar({ activeTab, onTabChange, className }: SidebarProps) {
@@ -24,7 +23,7 @@ export function Sidebar({ activeTab, onTabChange, className }: SidebarProps) {
       <div className="h-16 flex items-center px-6 border-b border-border-base">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-accent text-white flex items-center justify-center shadow-elevated">
-            <Activity className="w-4 h-4" />
+            <ChartLine className="w-4 h-4" />
           </div>
           <span className="font-display font-bold text-sm tracking-tight text-text-primary uppercase">
             Antigravity
@@ -46,7 +45,7 @@ export function Sidebar({ activeTab, onTabChange, className }: SidebarProps) {
               onClick={() => onTabChange(item.id)}
               className={cn(
                 "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-all relative group",
-                isActive ? "text-accent bg-accent-subtle" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
+                isActive ? "text-accent" : "text-text-secondary hover:text-text-primary hover:bg-surface-2"
               )}
             >
               <div className="flex items-center gap-3 z-10">
@@ -54,12 +53,12 @@ export function Sidebar({ activeTab, onTabChange, className }: SidebarProps) {
                 <span>{item.label}</span>
               </div>
               
-              <ChevronRight className={cn("w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity z-10", isActive ? "text-accent opacity-100" : "text-text-tertiary")} />
+              <CaretRight className={cn("w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity z-10", isActive ? "text-accent opacity-100" : "text-text-tertiary")} />
               
               {isActive && (
                 <motion.div
                   layoutId="sidebar-active-bg"
-                  className="absolute inset-0 bg-accent-subtle rounded-xl border-l-2 border-accent"
+                  className="absolute inset-0 bg-accent-subtle/80 rounded-xl border border-accent/15"
                   initial={false}
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
@@ -79,7 +78,7 @@ export function Sidebar({ activeTab, onTabChange, className }: SidebarProps) {
           <kbd className="text-[10px] font-mono bg-surface-3 px-1.5 py-0.5 rounded text-text-tertiary shadow-subtle border border-border-strong">⌘K</kbd>
         </button>
         <button className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors">
-          <Settings className="w-3.5 h-3.5 text-text-tertiary" />
+          <Gear className="w-3.5 h-3.5 text-text-tertiary" />
           <span>Workspace Settings</span>
         </button>
       </div>

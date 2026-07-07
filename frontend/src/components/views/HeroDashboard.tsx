@@ -6,10 +6,10 @@ import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { RepoHeader } from "@/components/layout/RepoHeader";
 import { 
-  Activity, Shield, Cpu, Users, Wrench, AlertTriangle, 
-  CheckCircle2, ChevronRight, Zap, Target, BookOpen, AlertCircle, ArrowUpRight, ArrowDownRight, Info,
-  ChevronDown, Sparkles
-} from "lucide-react";
+  ChartLine, Shield, Cpu, Users, Wrench, Warning, 
+  CheckCircle, CaretRight, Lightning, Target, BookOpen, WarningCircle, ArrowUpRight, ArrowDownRight, Info,
+  CaretDown, Sparkle, Bus
+} from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip } from "recharts";
 import { cn } from "@/lib/utils";
@@ -481,7 +481,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                           </div>
                         </div>
                         <div className="bg-emerald-500/5 border border-emerald-500/15 rounded-lg p-2.5 flex items-start gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
+                          <Sparkle className="w-3.5 h-3.5 text-success shrink-0 mt-0.5" />
                           <p className="text-[10px] text-success leading-normal font-medium">
                             {insight}
                           </p>
@@ -533,7 +533,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* Health Score - Spans 4 columns */}
-          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible relative hover:z-30 focus-within:z-30">
+          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
             <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -575,7 +575,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Technical Debt - Spans 4 columns */}
-          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible relative hover:z-30 focus-within:z-30">
+          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
             <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -616,7 +616,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Bus Factor - Spans 4 columns */}
-          <Card interactive className="md:col-span-4 shadow-subtle ring-1 ring-border-base/50 overflow-visible relative hover:z-30 focus-within:z-30">
+          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
             <CardContent className="p-6 flex flex-col justify-between h-full min-h-[220px]">
               <div className="flex items-start justify-between">
                 <div className="space-y-1">
@@ -645,13 +645,23 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                   </h3>
                 </div>
                 <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border ${busFactor?.bus_factor <= 1 ? "border-critical bg-critical/5 text-critical" : "border-success bg-success/5 text-success"} shadow-subtle`}>
-                  <Users className="w-6 h-6" />
+                  <Bus className="w-6 h-6" />
                 </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between">
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg ${busFactor?.bus_factor <= 1 ? "text-critical bg-critical/10" : "text-success bg-success/10"}`}>
-                  {busFactor?.bus_factor <= 1 ? "🔴 Critical Risk" : "🟢 Healthy"}
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1.5 ${busFactor?.bus_factor <= 1 ? "text-critical bg-critical/10" : "text-success bg-success/10"}`}>
+                  {busFactor?.bus_factor <= 1 ? (
+                    <>
+                      <WarningCircle className="w-3.5 h-3.5 shrink-0" />
+                      Critical Risk
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+                      Healthy
+                    </>
+                  )}
                 </span>
                 <span className="text-xs text-text-tertiary font-bold font-mono">Key Person Risk</span>
               </div>
@@ -662,7 +672,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             
             {/* Risk Level */}
-            <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle flex items-center justify-between ring-1 ring-border-base/50 relative hover:z-30 focus-within:z-30">
+            <div className="bg-surface-1 rounded-xl p-6 shadow-subtle flex items-center justify-between border border-border-base relative hover:z-30 focus-within:z-30">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Overall Risk Level</span>
@@ -679,13 +689,13 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                   Evaluated using files' complexity metrics, frequency of updates, and developer ownership metrics.
                 </p>
               </div>
-              <div className={`w-16 h-16 rounded-[22px] flex items-center justify-center ${risk.badgeColor} shadow-subtle shrink-0`}>
+              <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${risk.badgeColor} shadow-subtle shrink-0`}>
                 <Shield className="w-7 h-7" />
               </div>
             </div>
 
             {/* Maintainability Index placeholder */}
-            <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle flex items-center justify-between ring-1 ring-border-base/50 relative hover:z-30 focus-within:z-30">
+            <div className="bg-surface-1 rounded-xl p-6 shadow-subtle flex items-center justify-between border border-border-base relative hover:z-30 focus-within:z-30">
               <div className="space-y-2">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary">Code Maintainability</span>
@@ -702,8 +712,8 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                   Calculated based on average nesting depth, duplicate blocks, and total cyclomatic complexity.
                 </p>
               </div>
-              <div className="w-16 h-16 rounded-[22px] bg-accent/5 text-accent flex items-center justify-center shadow-subtle shrink-0">
-                <Activity className="w-7 h-7" />
+              <div className="w-16 h-16 rounded-xl bg-accent/5 text-accent flex items-center justify-center shadow-subtle shrink-0">
+                <ChartLine className="w-7 h-7" />
               </div>
             </div>
 
@@ -726,7 +736,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
             
             {/* Architecture Summary - Spans 8 columns */}
             <div className="lg:col-span-8 space-y-6">
-              <div className="bg-surface-1 rounded-3xl p-8 shadow-subtle space-y-4 ring-1 ring-border-base/50">
+              <div className="bg-surface-1 rounded-xl p-8 shadow-subtle space-y-4 border border-border-base">
                 <h3 className="text-lg font-display font-bold text-text-primary flex items-center gap-2">
                   <BookOpen className="w-5 h-5 text-accent" /> Architectural Summary
                 </h3>
@@ -740,7 +750,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                         .trim();
                       if (!cleanLine || cleanLine.toLowerCase() === "note") return null;
                       return (
-                        <div key={idx} className="flex items-start gap-2.5 p-3.5 bg-accent/[0.03] border border-accent/10 rounded-2xl text-xs text-text-secondary">
+                        <div key={idx} className="flex items-start gap-2.5 p-3.5 bg-accent-subtle/30 border border-accent/10 rounded-xl text-xs text-text-secondary">
                           <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
                           <span>{cleanLine}</span>
                         </div>
@@ -792,9 +802,9 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Strengths */}
-                <div className="bg-emerald-500/[0.03] rounded-3xl p-6 shadow-subtle ring-1 ring-emerald-500/10 space-y-4">
+                <div className="bg-emerald-500/[0.03] rounded-xl p-6 shadow-subtle border border-emerald-500/10 space-y-4">
                   <h4 className="text-sm font-display font-bold text-emerald-600 flex items-center gap-2 uppercase tracking-wider">
-                    <CheckCircle2 className="w-4 h-4" /> Codebase Strengths
+                    <CheckCircle className="w-4 h-4" /> Codebase Strengths
                   </h4>
                   <ul className="space-y-2.5">
                     {parsedAI.strengths.map((str, idx) => (
@@ -807,9 +817,9 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                 </div>
 
                 {/* Weaknesses */}
-                <div className="bg-amber-500/[0.03] rounded-3xl p-6 shadow-subtle ring-1 ring-amber-500/10 space-y-4">
+                <div className="bg-amber-500/[0.03] rounded-xl p-6 shadow-subtle border border-amber-500/10 space-y-4">
                   <h4 className="text-sm font-display font-bold text-amber-600 flex items-center gap-2 uppercase tracking-wider">
-                    <AlertTriangle className="w-4 h-4" /> Structural Weaknesses
+                    <Warning className="w-4 h-4" /> Structural Weaknesses
                   </h4>
                   <ul className="space-y-2.5">
                     {parsedAI.weaknesses.map((weak, idx) => (
@@ -824,9 +834,9 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
               </div>
 
               {/* 3. Landscape Critical Risks section */}
-              <div className="bg-rose-500/[0.03] rounded-3xl p-8 shadow-subtle ring-1 ring-rose-500/10 space-y-6 w-full">
+              <div className="bg-rose-500/[0.03] rounded-xl p-8 shadow-subtle border border-rose-500/10 space-y-6 w-full">
                 <div className="flex items-center gap-2 border-b border-rose-500/10 pb-4">
-                  <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  <WarningCircle className="w-5 h-5 text-rose-600 shrink-0" />
                   <div>
                     <h3 className="text-base font-display font-black text-rose-600 uppercase tracking-wider">
                       Critical Risks Analysis
@@ -892,7 +902,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                                 return (
                                   <div key={idx} className={`p-3 border rounded-2xl text-[11px] leading-relaxed space-y-1 ${colorClasses}`}>
                                     <div className="font-bold flex items-center gap-1.5">
-                                      <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                                      <WarningCircle className="w-3.5 h-3.5 shrink-0" />
                                       {prefix}
                                     </div>
                                     <p className="opacity-90">{message}</p>
@@ -984,7 +994,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
             <div className="lg:col-span-4 space-y-6">
               
               {/* Recommendations Card */}
-              <div className="bg-surface-1 rounded-3xl p-6 shadow-subtle space-y-4 ring-1 ring-border-base/50">
+              <div className="bg-surface-1 rounded-xl p-6 shadow-subtle space-y-4 border border-border-base">
                 <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider">
                   <Target className="w-4 h-4 text-accent" /> Action Items
                 </h3>
@@ -995,8 +1005,8 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                     const desc = hasColon ? rec.substring(rec.indexOf(":") + 1).trim() : rec;
                     
                     return (
-                      <div key={idx} className="p-3 bg-bg-base rounded-2xl flex items-start gap-2 border border-border-base/50 hover:border-border-strong transition-colors duration-200">
-                        <ChevronRight className="w-4 h-4 text-accent mt-0.5 shrink-0" />
+                      <div key={idx} className="p-3 bg-bg-base rounded-xl flex items-start gap-2 border border-border-base hover:border-border-strong transition-colors duration-200">
+                        <CaretRight className="w-4 h-4 text-accent mt-0.5 shrink-0" />
                         <p className="text-xs text-text-secondary leading-relaxed">
                           {hasColon ? (
                             <>

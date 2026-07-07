@@ -6,11 +6,11 @@ import { Drawer } from "@/components/ui/Drawer";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { 
-  AlertCircle, FileDigit, ListTodo, Wrench, ChevronRight, CheckCircle2, 
-  Info, Clock, AlertTriangle, Users2, Calendar, ShieldAlert, FileCode, 
-  GitCommit, User, Activity, Code, Sparkles, Layers, BarChart2, TrendingUp,
-  Search, Filter
-} from "lucide-react";
+  WarningCircle, FileCode, ListChecks, Wrench, CaretRight, CheckCircle, 
+  Info, Clock, Warning, Users, Calendar, ShieldWarning, 
+  GitCommit, User, ChartLine, Code, Sparkle, Stack, ChartBar, TrendUp,
+  MagnifyingGlass, Funnel
+} from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface TechDebtVisualizerProps {
@@ -336,8 +336,8 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
               </h3>
               <p className="text-xs text-text-secondary leading-relaxed font-medium">Ratio of refactoring tasks to active code paths.</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shrink-0">
-              <Activity className="w-6 h-6" />
+            <div className="w-12 h-12 rounded-xl bg-accent-subtle/40 flex items-center justify-center text-accent border border-accent/10 shrink-0">
+              <ChartLine className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
@@ -360,35 +360,35 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
               <p className="text-xs text-text-secondary leading-relaxed font-medium">Postponed developmental cleanup points.</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 border border-rose-500/20 shrink-0">
-              <ListTodo className="w-6 h-6" />
+              <ListChecks className="w-6 h-6" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Advanced Filters Bar */}
-      <div className="bg-surface-1 p-5 rounded-3xl shadow-sm border border-border-strong/50 space-y-4">
+      <div className="bg-surface-1 p-5 rounded-xl border border-border-base shadow-subtle space-y-4">
         <div className="flex flex-wrap items-center gap-4">
           {/* Search path */}
           <div className="relative flex-1 min-w-[200px]">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
+            <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
             <input 
               type="text" 
               placeholder="Search file path..."
               value={searchFilter}
               onChange={e => setSearchFilter(e.target.value)}
-              className="w-full bg-bg-base border-none rounded-2xl pl-10 pr-4 py-2 text-xs text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-subtle transition-all"
+              className="w-full bg-surface-1 border border-border-strong rounded-xl pl-10 pr-4 py-2 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle placeholder:text-text-tertiary/60"
             />
           </div>
 
           {/* Directory Filter */}
           <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <Layers className="w-3.5 h-3.5 text-text-tertiary" />
+            <Stack className="w-3.5 h-3.5 text-text-tertiary" />
             <span className="font-semibold">Directory:</span>
             <select
               value={dirFilter}
               onChange={e => setDirFilter(e.target.value)}
-              className="bg-bg-base border-none rounded-xl px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent text-[11px]"
+              className="bg-surface-1 border border-border-strong rounded-xl px-2.5 py-1 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle cursor-pointer"
             >
               <option value="all">All Directories</option>
               {uniqueDirs.map(d => <option key={d} value={d}>{d}</option>)}
@@ -402,7 +402,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
             <select
               value={langFilter}
               onChange={e => setLangFilter(e.target.value)}
-              className="bg-bg-base border-none rounded-xl px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent text-[11px]"
+              className="bg-surface-1 border border-border-strong rounded-xl px-2.5 py-1 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle cursor-pointer"
             >
               <option value="all">All Languages</option>
               {uniqueLanguages.map(l => <option key={l} value={l}>{l}</option>)}
@@ -411,12 +411,12 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
 
           {/* Severity Filter */}
           <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <Filter className="w-3.5 h-3.5 text-text-tertiary" />
+            <Funnel className="w-3.5 h-3.5 text-text-tertiary" />
             <span className="font-semibold">Severity:</span>
             <select
               value={severityFilter}
               onChange={e => setSeverityFilter(e.target.value as any)}
-              className="bg-bg-base border-none rounded-xl px-2 py-1 focus:outline-none focus:ring-1 focus:ring-accent text-[11px]"
+              className="bg-surface-1 border border-border-strong rounded-xl px-2.5 py-1 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle cursor-pointer"
             >
               <option value="all">All Risk Levels</option>
               <option value="high">High Risk (&gt;= 70)</option>
@@ -445,7 +445,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
         
         {/* Left Side: Modular Treemap and Ranked List */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-subtle ring-1 ring-border-base/50 rounded-3xl overflow-visible bg-surface-1">
+          <Card className="shadow-subtle border border-border-base rounded-xl overflow-visible bg-surface-1">
             <div className="p-5 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
               <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider">
                 <Wrench className="w-4.5 h-4.5 text-accent" /> Codebase Modularity Treemap
@@ -507,7 +507,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                 </ResponsiveContainer>
               ) : (
                 <div className="h-full flex flex-col items-center justify-center text-text-tertiary">
-                  <CheckCircle2 className="w-12 h-12 text-success opacity-45 mb-2" />
+                  <CheckCircle className="w-12 h-12 text-success opacity-45 mb-2" />
                   <p className="font-semibold text-sm">No complex files found matching filters.</p>
                 </div>
               )}
@@ -520,7 +520,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
             <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
               <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
                 <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-accent" /> Directory Debt share
+                  <Stack className="w-3.5 h-3.5 text-accent" /> Directory Debt share
                 </span>
                 <span className="text-[9px] font-mono text-text-tertiary font-bold">Sum of Scores</span>
               </div>
@@ -546,7 +546,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
             <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
               <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
                 <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
-                  <Users2 className="w-3.5 h-3.5 text-accent" /> Contributor Complexity Share
+                  <Users className="w-3.5 h-3.5 text-accent" /> Contributor Complexity Share
                 </span>
                 <span className="text-[9px] font-mono text-text-tertiary font-bold">Files Owned</span>
               </div>
@@ -573,7 +573,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
           <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
             <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
               <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
-                <TrendingUp className="w-3.5 h-3.5 text-accent" /> Historical Repository Health Trend
+                <TrendUp className="w-3.5 h-3.5 text-accent" /> Historical Repository Health Trend
               </span>
               <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/15">
                 Improving
@@ -614,10 +614,10 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
 
         {/* Right Side: Prioritized AI Recommendations List */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="shadow-subtle ring-1 ring-border-base/50 rounded-3xl overflow-hidden bg-surface-1">
+          <Card className="shadow-subtle border border-border-base rounded-xl overflow-hidden bg-surface-1">
             <div className="p-5 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4.5 h-4.5 text-accent" />
+                <Sparkle className="w-4.5 h-4.5 text-accent" />
                 <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wider">AI Prioritized Actions</h3>
               </div>
               <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-accent-subtle text-accent border border-accent/15">Ranked</Badge>
@@ -628,7 +628,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                 <div 
                   key={idx}
                   className={cn(
-                    "p-4 rounded-2xl border flex flex-col justify-between space-y-3 bg-surface-2/40 hover:bg-surface-2 transition-all duration-200",
+                    "p-4 rounded-xl border flex flex-col justify-between space-y-3 bg-surface-2/40 hover:bg-surface-2 transition-all duration-200",
                     rec.color === "rose" 
                       ? "border-rose-500/10 hover:border-rose-500/25" 
                       : rec.color === "amber"
@@ -692,7 +692,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
             
             <div className="bg-surface-2 rounded-2xl p-5 border border-border-base flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedFile.hotspot_score >= 70 ? 'bg-critical/10 text-critical border border-critical/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
-                <ShieldAlert className="w-6 h-6" />
+                <ShieldWarning className="w-6 h-6" />
               </div>
               <div>
                 <p className="text-[10px] uppercase font-mono tracking-wider text-text-tertiary">Refactor Risk Priority</p>
@@ -708,7 +708,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                   <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Complexity Score</p>
                   <p className="font-mono font-bold text-text-primary text-xl">{selectedFile.complexity}</p>
                 </div>
-                <Activity className="w-4 h-4 text-text-tertiary mt-2 self-end" />
+                <ChartLine className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
               <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
@@ -731,12 +731,12 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
 
               <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
                 <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Active Contributors</p>
+                  <p className="text-[10px] text-text-tertiary">Active Contributors</p>
                   <p className="font-mono font-bold text-text-primary text-xl">
                     {Math.max(1, Math.min(6, Math.floor(selectedFile.churn / 3) + 1))}
                   </p>
                 </div>
-                <Users2 className="w-4 h-4 text-text-tertiary mt-2 self-end" />
+                <Users className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
               <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base col-span-2 flex items-center justify-between">

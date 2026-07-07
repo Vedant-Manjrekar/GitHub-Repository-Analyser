@@ -20,12 +20,12 @@ export const Card = React.forwardRef<HTMLDivElement, CardProps>(
     return (
       <motion.div
         ref={ref}
-        whileHover={interactive ? { y: -3 } : {}}
-        transition={{ type: "spring", stiffness: 350, damping: 25 }}
+        whileHover={interactive ? { scale: 1.006 } : {}}
+        transition={{ duration: 0.15, ease: "easeInOut" }}
         className={cn(
-          "bg-surface-1 rounded-[20px] overflow-hidden",
+          "bg-surface-1 rounded-xl border border-border-base overflow-hidden transition-colors duration-150",
           shadows[elevation],
-          interactive && "cursor-pointer hover:shadow-elevated hover:bg-white transition-all duration-300",
+          interactive && "cursor-pointer hover:border-border-strong hover:bg-surface-2/40",
           className
         )}
         {...props}

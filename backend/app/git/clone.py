@@ -13,27 +13,50 @@ def get_repo_dir(repo_id: str) -> str:
     os.makedirs(UPLOADS_DIR, exist_ok=True)
     return os.path.join(UPLOADS_DIR, str(repo_id))
 
-def clone_repository(repo_url: str, repo_id: str) -> str:
-    """Clones a Git repository from a URL to a unique folder.
+def clone_repository(repo_url: str, repo_id: str, branch: str = None) -> str:
+    """Clones a Git repository from a URL to a unique folder or switches branch.
     
     Args:
         repo_url: The git clone URL.
         repo_id: The UUID of the repository.
+        branch: The target branch to checkout/clone.
         
     Returns:
         The absolute path to the cloned repository.
     """
     target_dir = get_repo_dir(repo_id)
     
-    # If the directory already exists, clear it first
-    if os.path.exists(target_dir):
-        shutil.rmtree(target_dir)
+    # If directory already exists, open it and check if it's correct
+    if os.path.exists(target_dir) and os.path.exists(os.path.join(target_dir, ".git")):
+        print(f"Repository folder already exists at {target_dir}. Checking out branch...")
+        try:
+            repo = git.Repo(target_dir)
+            repo.git.reset('--hard')
+            repo.git.clean('-fd')
+            # Fetch updates
+            for remote in repo.remotes:
+                try:
+                    remote.fetch()
+                except Exception:
+                    pass
+            if branch:
+                try:
+                    repo.git.checkout(branch)
+                except Exception:
+                    repo.git.checkout('-b', branch, f'origin/{branch}')
+            return target_dir
+        except Exception as e:
+            print(f"Failed to reuse existing folder: {e}. Re-cloning...")
+            shutil.rmtree(target_dir)
         
     os.makedirs(target_dir, exist_ok=True)
     
     # Perform git clone using GitPython
     print(f"Cloning {repo_url} into {target_dir}...")
-    git.Repo.clone_from(repo_url, target_dir)
+    if branch:
+        git.Repo.clone_from(repo_url, target_dir, branch=branch)
+    else:
+        git.Repo.clone_from(repo_url, target_dir)
     print(f"Successfully cloned {repo_url}.")
     
     return target_dir

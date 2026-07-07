@@ -3,9 +3,9 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { 
-  FileCode, Search, ChevronRight, ShieldAlert, GitCommit, User, 
-  Wrench, FileDigit, Folder, Play, CheckSquare, List, Sparkles, Terminal 
-} from "lucide-react";
+  FileCode, MagnifyingGlass, CaretRight, ShieldWarning, GitCommit, User, 
+  Wrench, Hash, Folder, Play, CheckSquare, List, Sparkle, Terminal 
+} from "@phosphor-icons/react";
 
 interface VSCodeExplorerProps {
   hotspots: any[];
@@ -50,8 +50,8 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
             <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-tertiary">Workspace Catalog</span>
             <Badge variant="outline" className="text-[9px] rounded-lg">Git main</Badge>
           </div>
-          <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+          <div className="relative mb-3">
+            <MagnifyingGlass className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
             <input 
               type="text" 
               placeholder="Search files by path..."
@@ -109,7 +109,7 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
                 {selectedFile.path.split("/").map((segment: string, i: number, arr: string[]) => (
                   <React.Fragment key={i}>
                     <span className={i === arr.length - 1 ? "text-text-primary font-bold" : ""}>{segment}</span>
-                    {i < arr.length - 1 && <ChevronRight className="w-3 h-3 text-text-tertiary shrink-0" />}
+                    {i < arr.length - 1 && <CaretRight className="w-3 h-3 text-text-tertiary shrink-0" />}
                   </React.Fragment>
                 ))}
               </div>
@@ -131,7 +131,9 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
                     <span className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Complexity</span>
                     <p className="text-xl font-bold font-mono text-text-primary mt-1">{selectedFile.complexity}</p>
                   </div>
-                  <FileDigit className="w-5 h-5 text-text-tertiary" />
+                  <div className="w-9 h-9 rounded-xl bg-surface-2 flex items-center justify-center border border-border-strong shrink-0">
+                    <Hash className="w-5 h-5 text-text-tertiary" />
+                  </div>
                 </div>
 
                 {/* Churn Card */}
@@ -181,8 +183,8 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
 
               {/* AI review recommendations checklist */}
               <div className="pt-6 border-t border-border-base space-y-4">
-                <h4 className="text-sm font-semibold font-display text-text-primary flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-accent animate-pulse-slow" /> AI Code Copilot Suggestions
+                <h4 className="font-display font-bold text-text-primary text-xs flex items-center gap-1.5 border-b border-border-subtle pb-2 uppercase tracking-wider">
+                  <Sparkle className="w-4 h-4 text-accent animate-pulse-slow" /> AI Code Copilot Suggestions
                 </h4>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -216,9 +218,9 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
             </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center text-text-tertiary">
-            <FileDigit className="w-16 h-16 mb-3 opacity-20" />
-            <p className="font-semibold text-sm">Select a module entry from the list</p>
+          <div className="h-full flex flex-col items-center justify-center text-text-tertiary">
+            <Hash className="w-16 h-16 mb-3 opacity-20" />
+            <p className="font-semibold text-sm">Select a file from the explorer</p>
             <p className="text-xs">Explore files, complexities, and AI refactoring advice.</p>
           </div>
         )}
