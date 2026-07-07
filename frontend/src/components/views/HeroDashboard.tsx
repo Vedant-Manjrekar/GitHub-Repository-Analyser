@@ -533,7 +533,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
           
           {/* Health Score - Spans 4 columns */}
-          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 to-emerald-500/[0.015]">
+          <Card className="md:col-span-4 shadow-subtle border border-emerald-500/30 overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 to-emerald-500/[0.015]">
             {/* Background design container */}
             <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
               <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-emerald-500/[0.1] blur-2xl opacity-80" />
@@ -588,7 +588,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Technical Debt - Spans 4 columns */}
-          <Card className="md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 to-amber-500/[0.015]">
+          <Card className="md:col-span-4 shadow-subtle border border-amber-500/30 overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 to-amber-500/[0.015]">
             {/* Background design container */}
             <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
               <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-amber-500/[0.1] blur-2xl opacity-80" />
@@ -642,7 +642,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Bus Factor - Spans 4 columns */}
-          <Card className={`md:col-span-4 shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 ${busFactor?.bus_factor <= 1 ? "to-rose-500/[0.015]" : "to-indigo-500/[0.015]"}`}>
+          <Card className={`md:col-span-4 shadow-subtle overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 ${busFactor?.bus_factor <= 1 ? "to-rose-500/[0.015] border border-rose-500/30" : "to-indigo-500/[0.015] border border-indigo-500/30"}`}>
             {/* Background design container */}
             <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
               <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${busFactor?.bus_factor <= 1 ? "bg-rose-500/[0.1]" : "bg-indigo-500/[0.1]"}`} />
@@ -711,7 +711,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           <div className="md:col-span-12 grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
             
             {/* Risk Level */}
-            <div className={`bg-gradient-to-br from-surface-1 ${risk.color === "success" ? "to-emerald-500/[0.015]" : risk.color === "warning" ? "to-amber-500/[0.015]" : "to-rose-500/[0.015]"} rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible hover:z-30 focus-within:z-30`}>
+            <div className={`bg-gradient-to-br from-surface-1 ${risk.color === "success" ? "to-emerald-500/[0.015] border-emerald-500/30" : risk.color === "warning" ? "to-amber-500/[0.015] border-amber-500/30" : "to-rose-500/[0.015] border-rose-500/30"} rounded-xl p-6 shadow-subtle border relative overflow-visible hover:z-30 focus-within:z-30`}>
               {/* Background design container */}
               <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
                 <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${risk.color === "success" ? "bg-emerald-500/[0.1]" : risk.color === "warning" ? "bg-amber-500/[0.1]" : "bg-rose-500/[0.1]"}`} />
@@ -749,7 +749,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
             </div>
 
             {/* Maintainability Index placeholder */}
-            <div className={`bg-gradient-to-br from-surface-1 ${techDebt?.health_score && techDebt.health_score > 80 ? "to-emerald-500/[0.015]" : "to-amber-500/[0.015]"} rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible hover:z-30 focus-within:z-30`}>
+            <div className={`bg-gradient-to-br from-surface-1 ${techDebt?.health_score && techDebt.health_score > 80 ? "to-emerald-500/[0.015] border-emerald-500/30" : "to-amber-500/[0.015] border-amber-500/30"} rounded-xl p-6 shadow-subtle border relative overflow-visible hover:z-30 focus-within:z-30`}>
               {/* Background design container */}
               <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
                 <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${techDebt?.health_score && techDebt.health_score > 80 ? "bg-emerald-500/[0.1]" : "bg-amber-500/[0.1]"}`} />
@@ -876,33 +876,79 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
                 {/* Strengths */}
-                <div className="bg-emerald-500/[0.03] rounded-xl p-6 shadow-subtle border border-emerald-500/10 space-y-4">
-                  <h4 className="text-sm font-display font-bold text-emerald-600 flex items-center gap-2 uppercase tracking-wider">
-                    <CheckCircle className="w-4 h-4" /> Codebase Strengths
-                  </h4>
-                  <ul className="space-y-2.5">
-                    {parsedAI.strengths.map((str, idx) => (
-                      <li key={idx} className="text-xs text-text-secondary flex items-start gap-2 leading-relaxed">
-                        <span className="text-emerald-500 mt-0.5">•</span>
-                        <span>{str}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="bg-gradient-to-br from-surface-1 to-emerald-500/[0.015] rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible">
+                  {/* Background design container */}
+                  <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+                    <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-emerald-500/[0.08] blur-2xl opacity-75" />
+                    <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.03] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                      <defs>
+                        <pattern id="grid-strengths" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                          <path d="M.5 16V.5H16" fill="none" />
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#grid-strengths)" />
+                    </svg>
+                  </div>
+
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3 border-b border-border-base pb-3">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 shrink-0 border border-emerald-500/15">
+                        <CheckCircle className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-display font-black text-text-primary uppercase tracking-wider">
+                          Codebase Strengths
+                        </h4>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-2">
+                      {parsedAI.strengths.map((str, idx) => (
+                        <li key={idx} className="text-[13px] font-medium leading-relaxed text-text-primary/85 flex items-start gap-3 p-2.5 rounded-lg hover:bg-emerald-500/[0.02] border border-transparent hover:border-emerald-500/5 transition-all duration-200">
+                          <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                          <span>{str}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
                 {/* Weaknesses */}
-                <div className="bg-amber-500/[0.03] rounded-xl p-6 shadow-subtle border border-amber-500/10 space-y-4">
-                  <h4 className="text-sm font-display font-bold text-amber-600 flex items-center gap-2 uppercase tracking-wider">
-                    <Warning className="w-4 h-4" /> Structural Weaknesses
-                  </h4>
-                  <ul className="space-y-2.5">
-                    {parsedAI.weaknesses.map((weak, idx) => (
-                      <li key={idx} className="text-xs text-text-secondary flex items-start gap-2 leading-relaxed">
-                        <span className="text-amber-500 mt-0.5">•</span>
-                        <span>{weak}</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="bg-gradient-to-br from-surface-1 to-amber-500/[0.015] rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible">
+                  {/* Background design container */}
+                  <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+                    <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-amber-500/[0.08] blur-2xl opacity-75" />
+                    <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.03] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                      <defs>
+                        <pattern id="grid-weaknesses" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                          <path d="M.5 16V.5H16" fill="none" />
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#grid-weaknesses)" />
+                    </svg>
+                  </div>
+
+                  <div className="relative z-10 space-y-4">
+                    <div className="flex items-center gap-3 border-b border-border-base pb-3">
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 shrink-0 border border-amber-500/15">
+                        <Warning className="w-4.5 h-4.5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-display font-black text-text-primary uppercase tracking-wider">
+                          Structural Weaknesses
+                        </h4>
+                      </div>
+                    </div>
+
+                    <ul className="space-y-2">
+                      {parsedAI.weaknesses.map((weak, idx) => (
+                        <li key={idx} className="text-[13px] font-medium leading-relaxed text-text-primary/85 flex items-start gap-3 p-2.5 rounded-lg hover:bg-amber-500/[0.02] border border-transparent hover:border-amber-500/5 transition-all duration-200">
+                          <Warning className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                          <span>{weak}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
               </div>
