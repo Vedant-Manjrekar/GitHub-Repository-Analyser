@@ -158,23 +158,70 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
         Content crossfade: simple CSS opacity transition.
         No Framer Motion layout — avoids per-frame layout recalc.
       */}
-      <div
-        onClick={() => setIsExpanded(v => !v)}
-        className="bg-[#212529] border border-white/10 text-white shadow-floating w-full overflow-hidden cursor-pointer select-none"
+      <motion.div
+        onClick={() => {
+          if (!isExpanded) setIsExpanded(true);
+        }}
+        className="bg-[#212529] border border-white/10 text-white shadow-floating w-full cursor-pointer select-none rounded-[28px] relative"
+        animate={{
+          width: "100%",
+          height: isExpanded ? "auto" : "56px",
+          paddingTop: isExpanded ? 32 : 0,
+          paddingBottom: isExpanded ? 32 : 0,
+          paddingLeft: isExpanded ? 32 : 24,
+          paddingRight: isExpanded ? 32 : 24,
+        }}
+        transition={{
+          height: {
+            type: "spring",
+            stiffness: 140,
+            damping: 20,
+            mass: 1.1,
+          },
+          paddingTop: {
+            type: "spring",
+            stiffness: 140,
+            damping: 20,
+          },
+          paddingBottom: {
+            type: "spring",
+            stiffness: 140,
+            damping: 20,
+          },
+          paddingLeft: {
+            type: "spring",
+            stiffness: 160,
+            damping: 22,
+          },
+          paddingRight: {
+            type: "spring",
+            stiffness: 160,
+            damping: 22,
+          },
+        }}
         style={{
-          borderRadius: isExpanded ? "28px" : "9999px",
-          padding: isExpanded ? "2rem" : "1rem 2rem",
-          transition: `border-radius 0.5s ${EASE}, padding 0.5s ${EASE}`,
+          borderRadius: 28,
+          overflow: isExpanded || isDropdownOpen ? "visible" : "hidden",
         }}
       >
         {/* ── Compact bar — always in DOM, fades out ─────────── */}
-        <div
-          style={{
+        <motion.div
+          animate={{
             opacity: isExpanded ? 0 : 1,
             pointerEvents: isExpanded ? "none" : "auto",
-            transition: `opacity 0.2s ease`,
           }}
-          className="flex items-center justify-between w-full"
+          transition={{
+            duration: 0.15,
+            ease: "easeInOut",
+          }}
+          style={{
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            left: 24,
+            right: 24,
+          }}
+          className="flex items-center justify-between"
         >
           {/* Left cluster */}
           <div className="flex items-center gap-4 min-w-0">
@@ -217,156 +264,150 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
             </span>
             <div
               className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/15 text-white shrink-0 transition-colors"
-              style={{ transform: isExpanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.45s " + EASE }}
             >
               <CaretDown className="w-4 h-4" />
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ── Expanded panel — grid-rows height animation ─────── */}
+        {/* ── Expanded panel ── */}
         <div
           style={{
-            display: "grid",
-            gridTemplateRows: isExpanded ? "1fr" : "0fr",
-            marginTop: isExpanded ? "0" : "0",
-            transition: `grid-template-rows 0.5s ${EASE}`,
+            pointerEvents: isExpanded ? "auto" : "none",
           }}
+          className="w-full"
         >
-          <div style={{ overflow: "hidden" }}>
-            {/* Inner opacity wrapper — delayed fade-in */}
+          {/* Inner opacity wrapper — delayed fade-in */}
+          <motion.div
+            animate={{
+              opacity: isExpanded ? 1 : 0,
+              y: isExpanded ? 0 : 16,
+            }}
+            transition={{
+              opacity: { duration: 0.2 },
+              y: { type: "spring", stiffness: 140, damping: 20 },
+            }}
+            className="space-y-6"
+          >
+            {/* Header row */}
             <div
-              style={{
-                opacity: isExpanded ? 1 : 0,
-                transition: `opacity ${isExpanded ? "0.3s" : "0.15s"} ease ${isExpanded ? "0.2s" : "0s"}`,
-              }}
-              className="space-y-6 pt-6"
+              onClick={() => setIsExpanded(false)}
+              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer select-none"
             >
-              {/* Header row */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-4">
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="relative flex h-2 w-2 shrink-0">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                    </span>
-                    <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider">
-                      Repository Name
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <h1 className="text-2xl font-display font-black tracking-tight text-white">
-                      {repo.name || "Git Repository"}
-                    </h1>
-                    <Badge className="px-2.5 py-1 text-[10px] rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/10 uppercase font-mono font-bold">
-                      Analyzed
-                    </Badge>
-                  </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2">
+                  <span className="relative flex h-2 w-2 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                  </span>
+                  <span className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider">
+                    Repository Name
+                  </span>
                 </div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-2xl font-display font-black tracking-tight text-white">
+                    {repo.name || "Git Repository"}
+                  </h1>
+                  <Badge className="px-2.5 py-1 text-[10px] rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/10 uppercase font-mono font-bold">
+                    Analyzed
+                  </Badge>
+                </div>
+              </div>
 
-                <div className="flex items-center gap-2.5">
-                  <div className="relative" ref={dropdownRef}>
-                    <button
-                      disabled={isSwitching}
-                      onClick={e => { e.stopPropagation(); setIsDropdownOpen(v => !v); }}
-                      className="px-3 py-1.5 text-[10px] rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
-                    >
-                      {isSwitching
-                        ? <ArrowsCounterClockwise className="w-3 h-3 text-zinc-400 animate-spin" />
-                        : <GitBranch className="w-3 h-3 text-zinc-400" />}
-                      <span>{repo.branch || "main"}</span>
-                      <CaretDown className="w-3 h-3 text-zinc-400" />
-                    </button>
-                    <AnimatePresence><BranchMenu align="right" /></AnimatePresence>
-                  </div>
-
+              <div className="flex items-center gap-2.5">
+                <div className="relative" ref={dropdownRef}>
                   <button
-                    onClick={e => { e.stopPropagation(); setIsExpanded(false); }}
-                    className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center border border-white/10 transition-colors cursor-pointer"
+                    disabled={isSwitching}
+                    onClick={e => { e.stopPropagation(); setIsDropdownOpen(v => !v); }}
+                    className="px-3 py-1.5 text-[10px] rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
                   >
-                    <CaretDown className="w-3.5 h-3.5 rotate-180" />
+                    {isSwitching
+                      ? <ArrowsCounterClockwise className="w-3 h-3 text-zinc-400 animate-spin" />
+                      : <GitBranch className="w-3 h-3 text-zinc-400" />}
+                    <span>{repo.branch || "main"}</span>
+                    <CaretDown className="w-3 h-3 text-zinc-400" />
                   </button>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="text-xs text-zinc-300 leading-relaxed max-w-3xl">
-                {repo.description || "Comprehensive architectural code reviews, risk analysis, and technical debt visualization for engineering teams."}
-              </p>
-
-              {/* Metadata row */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4 border-t border-white/5">
-                {ownerName && (
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-300 shrink-0">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 mb-0.5">Repository Owner</p>
-                      <p className="text-sm font-bold text-white">@{ownerName}</p>
-                    </div>
-                  </div>
-                )}
-
-                {contributorNames.length > 0 && (
-                  <div
-                    onClick={e => { e.stopPropagation(); setIsModalOpen(true); }}
-                    className="flex items-center gap-3.5 cursor-pointer hover:bg-white/5 p-1.5 rounded-xl transition-all"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-300 shrink-0">
-                      <Users className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 flex items-center gap-1.5 mb-0.5">
-                        Contributors
-                        <span className="font-sans font-semibold bg-white/10 text-white px-1.5 py-0.5 rounded text-[9px] normal-case">
-                          View List
-                        </span>
-                      </p>
-                      <p className="text-sm font-bold text-white truncate">{getContributorsText()}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-center gap-3.5" title={getLanguagesTitle()}>
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-300 shrink-0">
-                    <FileCode className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 mb-0.5">Languages</p>
-                    <p className="text-sm font-bold text-white truncate">{getLanguagesText()}</p>
-                  </div>
+                  <AnimatePresence><BranchMenu align="right" /></AnimatePresence>
                 </div>
 
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-300 shrink-0">
-                    <Calendar className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 mb-0.5">Last Analyzed</p>
-                    <p className="text-sm font-bold text-white">{new Date().toLocaleDateString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Stats grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-white/5">
-                {stats.map((stat, idx) => (
-                  <div key={idx} className="bg-white/5 rounded-xl p-3 border border-white/10 flex flex-col justify-between hover:bg-white/10 transition-colors">
-                    <div className="mb-1.5">
-                      <stat.icon className="w-3.5 h-3.5 text-zinc-400" />
-                    </div>
-                    <div>
-                      <p className="text-[9px] uppercase font-mono font-bold text-zinc-500 mb-0.5">{stat.label}</p>
-                      <p className="text-sm font-bold font-display text-white">{stat.value}</p>
-                    </div>
-                  </div>
-                ))}
+                <button
+                  onClick={e => { e.stopPropagation(); setIsExpanded(false); }}
+                  className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center border border-white/10 transition-colors cursor-pointer"
+                >
+                  <CaretDown className="w-3.5 h-3.5 rotate-180" />
+                </button>
               </div>
             </div>
-          </div>
+
+            {/* Description */}
+            {repo.description && (
+              <p className="text-xs text-zinc-300 leading-relaxed max-w-3xl">
+                {repo.description}
+              </p>
+            )}
+
+            {/* Metadata row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-5 border-t border-white/5">
+              {ownerName && (
+                <div className="flex items-start gap-2.5">
+                  <User className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider mb-0.5">Repository Owner</p>
+                    <p className="text-sm font-bold text-white">@{ownerName}</p>
+                  </div>
+                </div>
+              )}
+
+              {contributorNames.length > 0 && (
+                <div
+                  onClick={e => { e.stopPropagation(); setIsModalOpen(true); }}
+                  className="flex items-start gap-2.5 cursor-pointer hover:bg-white/5 p-1 rounded-lg transition-all"
+                >
+                  <Users className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider flex items-center gap-1.5 mb-0.5">
+                      Contributors
+                      <span className="font-sans font-semibold bg-white/10 text-white px-1.5 py-0.5 rounded text-[8px] normal-case">
+                        View List
+                      </span>
+                    </p>
+                    <p className="text-sm font-bold text-white truncate">{getContributorsText()}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-start gap-2.5" title={getLanguagesTitle()}>
+                <FileCode className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider mb-0.5">Languages</p>
+                  <p className="text-sm font-bold text-white truncate">{getLanguagesText()}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-2.5">
+                <Calendar className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+                <div>
+                  <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider mb-0.5">Last Analyzed</p>
+                  <p className="text-sm font-bold text-white">{new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-5 border-t border-white/5">
+              {stats.map((stat, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 select-none">
+                  <stat.icon className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider mb-0.5">{stat.label}</p>
+                    <p className="text-lg font-display font-black text-white">{stat.value}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Contributors Modal ─────────────────────────────────── */}
       <AnimatePresence>
