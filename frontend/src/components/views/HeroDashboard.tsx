@@ -801,7 +801,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
         <section className="space-y-6 pt-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-display font-black text-text-primary tracking-tight flex items-center gap-2">
-              <Wrench className="w-5 h-5 text-accent" /> AI Codebase Intelligence
+              <Wrench className="w-5 h-5 text-accent" /> Codebase Intelligence
             </h2>
             <span className="text-xs text-text-tertiary font-bold tracking-wider uppercase">Copilot Review</span>
           </div>
@@ -810,67 +810,6 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
             
             {/* Architecture Summary - Spans 8 columns */}
             <div className="lg:col-span-8 space-y-6">
-              <div className="bg-surface-1 rounded-xl p-8 shadow-subtle space-y-4 border border-border-base">
-                <h3 className="text-lg font-display font-bold text-text-primary flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-accent" /> Architectural Summary
-                </h3>
-                <div className="space-y-4">
-                  {parsedAI.architecture.map((line, idx) => {
-                    // Check if it's a note / compile warning
-                    if (line.startsWith(">") || line.toLowerCase().includes("compiled dynamically")) {
-                      const cleanLine = line
-                        .replace(/^>\s*/, "")
-                        .replace(/\[\!NOTE\]/i, "")
-                        .trim();
-                      if (!cleanLine || cleanLine.toLowerCase() === "note") return null;
-                      return (
-                        <div key={idx} className="flex items-start gap-2.5 p-3.5 bg-accent-subtle/30 border border-accent/10 rounded-xl text-xs text-text-secondary">
-                          <Info className="w-4 h-4 text-accent shrink-0 mt-0.5" />
-                          <span>{cleanLine}</span>
-                        </div>
-                      );
-                    }
-                    
-                    // Check if it's a divider
-                    if (line === "---" || line === "--") {
-                      return <hr key={idx} className="border-border-subtle my-2" />;
-                    }
-
-                    // Check if it is a heading/subheading
-                    if (line.startsWith("##") || line.includes("Core Health Indices")) {
-                      const cleanHeading = line.replace(/^#+\s*/, "").trim();
-                      return (
-                        <h4 key={idx} className="text-sm font-display font-bold text-text-primary tracking-tight mt-6 uppercase text-text-tertiary">
-                          {cleanHeading}
-                        </h4>
-                      );
-                    }
-
-                    // Check if it's a key-value metric (like "Repository Health Score: 73.0/100")
-                    if (line.includes(":") && !line.startsWith("http") && !line.startsWith("https")) {
-                      const parts = line.split(":");
-                      const key = parts[0].trim();
-                      const val = parts.slice(1).join(":").trim();
-                      
-                      if (key.length > 0 && key.length < 35 && val.length > 0 && val.length < 120) {
-                        return (
-                          <div key={idx} className="flex items-center justify-between p-3.5 bg-surface-2 rounded-2xl border border-border-base text-sm hover:border-border-strong transition-colors duration-200">
-                            <span className="font-medium text-text-secondary">{key}</span>
-                            <span className="font-bold text-text-primary bg-surface-3 px-2.5 py-1 rounded-xl text-xs border border-border-subtle">{val}</span>
-                          </div>
-                        );
-                      }
-                    }
-
-                    // Fallback default paragraph
-                    return (
-                      <p key={idx} className="text-sm text-text-secondary leading-relaxed">
-                        {line}
-                      </p>
-                    );
-                  })}
-                </div>
-              </div>
 
               {/* Strengths & Weaknesses (Asymmetric Cards) */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -954,97 +893,113 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
               </div>
 
               {/* 3. Landscape Critical Risks section */}
-              <div className="bg-rose-500/[0.03] rounded-xl p-8 shadow-subtle border border-rose-500/10 space-y-6 w-full">
-                <div className="flex items-center gap-2 border-b border-rose-500/10 pb-4">
-                  <WarningCircle className="w-5 h-5 text-rose-600 shrink-0" />
-                  <div>
-                    <h3 className="text-base font-display font-black text-rose-600 uppercase tracking-wider">
-                      Critical Risks Analysis
-                    </h3>
-                    <p className="text-xs text-text-tertiary mt-0.5">Codebase vulnerabilities, resource dependencies, and structural hotspots</p>
-                  </div>
+              <div className="bg-gradient-to-br from-surface-1 to-rose-500/[0.015] rounded-xl p-6 shadow-subtle border border-border-base relative overflow-visible space-y-6 w-full">
+                {/* Background design container */}
+                <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+                  <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-rose-500/[0.08] blur-2xl opacity-75" />
+                  <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.03] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                    <defs>
+                      <pattern id="grid-risks" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                        <path d="M.5 16V.5H16" fill="none" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid-risks)" />
+                  </svg>
                 </div>
-                
-                {(() => {
-                  const riskData = parseRisksToSections(parsedAI.risks);
+
+                <div className="relative z-10 space-y-6">
+                  <div className="flex items-start gap-3 border-b border-border-base pb-3">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/10 flex items-center justify-center text-rose-600 shrink-0 border border-rose-500/15 mt-0.5">
+                      <WarningCircle className="w-4.5 h-4.5" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-display font-black text-text-primary uppercase tracking-wider">
+                        Critical Risks Analysis
+                      </h4>
+                      <p className="text-[11px] text-text-tertiary mt-0.5">Codebase vulnerabilities, resource dependencies, and structural hotspots</p>
+                    </div>
+                  </div>
                   
-                  return (
-                    <div className="space-y-8">
-                      {/* Top Row: Maintainability & Dependency */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pb-6 border-b border-rose-500/10">
-                        {/* Column 1: Codebase Maintainability */}
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-display font-black text-rose-800/80 tracking-wider uppercase border-b border-rose-500/5 pb-2">
-                            Codebase Maintainability
-                          </h4>
-                          <div className="space-y-3">
-                            {riskData.maintainability.map((item, idx) => {
-                              if (item.includes(":")) {
-                                const parts = item.split(":");
-                                const key = parts[0].trim();
-                                const val = parts.slice(1).join(":").trim();
-                                return (
-                                  <div key={idx} className="flex items-start gap-2 text-xs py-1">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0"></span>
-                                    <span className="text-text-secondary leading-relaxed">
-                                      <strong className="text-text-primary">{key}:</strong> {val}
-                                    </span>
-                                  </div>
-                                );
-                              }
-                              return (
-                                <div key={idx} className="flex items-start gap-2 text-xs py-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0"></span>
-                                  <p className="text-text-secondary leading-relaxed">{item}</p>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Column 2: Contributor Dependency */}
-                        <div className="space-y-4">
-                          <h4 className="text-xs font-display font-black text-rose-800/80 tracking-wider uppercase border-b border-rose-500/5 pb-2">
-                            Contributor Dependency
-                          </h4>
-                          <div className="space-y-3">
-                            {riskData.dependency.map((item, idx) => {
-                              if (item.toLowerCase().startsWith("warning") || item.toLowerCase().startsWith("caution")) {
-                                const parts = item.split(":");
-                                const prefix = parts[0].trim();
-                                const message = parts.slice(1).join(":").trim();
-                                
-                                const isWarning = prefix.toLowerCase().startsWith("warning");
-                                const colorClasses = isWarning 
-                                  ? "bg-rose-500/10 border-rose-500/20 text-rose-700" 
-                                  : "bg-amber-500/10 border-amber-500/20 text-amber-700";
-
-                                return (
-                                  <div key={idx} className={`p-3 border rounded-2xl text-[11px] leading-relaxed space-y-1 ${colorClasses}`}>
-                                    <div className="font-bold flex items-center gap-1.5">
-                                      <WarningCircle className="w-3.5 h-3.5 shrink-0" />
-                                      {prefix}
+                  {(() => {
+                    const riskData = parseRisksToSections(parsedAI.risks);
+                    
+                    return (
+                      <div className="space-y-6">
+                        {/* Top Row: Maintainability & Dependency */}
+                        <div className="grid grid-cols-1 gap-4 pb-4 border-b border-border-base">
+                          {/* Column 1: Codebase Maintainability */}
+                          <div className="space-y-2">
+                            <h4 className="text-xs font-display font-black text-text-tertiary tracking-wider uppercase border-b border-border-base/50 pb-1">
+                              Codebase Maintainability
+                            </h4>
+                            <div className="space-y-1">
+                              {riskData.maintainability.map((item, idx) => {
+                                if (item.includes(":")) {
+                                  const parts = item.split(":");
+                                  const key = parts[0].trim();
+                                  const val = parts.slice(1).join(":").trim();
+                                  return (
+                                    <div key={idx} className="text-[13px] font-medium leading-relaxed text-text-primary/85 flex items-start gap-2.5 p-1.5 rounded-lg hover:bg-rose-500/[0.015] transition-all duration-200">
+                                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0"></span>
+                                      <span>
+                                        <strong className="text-text-primary">{key}:</strong> {val}
+                                      </span>
                                     </div>
-                                    <p className="opacity-90">{message}</p>
+                                  );
+                                }
+                                return (
+                                  <div key={idx} className="text-[13px] font-medium leading-relaxed text-text-primary/85 flex items-start gap-2.5 p-1.5 rounded-lg hover:bg-rose-500/[0.015] transition-all duration-200">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0"></span>
+                                    <span>{item}</span>
                                   </div>
                                 );
-                              }
-                              return (
-                                <div key={idx} className="flex items-start gap-2 text-xs py-1">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0"></span>
-                                  <p className="text-text-secondary leading-relaxed">{item}</p>
-                                </div>
-                              );
-                            })}
+                              })}
+                            </div>
+                          </div>
+
+                          {/* Column 2: Contributor Dependency */}
+                          <div className="space-y-2">
+                            <h4 className="text-xs font-display font-black text-text-tertiary tracking-wider uppercase border-b border-border-base/50 pb-1">
+                              Contributor Dependency
+                            </h4>
+                            <div className="space-y-1">
+                              {riskData.dependency.map((item, idx) => {
+                                if (item.toLowerCase().startsWith("warning") || item.toLowerCase().startsWith("caution")) {
+                                  const parts = item.split(":");
+                                  const prefix = parts[0].trim();
+                                  const message = parts.slice(1).join(":").trim();
+                                  
+                                  const isWarning = prefix.toLowerCase().startsWith("warning");
+                                  const colorClasses = isWarning 
+                                    ? "bg-rose-500/10 border-rose-500/20 text-rose-700" 
+                                    : "bg-amber-500/10 border-amber-500/20 text-amber-700";
+
+                                  return (
+                                    <div key={idx} className={`p-2 border rounded-xl text-[11px] leading-relaxed space-y-0.5 ${colorClasses}`}>
+                                      <div className="font-bold flex items-center gap-1.5">
+                                        <WarningCircle className="w-3.5 h-3.5 shrink-0" />
+                                        {prefix}
+                                      </div>
+                                      <p className="opacity-90">{message}</p>
+                                    </div>
+                                  );
+                                }
+                                return (
+                                  <div key={idx} className="text-[13px] font-medium leading-relaxed text-text-primary/85 flex items-start gap-2.5 p-1.5 rounded-lg hover:bg-rose-500/[0.015] transition-all duration-200">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-2 shrink-0"></span>
+                                    <span>{item}</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      {/* Bottom Row: Code Hotspots */}
-                      <div className="space-y-4">
-                        <h4 className="text-xs font-display font-black text-rose-800/80 tracking-wider uppercase border-b border-rose-500/5 pb-2">
-                          Code Hotspots (High Complexity + High Churn)
-                        </h4>
+                        {/* Bottom Row: Code Hotspots */}
+                        <div className="space-y-4">
+                          <h4 className="text-xs font-display font-black text-text-tertiary tracking-wider uppercase border-b border-border-base/50 pb-2">
+                            Code Hotspots (High Complexity + High Churn)
+                          </h4>
                         
                         {riskData.hotspots.length > 0 ? (
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1107,6 +1062,7 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                     </div>
                   );
                 })()}
+                </div>
               </div>
             </div>
 
