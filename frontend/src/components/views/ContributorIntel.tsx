@@ -139,37 +139,147 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
             <Badge variant="outline" className="rounded-lg bg-bg-base">Commits Share</Badge>
           </div>
           
-          <div className="flex-1 w-full text-[10px] font-mono">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={contributors} margin={{ top: 10, right: 10, left: -25, bottom: 10 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-strong)" vertical={false} />
-                <XAxis dataKey="name" stroke="var(--text-tertiary)" tickLine={false} axisLine={false} />
-                <YAxis stroke="var(--text-tertiary)" tickLine={false} axisLine={false} />
-                <Tooltip 
-                  cursor={{ fill: 'var(--bg-surface-2)' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      const data = payload[0].payload;
-                      return (
-                        <div className="bg-surface-1 p-3 rounded-2xl shadow-floating text-xs space-y-1 ring-1 ring-border-base z-50">
-                          <p className="font-bold text-text-primary">{data.name}</p>
-                          <p className="text-text-secondary">{data.commits} commits</p>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Bar dataKey="commits" radius={[8, 8, 0, 0]}>
-                  {contributors?.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={index === 0 ? "var(--color-accent)" : index === 1 ? "var(--color-accent-hover)" : "var(--border-strong)"} 
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="flex-1 w-full flex items-center justify-center p-4">
+            {contributors && contributors.length > 0 ? (
+              <svg viewBox="0 0 800 380" className="w-full h-full select-none">
+                {/* 1. Grid Lines (Horizontal, dashed) */}
+                {(() => {
+                  const y_base = 310;
+                  const max_h = 220;
+                  const gridLines = [0, 0.25, 0.5, 0.75, 1];
+                  return gridLines.map((ratio, idx) => {
+                    const y = y_base - max_h * ratio;
+                    return (
+                      <line
+                        key={idx}
+                        x1="50"
+                        y1={y}
+                        x2="750"
+                        y2={y}
+                        stroke="#27272a"
+                        strokeDasharray="4 4"
+                        strokeWidth="1"
+                      />
+                    );
+                  });
+                })()}
+
+                {/* 2. 3D Columns */}
+                {(() => {
+                  const y_base = 310;
+                  const max_h = 220;
+                  const w = 48;
+                  const skew_x = 12;
+                  const skew_y = 8;
+                  const cap_h = 8;
+                  const numItems = Math.min(contributors.length, 6);
+                  const padding = 120;
+                  const step = numItems > 1 ? (800 - 2 * padding) / (numItems - 1) : 0;
+                  const maxCommits = Math.max(...contributors.map(item => item.commits)) || 1;
+                  const totalCommits = contributors.reduce((sum, item) => sum + item.commits, 0) || 1;
+
+                  return contributors.slice(0, numItems).map((c, index) => {
+                    const x = padding + index * step;
+                    const h = Math.max((c.commits / maxCommits) * max_h, 40);
+                    
+                    const percentVal = ((c.commits / totalCommits) * 100).toFixed(1);
+                    const isHighest = index === 0;
+
+                    // Cap faces colors: Highest gets coral-red, others get dark-gray
+                    const capFrontColor = isHighest ? "#f87171" : "#3f3f46"; // Light red vs grey
+                    const capSideColor = isHighest ? "#ef4444" : "#27272a";  // Main red vs dark grey
+                    const capTopColor = isHighest ? "#dc2626" : "#1e1e2f";   // Deep red vs charcoal
+                    
+                    // Body colors: Premium zinc styling for dark-mode layout
+                    const bodyFrontColor = "#fafafa";
+                    const bodySideColor = "#d4d4d8";
+                    
+                    const strokeColor = "#18181b";
+                    const strokeWidth = "1.5";
+
+                    const bodyFront = `${x - w/2},${y_base} ${x + w/2},${y_base} ${x + w/2},${y_base - h + cap_h} ${x - w/2},${y_base - h + cap_h}`;
+                    const bodySide = `${x + w/2},${y_base} ${x + w/2 + skew_x},${y_base - skew_y} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2},${y_base - h + cap_h}`;
+                    const capFront = `${x - w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h} ${x - w/2},${y_base - h}`;
+                    const capSide = `${x + w/2},${y_base - h + cap_h} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x + w/2},${y_base - h}`;
+                    const capTop = `${x - w/2},${y_base - h} ${x + w/2},${y_base - h} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x - w/2 + skew_x},${y_base - h - skew_y}`;
+                    const shadowPoints = `${x - w/2},${y_base + 3} ${x + w/2},${y_base + 3} ${x + w/2 + skew_x},${y_base + 3 - skew_y} ${x - w/2 + skew_x},${y_base + 3 - skew_y}`;
+
+                    return (
+                      <g 
+                        key={c.email || index} 
+                        className="group cursor-pointer"
+                        onClick={() => setSelectedAuthor(c)}
+                      >
+                        {/* Shadow */}
+                        <polygon points={shadowPoints} fill="rgba(0, 0, 0, 0.45)" filter="blur(2px)" />
+
+                        {/* Column body front */}
+                        <polygon 
+                          points={bodyFront} 
+                          fill={bodyFrontColor} 
+                          stroke={strokeColor} 
+                          strokeWidth={strokeWidth}
+                          className="transition-all duration-300 group-hover:fill-white"
+                        />
+
+                        {/* Column body side */}
+                        <polygon 
+                          points={bodySide} 
+                          fill={bodySideColor} 
+                          stroke={strokeColor} 
+                          strokeWidth={strokeWidth}
+                          className="transition-all duration-300 group-hover:fill-zinc-200"
+                        />
+
+                        {/* Cap front */}
+                        <polygon points={capFront} fill={capFrontColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+                        
+                        {/* Cap side */}
+                        <polygon points={capSide} fill={capSideColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+                        
+                        {/* Cap top */}
+                        <polygon points={capTop} fill={capTopColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+
+                        {/* Percentage Label */}
+                        <text 
+                          x={x + skew_x / 2} 
+                          y={y_base - h - skew_y - 12} 
+                          textAnchor="middle" 
+                          fill={isHighest ? "#ef4444" : "#ffffff"} 
+                          className="font-mono font-black text-[13px] tracking-tight"
+                        >
+                          {percentVal}%
+                        </text>
+
+                        {/* Commits Badge */}
+                        <text 
+                          x={x + skew_x / 2} 
+                          y={y_base - h - skew_y - 2} 
+                          textAnchor="middle" 
+                          fill="#71717a" 
+                          className="font-mono text-[9px]"
+                        >
+                          {c.commits} commits
+                        </text>
+
+                        {/* Contributor Name */}
+                        <text 
+                          x={x + skew_x / 2} 
+                          y={y_base + 26} 
+                          textAnchor="middle" 
+                          fill="#a1a1aa" 
+                          className="font-sans text-[11px] font-bold tracking-tight group-hover:fill-accent transition-colors"
+                        >
+                          {c.name.split(" ")[0]}
+                        </text>
+                      </g>
+                    );
+                  });
+                })()}
+              </svg>
+            ) : (
+              <div className="text-zinc-500 text-xs italic">No contributions found to display.</div>
+            )}
           </div>
         </div>
 
