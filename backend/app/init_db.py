@@ -23,6 +23,26 @@ def init_db():
         # Ignore if column already exists
         pass
         
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text("ALTER TABLE repositories ADD COLUMN last_analyzed_at TIMESTAMP;"))
+            conn.commit()
+            print("Successfully added last_analyzed_at column to repositories table.")
+    except Exception as e:
+        # Ignore if column already exists
+        pass
+        
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text("ALTER TABLE files ADD COLUMN content TEXT;"))
+            conn.commit()
+            print("Successfully added content column to files table.")
+    except Exception as e:
+        # Ignore if column already exists
+        pass
+        
     print("Database tables initialized successfully!")
 
 if __name__ == "__main__":

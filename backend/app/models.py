@@ -16,6 +16,7 @@ class Repository(Base):
     error_message = Column(Text, nullable=True)
     branch = Column(String, default="main", nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    last_analyzed_at = Column(DateTime(timezone=True), nullable=True)
 
     # Relationships
     contributors = relationship("Contributor", back_populates="repository", cascade="all, delete-orphan")
@@ -63,6 +64,7 @@ class File(Base):
     churn = Column(Integer, default=0, nullable=False)
     hotspot_score = Column(Float, default=0.0, nullable=False)
     owner = Column(String, nullable=True)
+    content = Column(Text, nullable=True)
 
     # Relationships
     repository = relationship("Repository", back_populates="files")

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Drawer } from "@/components/ui/Drawer";
-import { Users, Warning, CheckCircle, GitCommit, Info, User, Envelope, ShieldWarning, Cpu } from "@phosphor-icons/react";
+import { Users, Warning, CheckCircle, GitCommit, Info, User, Envelope, ShieldWarning, Cpu, Folder, CaretDown, FileCode } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,28 @@ const getLossRiskLabel = (score: number) => {
 
 export function ContributorIntel({ contributors, busFactor }: ContributorIntelProps) {
   const [selectedAuthor, setSelectedAuthor] = useState<any>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+
+  const toggleFolder = (folder: string) => {
+    setExpandedFolders(prev => ({
+      ...prev,
+      [folder]: !prev[folder]
+    }));
+  };
+
+  const getFolderGroups = (files: string[]) => {
+    const groups: Record<string, string[]> = {};
+    files.forEach(file => {
+      const segments = file.split("/");
+      const fileName = segments.pop() || "";
+      const folderPath = segments.join("/") || "Root";
+      if (!groups[folderPath]) {
+        groups[folderPath] = [];
+      }
+      groups[folderPath].push(fileName);
+    });
+    return groups;
+  };
 
   // Derive Mocked timelines & owned files for the selection drawer to show rich profiles
   const getAuthorDetails = (author: any) => {
@@ -32,11 +54,13 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
       ? ["Core Architecture", "Database Migrations", "API Endpoints"] 
       : ["UI Components", "Unit Testing", "Styling Systems"];
 
-    const mockFiles = [
-      "src/app/page.tsx",
-      "src/components/layout/AppShell.tsx",
-      "src/utils/api.ts"
-    ];
+    const mockFiles = author.owned_files && author.owned_files.length > 0
+      ? author.owned_files
+      : [
+          "src/app/page.tsx",
+          "src/components/layout/AppShell.tsx",
+          "src/utils/api.ts"
+        ];
 
     return {
       riskScore,
@@ -253,13 +277,54 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
             {/* Owned / Primary Files */}
             <div className="space-y-3 pt-2 border-t border-border-base">
               <h5 className="text-xs font-bold font-mono uppercase tracking-wider text-text-tertiary">Primary Owned Files</h5>
-              <div className="space-y-2">
-                {authorDetails.mockFiles.map((file, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-3 bg-surface-2 rounded-xl text-xs">
-                    <Cpu className="w-4 h-4 text-text-tertiary" />
-                    <span className="font-mono text-text-secondary">{file}</span>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                {(() => {
+                  const filesList = authorDetails.mockFiles || [];
+                  if (filesList.length === 0) {
+                    return (
+                      <div className="py-8 text-center text-text-tertiary text-xs italic">
+                        No owned files found.
+                      </div>
+                    );
+                  }
+                  
+                  const folderGroups = getFolderGroups(filesList);
+                  return Object.keys(folderGroups).sort().map(folder => {
+                    const isOpen = expandedFolders[folder] !== false;
+                    const folderFiles = folderGroups[folder];
+                    
+                    return (
+                      <div key={folder} className="border border-border-base rounded-2xl overflow-hidden bg-surface-2/45">
+                        {/* Folder Header */}
+                        <button
+                          onClick={() => toggleFolder(folder)}
+                          className="w-full px-4 py-3 flex items-center justify-between text-xs font-bold bg-surface-2 hover:bg-surface-3 transition-colors text-left"
+                        >
+                          <div className="flex items-center gap-2 truncate">
+                            <Folder className="w-4 h-4 text-accent shrink-0" />
+                            <span className="font-mono text-text-primary truncate">{folder}</span>
+                            <Badge variant="outline" className="px-1.5 py-0.5 rounded text-[9px] shrink-0 font-normal">
+                              {folderFiles.length} {folderFiles.length === 1 ? 'file' : 'files'}
+                            </Badge>
+                          </div>
+                          <CaretDown className={cn("w-3.5 h-3.5 text-text-tertiary shrink-0 transition-transform duration-200", isOpen && "rotate-180")} />
+                        </button>
+                        
+                        {/* Folder Files List */}
+                        {isOpen && (
+                          <div className="p-2.5 space-y-1 bg-surface-1 border-t border-border-base/50 divide-y divide-border-subtle/30">
+                            {folderFiles.map((fileName, idx) => (
+                              <div key={idx} className="flex items-center gap-2.5 py-2 px-2.5 text-xs text-text-secondary hover:text-text-primary transition-colors">
+                                <FileCode className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
+                                <span className="font-mono truncate">{fileName}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
 

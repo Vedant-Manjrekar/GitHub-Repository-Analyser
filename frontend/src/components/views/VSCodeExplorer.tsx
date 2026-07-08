@@ -156,28 +156,37 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
 
               </div>
 
-              {/* IDE Code mock section */}
+              {/* IDE Code preview section */}
               <div className="rounded-2xl overflow-hidden shadow-subtle ring-1 ring-border-base/50">
                 <div className="h-10 bg-slate-900 px-4 flex items-center justify-between text-xs text-slate-400 font-mono select-none">
-                  <span>code_preview ({selectedFile.path.split(".").pop()})</span>
+                  <span>{selectedFile.path.split("/").pop()} ({selectedFile.path.split(".").pop()})</span>
                   <div className="flex gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
                     <span className="w-2.5 h-2.5 rounded-full bg-slate-700"></span>
                   </div>
                 </div>
-                <div className="bg-slate-950 p-5 font-mono text-xs text-slate-300 leading-relaxed overflow-x-auto select-all">
-                  <div className="flex gap-4">
-                    <div className="text-slate-600 select-none text-right w-6">
-                      1<br />2<br />3<br />4<br />5
+                <div className="bg-slate-950 p-5 font-mono text-xs text-slate-300 leading-relaxed overflow-x-auto select-all max-h-[360px] overflow-y-auto custom-scrollbar">
+                  {selectedFile.content ? (
+                    <div className="flex gap-4">
+                      {/* Line Numbers */}
+                      <div className="text-slate-600 select-none text-right w-8 border-r border-slate-800 pr-2">
+                        {selectedFile.content.split("\n").map((_: string, i: number) => (
+                          <React.Fragment key={i}>
+                            {i + 1}
+                            <br />
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      {/* File Content */}
+                      <pre className="text-slate-300 whitespace-pre font-mono text-left">
+                        {selectedFile.content}
+                      </pre>
                     </div>
-                    <div>
-                      <span className="text-pink-400">import</span> React, &#123; useState &#125; <span className="text-pink-400">from</span> <span className="text-emerald-400">"react"</span>;<br />
-                      <span className="text-pink-400">export default function</span> <span className="text-blue-400">Module</span>() &#123;<br />
-                      &nbsp;&nbsp;<span className="text-slate-400">// Logical branches in this file exceed limits</span><br />
-                      &nbsp;&nbsp;<span className="text-pink-400">return</span> &lt;<span className="text-blue-400">div</span>&gt;Optimizing module properties...&lt;/<span className="text-blue-400">div</span>&gt;;<br />
-                      &#125;
+                  ) : (
+                    <div className="py-8 text-center text-slate-500 italic">
+                      No content available for this file.
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
 

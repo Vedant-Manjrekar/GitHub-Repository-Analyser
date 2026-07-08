@@ -21,6 +21,7 @@ class RepositoryResponse(BaseSchema):
     error_message: Optional[str] = None
     created_at: datetime
     branch: Optional[str] = "main"
+    last_analyzed_at: Optional[datetime] = None
 
 # --- Contributor Schemas ---
 class ContributorResponse(BaseSchema):
@@ -29,6 +30,7 @@ class ContributorResponse(BaseSchema):
     name: str
     email: str
     commits: int
+    owned_files: Optional[List[str]] = None
 
 # --- Commit Schemas ---
 class CommitResponse(BaseSchema):
@@ -50,6 +52,7 @@ class FileResponse(BaseSchema):
     churn: int
     hotspot_score: float
     owner: Optional[str] = None
+    content: Optional[str] = None
 
 # --- Repository Score Schemas ---
 class RepositoryScoreResponse(BaseSchema):

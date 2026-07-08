@@ -102,3 +102,14 @@ export async function switchRepositoryBranch(repoId: string, branch: string) {
   }
   return res.json();
 }
+
+export async function restartAnalysis(repoId: string) {
+  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}`, {
+    method: "POST",
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Failed to restart analysis.");
+  }
+  return res.json();
+}

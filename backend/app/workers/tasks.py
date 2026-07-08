@@ -1,7 +1,9 @@
 import os
 import sys
 import traceback
+import shutil
 from celery import Celery
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 # Add root folder to python path to allow absolute imports in celery workers
@@ -117,6 +119,15 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
         # Store Files in database
         files_db_list = []
         for f in hotspot_results:
+            file_abs_path = os.path.join(repo_dir, f["path"])
+            content_str = None
+            try:
+                if os.path.exists(file_abs_path) and os.path.isfile(file_abs_path):
+                    with open(file_abs_path, "r", encoding="utf-8", errors="ignore") as file_content_f:
+                        content_str = file_content_f.read()
+            except Exception as read_err:
+                print(f"Warning: Failed to read content of file {f['path']}: {read_err}")
+
             file_model = File(
                 repository_id=repo.id,
                 path=f["path"],
@@ -124,7 +135,8 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
                 complexity=f["complexity"],
                 churn=f["churn"],
                 hotspot_score=f["hotspot_score"],
-                owner=f["owner"]
+                owner=f["owner"],
+                content=content_str
             )
             db.add(file_model)
             files_db_list.append(file_model)
@@ -166,8 +178,18 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
         
         # 9. Update Repository status to completed
         repo.status = "completed"
+        repo.last_analyzed_at = func.now()
         db.commit()
         print(f"Successfully completed analysis pipeline for {repo.name} ({repo_id})")
+        
+        # Clean up repository from disk
+        if repo_dir and os.path.exists(repo_dir):
+            try:
+                shutil.rmtree(repo_dir)
+                print(f"Deleted repository directory after successful analysis: {repo_dir}")
+            except Exception as e:
+                print(f"Warning: Failed to delete repository directory: {e}")
+                
         return True
         
     except Exception as e:
@@ -182,9 +204,20 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
             if repo:
                 repo.status = "failed"
                 repo.error_message = str(e)
+                repo.last_analyzed_at = func.now()
                 db.commit()
         except Exception as db_err:
             print(f"Error saving failed status to database: {db_err}")
+            
+        # Clean up repository from disk if it exists
+        try:
+            from app.git.clone import get_repo_dir
+            target_dir = get_repo_dir(repo_id)
+            if os.path.exists(target_dir):
+                shutil.rmtree(target_dir)
+                print(f"Deleted repository directory after failed analysis: {target_dir}")
+        except Exception as clean_err:
+            print(f"Warning: Failed to delete repository directory on failure: {clean_err}")
             
         return False
         

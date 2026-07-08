@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
   GitBranch, Database, Calendar, Users, FileCode, CheckCircle, User,
-  CaretDown, ArrowsCounterClockwise,
+  CaretDown, ArrowsCounterClockwise, WarningCircle
 } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/Badge";
-import { getRepositoryBranches, switchRepositoryBranch } from "@/utils/api";
+import { getRepositoryBranches, switchRepositoryBranch, restartAnalysis } from "@/utils/api";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -31,6 +31,23 @@ const getFriendlyLanguage = (ext: string) => {
 
 const EASE = "cubic-bezier(0.32, 0.72, 0, 1)"; // Apple-style ease
 
+const formatLastAnalyzed = (dateStr?: string) => {
+  if (!dateStr) return "Never";
+  try {
+    const d = new Date(dateStr);
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  } catch {
+    return dateStr;
+  }
+};
+
 export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
   const repo = dashboard?.repository || {};
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,7 +55,25 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
   const [branches, setBranches] = useState<string[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSwitching, setIsSwitching] = useState(false);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleReanalyze = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsReanalyzing(true);
+    try {
+      await restartAnalysis(repo.id);
+      window.location.search = `?repoId=${repo.id}`;
+    } catch (err: any) {
+      setIsReanalyzing(false);
+      alert(`Failed to restart analysis: ${err.message || err}`);
+    }
+  };
+
+  const lastAnalyzedDate = repo.last_analyzed_at || repo.created_at;
+  const isOutdated = repo.repo_url && lastAnalyzedDate
+    ? (new Date().getTime() - new Date(lastAnalyzedDate).getTime()) > 3 * 24 * 60 * 60 * 1000
+    : false;
 
   useEffect(() => {
     if (repo?.id) {
@@ -388,7 +423,21 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
                 <Calendar className="w-4 h-4 text-zinc-400 mt-0.5 shrink-0" />
                 <div>
                   <p className="text-[10px] uppercase font-mono font-bold text-zinc-400 tracking-wider mb-0.5">Last Analyzed</p>
-                  <p className="text-sm font-bold text-white">{new Date().toLocaleDateString()}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <p className="text-sm font-bold text-white" title={repo.last_analyzed_at || repo.created_at}>
+                      {formatLastAnalyzed(repo.last_analyzed_at || repo.created_at)}
+                    </p>
+                    {repo.repo_url && (
+                      <button
+                        onClick={handleReanalyze}
+                        disabled={isReanalyzing}
+                        className="p-1 rounded hover:bg-white/10 text-zinc-400 hover:text-white transition-colors cursor-pointer disabled:opacity-50"
+                        title="Re-analyze repository"
+                      >
+                        <ArrowsCounterClockwise className={cn("w-3.5 h-3.5", isReanalyzing && "animate-spin")} />
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -408,6 +457,16 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* Outdated warning banner */}
+      {isOutdated && (
+        <div className="mt-4 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/15 text-amber-500/90 text-xs select-none">
+          <WarningCircle className="w-4.5 h-4.5 shrink-0 text-amber-500 animate-pulse-slow" />
+          <span>
+            Analysis may be outdated. Repository contents may have changed since the last analysis.
+          </span>
+        </div>
+      )}
 
       {/* ── Contributors Modal ─────────────────────────────────── */}
       <AnimatePresence>
