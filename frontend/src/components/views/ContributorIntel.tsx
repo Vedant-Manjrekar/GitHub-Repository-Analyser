@@ -133,7 +133,7 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Recharts Commit distribution bar chart - Spans 8 Columns */}
-        <div className="lg:col-span-8 flex flex-col h-[450px] bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base">
+        <div className="lg:col-span-8 flex flex-col h-[400px] bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base">
           <div className="flex items-center justify-between border-b border-border-base pb-3 mb-4">
             <h3 className="text-base font-display font-bold text-text-primary">Contribution Timeline Distribution</h3>
             <Badge variant="outline" className="rounded-lg bg-bg-base">Commits Share</Badge>
@@ -141,142 +141,257 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
           
           <div className="flex-1 w-full flex items-center justify-center p-4">
             {contributors && contributors.length > 0 ? (
-              <svg viewBox="0 0 800 380" className="w-full h-full select-none">
-                {/* 1. Grid Lines (Horizontal, dashed) */}
-                {(() => {
-                  const y_base = 310;
-                  const max_h = 220;
-                  const gridLines = [0, 0.25, 0.5, 0.75, 1];
-                  return gridLines.map((ratio, idx) => {
-                    const y = y_base - max_h * ratio;
-                    return (
-                      <line
-                        key={idx}
-                        x1="50"
-                        y1={y}
-                        x2="750"
-                        y2={y}
-                        stroke="#27272a"
-                        strokeDasharray="4 4"
-                        strokeWidth="1"
-                      />
-                    );
-                  });
-                })()}
+              (() => {
+                const y_base = 210;
+                const max_h = 160;
+                const w = 48;
+                const skew_x = 12;
+                const skew_y = 8;
+                const cap_h = 8;
+                const numItems = Math.min(contributors.length, 6);
+                
+                // Dynamically calculate spacing and bounds based on contributor count to center chart layout
+                const desiredStep = numItems > 1 ? Math.min(130, 580 / (numItems - 1)) : 130;
+                const plotWidth = numItems > 1 ? desiredStep * (numItems - 1) : w;
+                const plotStart = (800 - plotWidth) / 2;
+                
+                const x_axis_start = plotStart - 40;
+                const x_axis_end = plotStart + plotWidth + 40;
 
-                {/* 2. 3D Columns */}
-                {(() => {
-                  const y_base = 310;
-                  const max_h = 220;
-                  const w = 48;
-                  const skew_x = 12;
-                  const skew_y = 8;
-                  const cap_h = 8;
-                  const numItems = Math.min(contributors.length, 6);
-                  const padding = 120;
-                  const step = numItems > 1 ? (800 - 2 * padding) / (numItems - 1) : 0;
-                  const maxCommits = Math.max(...contributors.map(item => item.commits)) || 1;
-                  const totalCommits = contributors.reduce((sum, item) => sum + item.commits, 0) || 1;
+                const maxCommits = Math.max(...contributors.map(item => item.commits)) || 1;
+                const totalCommits = contributors.reduce((sum, item) => sum + item.commits, 0) || 1;
 
-                  return contributors.slice(0, numItems).map((c, index) => {
-                    const x = padding + index * step;
-                    const h = Math.max((c.commits / maxCommits) * max_h, 40);
-                    
-                    const percentVal = ((c.commits / totalCommits) * 100).toFixed(1);
-                    const isHighest = index === 0;
+                return (
+                  <svg viewBox="0 0 800 400" className="w-full h-full select-none">
+                    <defs>
+                      {/* Modern bright zinc linear gradients for clean 3D body depth */}
+                      <linearGradient id="bodyFront" x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stopColor="#e4e4e7" />
+                        <stop offset="100%" stopColor="#ffffff" />
+                      </linearGradient>
+                      <linearGradient id="bodySide" x1="0%" y1="100%" x2="0%" y2="0%">
+                        <stop offset="0%" stopColor="#a1a1aa" />
+                        <stop offset="100%" stopColor="#d4d4d8" />
+                      </linearGradient>
+                    </defs>
 
-                    // Cap faces colors: Highest gets coral-red, others get dark-gray
-                    const capFrontColor = isHighest ? "#f87171" : "#3f3f46"; // Light red vs grey
-                    const capSideColor = isHighest ? "#ef4444" : "#27272a";  // Main red vs dark grey
-                    const capTopColor = isHighest ? "#dc2626" : "#1e1e2f";   // Deep red vs charcoal
-                    
-                    // Body colors: Premium zinc styling for dark-mode layout
-                    const bodyFrontColor = "#fafafa";
-                    const bodySideColor = "#d4d4d8";
-                    
-                    const strokeColor = "#18181b";
-                    const strokeWidth = "1.5";
+                    {/* 1. Grid Lines (Horizontal, dashed) */}
+                    {(() => {
+                      const gridLines = [0, 0.25, 0.5, 0.75, 1];
+                      return gridLines.map((ratio, idx) => {
+                        const y = y_base - max_h * ratio;
+                        return (
+                          <line
+                            key={idx}
+                            x1={x_axis_start}
+                            y1={y}
+                            x2={x_axis_end}
+                            y2={y}
+                            stroke="rgba(255, 255, 255, 0.04)"
+                            strokeDasharray="4 4"
+                            strokeWidth="1"
+                          />
+                        );
+                      });
+                    })()}
 
-                    const bodyFront = `${x - w/2},${y_base} ${x + w/2},${y_base} ${x + w/2},${y_base - h + cap_h} ${x - w/2},${y_base - h + cap_h}`;
-                    const bodySide = `${x + w/2},${y_base} ${x + w/2 + skew_x},${y_base - skew_y} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2},${y_base - h + cap_h}`;
-                    const capFront = `${x - w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h} ${x - w/2},${y_base - h}`;
-                    const capSide = `${x + w/2},${y_base - h + cap_h} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x + w/2},${y_base - h}`;
-                    const capTop = `${x - w/2},${y_base - h} ${x + w/2},${y_base - h} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x - w/2 + skew_x},${y_base - h - skew_y}`;
-                    const shadowPoints = `${x - w/2},${y_base + 3} ${x + w/2},${y_base + 3} ${x + w/2 + skew_x},${y_base + 3 - skew_y} ${x - w/2 + skew_x},${y_base + 3 - skew_y}`;
+                    {/* 2. Y-Axis and Ticks / Labels */}
+                    {(() => {
+                      const ticks = [
+                        { ratio: 0, label: "0%" },
+                        { ratio: 0.25, label: "25%" },
+                        { ratio: 0.5, label: "50%" },
+                        { ratio: 0.75, label: "75%" },
+                        { ratio: 1, label: "100%" }
+                      ];
+                      return (
+                        <g>
+                          {/* Y-Axis Line */}
+                          <line x1={x_axis_start} y1={y_base} x2={x_axis_start} y2="50" stroke="#3f3f46" strokeWidth="1.5" />
+                          {/* Y-Axis Title with dynamic coordinate centering */}
+                          <text 
+                            x={x_axis_start - 45} 
+                            y="135" 
+                            transform={`rotate(-90 ${x_axis_start - 45} 135)`} 
+                            textAnchor="middle" 
+                            fill="#71717a" 
+                            fontSize="9"
+                            className="font-sans font-bold uppercase tracking-wider"
+                          >
+                            Commit Share
+                          </text>
+                          {ticks.map((t, idx) => {
+                            const y = y_base - max_h * t.ratio;
+                            return (
+                              <g key={idx}>
+                                {/* Tick mark */}
+                                <line x1={x_axis_start - 6} y1={y} x2={x_axis_start} y2={y} stroke="#3f3f46" strokeWidth="1.5" />
+                                {/* Label */}
+                                <text 
+                                  x={x_axis_start - 12} 
+                                  y={y + 4} 
+                                  textAnchor="end" 
+                                  fill="#71717a" 
+                                  fontSize="9"
+                                  className="font-mono font-medium"
+                                >
+                                  {t.label}
+                                </text>
+                              </g>
+                            );
+                          })}
+                        </g>
+                      );
+                    })()}
 
-                    return (
-                      <g 
-                        key={c.email || index} 
-                        className="group cursor-pointer"
-                        onClick={() => setSelectedAuthor(c)}
-                      >
-                        {/* Shadow */}
-                        <polygon points={shadowPoints} fill="rgba(0, 0, 0, 0.45)" filter="blur(2px)" />
+                    {/* 3. X-Axis and Labels */}
+                    <line x1={x_axis_start} y1={y_base} x2={x_axis_end} y2={y_base} stroke="#3f3f46" strokeWidth="1.5" />
+                    <text 
+                      x={(x_axis_start + x_axis_end) / 2} 
+                      y="260" 
+                      textAnchor="middle" 
+                      fill="#71717a" 
+                      fontSize="9"
+                      className="font-sans font-bold uppercase tracking-wider"
+                    >
+                      Contributors
+                    </text>
 
-                        {/* Column body front */}
-                        <polygon 
-                          points={bodyFront} 
-                          fill={bodyFrontColor} 
-                          stroke={strokeColor} 
-                          strokeWidth={strokeWidth}
-                          className="transition-all duration-300 group-hover:fill-white"
-                        />
+                    {/* 4. 3D Columns and X Ticks */}
+                    {contributors.slice(0, numItems).map((c, index) => {
+                      const x = plotStart + index * desiredStep;
+                      const h = Math.max((c.commits / maxCommits) * max_h, 35);
+                      
+                      const percentVal = ((c.commits / totalCommits) * 100).toFixed(1);
+                      const isHighest = index === 0;
 
-                        {/* Column body side */}
-                        <polygon 
-                          points={bodySide} 
-                          fill={bodySideColor} 
-                          stroke={strokeColor} 
-                          strokeWidth={strokeWidth}
-                          className="transition-all duration-300 group-hover:fill-zinc-200"
-                        />
+                      // Cap faces: Highest gets vibrant coral-red, others get dark metallic zinc-charcoal
+                      const capFrontColor = isHighest ? "#ff6b6b" : "#3f3f46"; // coral-red vs charcoal
+                      const capSideColor = isHighest ? "#fa5252" : "#27272a";  // dark coral vs dark grey
+                      const capTopColor = isHighest ? "#ffa8a8" : "#52525b";   // light coral vs medium grey
+                      
+                      const bodyFrontColor = "url(#bodyFront)";
+                      const bodySideColor = "url(#bodySide)";
+                      
+                      const strokeColor = "#27272a";
+                      const strokeWidth = "1.2";
 
-                        {/* Cap front */}
-                        <polygon points={capFront} fill={capFrontColor} stroke={strokeColor} strokeWidth={strokeWidth} />
-                        
-                        {/* Cap side */}
-                        <polygon points={capSide} fill={capSideColor} stroke={strokeColor} strokeWidth={strokeWidth} />
-                        
-                        {/* Cap top */}
-                        <polygon points={capTop} fill={capTopColor} stroke={strokeColor} strokeWidth={strokeWidth} />
+                      const bodyFront = `${x - w/2},${y_base} ${x + w/2},${y_base} ${x + w/2},${y_base - h + cap_h} ${x - w/2},${y_base - h + cap_h}`;
+                      const bodySide = `${x + w/2},${y_base} ${x + w/2 + skew_x},${y_base - skew_y} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2},${y_base - h + cap_h}`;
+                      const capFront = `${x - w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h} ${x - w/2},${y_base - h}`;
+                      const capSide = `${x + w/2},${y_base - h + cap_h} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x + w/2},${y_base - h}`;
+                      const capTop = `${x - w/2},${y_base - h} ${x + w/2},${y_base - h} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x - w/2 + skew_x},${y_base - h - skew_y}`;
+                      const shadowPoints = `${x - w/2},${y_base + 3} ${x + w/2},${y_base + 3} ${x + w/2 + skew_x},${y_base + 3 - skew_y} ${x - w/2 + skew_x},${y_base + 3 - skew_y}`;
 
-                        {/* Percentage Label */}
-                        <text 
-                          x={x + skew_x / 2} 
-                          y={y_base - h - skew_y - 12} 
-                          textAnchor="middle" 
-                          fill={isHighest ? "#ef4444" : "#ffffff"} 
-                          className="font-mono font-black text-[13px] tracking-tight"
+                      // Dynamic text for commit count inside the column face
+                      const commitsText = h > 65 ? `${c.commits} commits` : `${c.commits}`;
+
+                      // Truncate name helper to prevent overlapping on dynamic/narrow sizes
+                      const displayName = c.name.split(" ")[0];
+                      const truncatedName = displayName.length > 8 ? displayName.substring(0, 7) + ".." : displayName;
+
+                      return (
+                        <g 
+                          key={c.email || index} 
+                          className="group cursor-pointer"
+                          onClick={() => setSelectedAuthor(c)}
                         >
-                          {percentVal}%
-                        </text>
+                          {/* Shadow */}
+                          <polygon points={shadowPoints} fill="rgba(0, 0, 0, 0.4)" filter="blur(2px)" />
 
-                        {/* Commits Badge */}
-                        <text 
-                          x={x + skew_x / 2} 
-                          y={y_base - h - skew_y - 2} 
-                          textAnchor="middle" 
-                          fill="#71717a" 
-                          className="font-mono text-[9px]"
-                        >
-                          {c.commits} commits
-                        </text>
+                          {/* Column body front */}
+                          <polygon 
+                            points={bodyFront} 
+                            fill={bodyFrontColor} 
+                            stroke={strokeColor} 
+                            strokeWidth={strokeWidth}
+                            className="transition-all duration-300 group-hover:brightness-105"
+                          />
 
-                        {/* Contributor Name */}
-                        <text 
-                          x={x + skew_x / 2} 
-                          y={y_base + 26} 
-                          textAnchor="middle" 
-                          fill="#a1a1aa" 
-                          className="font-sans text-[11px] font-bold tracking-tight group-hover:fill-accent transition-colors"
-                        >
-                          {c.name.split(" ")[0]}
-                        </text>
-                      </g>
-                    );
-                  });
-                })()}
-              </svg>
+                          {/* Column body side */}
+                          <polygon 
+                            points={bodySide} 
+                            fill={bodySideColor} 
+                            stroke={strokeColor} 
+                            strokeWidth={strokeWidth}
+                            className="transition-all duration-300 group-hover:brightness-105"
+                          />
+
+                          {/* Cap front */}
+                          <polygon 
+                            points={capFront} 
+                            fill={capFrontColor} 
+                            stroke={strokeColor} 
+                            strokeWidth={strokeWidth}
+                          />
+                          
+                          {/* Cap side */}
+                          <polygon 
+                            points={capSide} 
+                            fill={capSideColor} 
+                            stroke={strokeColor} 
+                            strokeWidth={strokeWidth}
+                          />
+                          
+                          {/* Cap top */}
+                          <polygon 
+                            points={capTop} 
+                            fill={capTopColor} 
+                            stroke={strokeColor} 
+                            strokeWidth={strokeWidth}
+                          />
+
+                          {/* X-Axis Tick */}
+                          <line 
+                            x1={x + skew_x / 2} 
+                            y1={y_base} 
+                            x2={x + skew_x / 2} 
+                            y2={y_base + 6} 
+                            stroke="#3f3f46" 
+                            strokeWidth="1.5" 
+                          />
+
+                          {/* Percentage Label - Floating with proper spacing above the cap */}
+                          <text 
+                            x={x + skew_x / 2} 
+                            y={y_base - h - skew_y - 12} 
+                            textAnchor="middle" 
+                            fill={isHighest ? "#ff6b6b" : "#ffffff"} 
+                            fontSize="11"
+                            className="font-mono font-black tracking-tight"
+                          >
+                            {percentVal}%
+                          </text>
+
+                          {/* Commits Label - Written directly on the body front face */}
+                          <text 
+                            x={x} 
+                            y={y_base - (h - cap_h) / 2 + 4} 
+                            textAnchor="middle" 
+                            fill="#18181b" 
+                            fontSize="9"
+                            className="font-mono font-bold pointer-events-none text-center"
+                          >
+                            {commitsText}
+                          </text>
+
+                          {/* Contributor Name */}
+                          <text 
+                            x={x + skew_x / 2} 
+                            y={y_base + 24} 
+                            textAnchor="middle" 
+                            fill="#a1a1aa" 
+                            fontSize="10"
+                            className="font-sans font-bold tracking-tight group-hover:fill-accent transition-colors"
+                          >
+                            {truncatedName}
+                          </text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                );
+              })()
             ) : (
               <div className="text-zinc-500 text-xs italic">No contributions found to display.</div>
             )}
@@ -284,7 +399,7 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
         </div>
 
         {/* Contributor list sidebar - Spans 4 Columns */}
-        <Card className="lg:col-span-4 flex flex-col h-[450px] shadow-subtle ring-1 ring-border-base/50">
+        <Card className="lg:col-span-4 flex flex-col h-[400px] shadow-subtle ring-1 ring-border-base/50">
           <CardHeader className="border-b border-border-base bg-surface-2 py-4">
             <CardTitle className="text-sm flex justify-between items-center">
               Active Contributors
