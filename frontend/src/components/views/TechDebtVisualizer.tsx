@@ -366,264 +366,171 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
         </Card>
       </div>
 
-      {/* Advanced Filters Bar */}
-      <div className="bg-surface-1 p-5 rounded-xl border border-border-base shadow-subtle space-y-4">
-        <div className="flex flex-wrap items-center gap-4">
-          {/* Search path */}
-          <div className="relative flex-1 min-w-[200px]">
-            <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
-            <input 
-              type="text" 
-              placeholder="Search file path..."
-              value={searchFilter}
-              onChange={e => setSearchFilter(e.target.value)}
-              className="w-full bg-surface-1 border border-border-strong rounded-xl pl-10 pr-4 py-2 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle placeholder:text-text-tertiary/60"
-            />
-          </div>
+      {/* Outer wrapper */}
+      <div className="space-y-8">
 
-          {/* Directory Filter */}
-          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <Stack className="w-3.5 h-3.5 text-text-tertiary" />
-            <span className="font-semibold">Directory:</span>
-            <select
-              value={dirFilter}
-              onChange={e => setDirFilter(e.target.value)}
-              className="bg-surface-1 border border-border-strong rounded-xl px-2.5 py-1 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle cursor-pointer"
-            >
-              <option value="all">All Directories</option>
-              {uniqueDirs.map(d => <option key={d} value={d}>{d}</option>)}
-            </select>
-          </div>
-
-          {/* Language Filter */}
-          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <Code className="w-3.5 h-3.5 text-text-tertiary" />
-            <span className="font-semibold">Language:</span>
-            <select
-              value={langFilter}
-              onChange={e => setLangFilter(e.target.value)}
-              className="bg-surface-1 border border-border-strong rounded-xl px-2.5 py-1 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle cursor-pointer"
-            >
-              <option value="all">All Languages</option>
-              {uniqueLanguages.map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-
-          {/* Severity Filter */}
-          <div className="flex items-center gap-1.5 text-xs text-text-secondary">
-            <Funnel className="w-3.5 h-3.5 text-text-tertiary" />
-            <span className="font-semibold">Severity:</span>
-            <select
-              value={severityFilter}
-              onChange={e => setSeverityFilter(e.target.value as any)}
-              className="bg-surface-1 border border-border-strong rounded-xl px-2.5 py-1 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle cursor-pointer"
-            >
-              <option value="all">All Risk Levels</option>
-              <option value="high">High Risk (&gt;= 70)</option>
-              <option value="moderate">Mod Risk (45-69)</option>
-              <option value="low">Low Risk (&lt; 45)</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Complexity threshold slider */}
-        <div className="flex items-center gap-4 border-t border-border-subtle pt-3">
-          <span className="text-xs font-semibold text-text-secondary">Complexity Floor: {complexityThreshold}</span>
-          <input 
-            type="range"
-            min="0"
-            max={maxComplexity}
-            value={complexityThreshold}
-            onChange={e => setComplexityThreshold(parseInt(e.target.value))}
-            className="w-48 accent-accent"
-          />
-        </div>
-      </div>
-
-      {/* Main Split Layout Grid */}
+      {/* Main Split Layout: Treemap + AI sidebar */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        
-        {/* Left Side: Modular Treemap and Ranked List */}
+
+        {/* Left Side: Treemap + Metrics Grid */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-subtle border border-border-base rounded-xl overflow-visible bg-surface-1">
-            <div className="p-5 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
+        
+        {/* Modular Treemap Card */}
+        <Card className="shadow-subtle border border-border-base rounded-xl overflow-visible bg-surface-1">
+          {/* Combined Header Toolbar with Title and Advanced Filters */}
+          <div className="p-5 border-b border-border-base bg-surface-2/30 rounded-t-xl space-y-4">
+            <div className="flex items-center justify-between">
               <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider">
                 <Wrench className="w-4.5 h-4.5 text-accent" /> Codebase Modularity Treemap
               </h3>
               <Badge variant="outline" className="text-[10px] bg-surface-3">Size: Est. LOC</Badge>
             </div>
-            
-            <CardContent className="p-6 h-[440px] w-full overflow-visible relative">
-              {treemapData.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <Treemap
-                    data={treemapData}
-                    dataKey="size"
-                    aspectRatio={4/3}
-                    stroke="var(--bg-base)"
-                    fill="#8884d8"
-                    isAnimationActive={false}
-                    content={<CustomizedTreemapContent />}
-                  >
-                    <Tooltip 
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          const calculatedLOC = Math.round(data.complexity * 45 + (data.churn * 15) + 30);
-                          return (
-                            <div className="bg-surface-1/95 backdrop-blur-md p-4 rounded-2xl shadow-floating text-xs space-y-3 z-[100] border border-border-strong w-72 ring-1 ring-border-strong/50 pointer-events-none select-none">
-                              <p className="font-mono font-bold text-text-primary border-b border-border-base pb-2 truncate" title={data.path}>
-                                {data.name}
-                              </p>
-                              <div className="space-y-1.5 text-text-secondary text-[11px]">
-                                <div className="flex justify-between">
-                                  <span>Path:</span>
-                                  <span className="font-medium text-text-primary truncate max-w-[170px]" title={data.path}>{data.path}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Debt Score:</span>
-                                  <span className="font-mono text-text-primary font-bold">{Math.round(data.hotspot_score)}/100</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Est. LOC:</span>
-                                  <span className="font-mono text-text-primary font-bold">{calculatedLOC} lines</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Complexity:</span>
-                                  <span className="font-mono text-text-primary font-bold">{data.complexity}</span>
-                                </div>
-                                <div className="flex justify-between">
-                                  <span>Churn (Edits):</span>
-                                  <span className="font-mono text-text-primary font-bold">{data.churn}</span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                  </Treemap>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center text-text-tertiary">
-                  <CheckCircle className="w-12 h-12 text-success opacity-45 mb-2" />
-                  <p className="font-semibold text-sm">No complex files found matching filters.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
 
-          {/* Directory & Contributor Breakdown Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Directory breakdown */}
-            <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
-              <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
-                <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
-                  <Stack className="w-3.5 h-3.5 text-accent" /> Directory Debt share
-                </span>
-                <span className="text-[9px] font-mono text-text-tertiary font-bold">Sum of Scores</span>
+            {/* Merged filter inputs grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-2 border-t border-border-base/50">
+              {/* Search */}
+              <div className="relative">
+                <MagnifyingGlass className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                <input 
+                  type="text" 
+                  placeholder="Search file path..."
+                  value={searchFilter}
+                  onChange={e => setSearchFilter(e.target.value)}
+                  className="w-full bg-surface-1 border border-border-strong rounded-xl pl-8.5 pr-3 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle placeholder:text-text-tertiary/60"
+                />
               </div>
-              <CardContent className="p-4 space-y-3.5">
-                {directoryBreakdown.map((item, idx) => (
-                  <div key={idx} className="space-y-1">
-                    <div className="flex items-center justify-between text-xs font-semibold">
-                      <span className="text-text-secondary font-mono">{item.name}/</span>
-                      <span className="text-text-primary">{item.debtShare} pts</span>
-                    </div>
-                    <div className="w-full bg-surface-3 h-1.5 rounded-full overflow-hidden">
-                      <div 
-                        className="bg-accent h-full rounded-full transition-all duration-500" 
-                        style={{ width: `${Math.min(100, (item.debtShare / (techDebt?.health_score * 3 || 100)) * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
 
-            {/* Contributor ownership */}
-            <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
-              <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
-                <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-accent" /> Contributor Complexity Share
-                </span>
-                <span className="text-[9px] font-mono text-text-tertiary font-bold">Files Owned</span>
+              {/* Directory */}
+              <div className="relative flex items-center bg-surface-1 border border-border-strong rounded-xl px-2 py-1">
+                <Stack className="w-3.5 h-3.5 text-text-tertiary mr-1 shrink-0" />
+                <select
+                  value={dirFilter}
+                  onChange={e => setDirFilter(e.target.value)}
+                  className="w-full bg-transparent text-[11px] text-text-primary focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Directories</option>
+                  {uniqueDirs.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
               </div>
-              <CardContent className="p-4 space-y-3">
-                {contributorBreakdown.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-xs py-0.5">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-6 h-6 rounded-full bg-accent-subtle text-accent font-bold font-display text-[9px] flex items-center justify-center border border-accent/15">
-                        {item.name.substring(0, 2).toUpperCase()}
-                      </div>
-                      <span className="font-semibold text-text-secondary truncate">{item.name}</span>
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-text-tertiary text-[10px]">{item.files} files</span>
-                      <span className="font-mono text-text-primary font-bold">{item.totalScore} pts</span>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Historical Health Trend area */}
-          <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
-            <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
-              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
-                <TrendUp className="w-3.5 h-3.5 text-accent" /> Historical Repository Health Trend
-              </span>
-              <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/15">
-                Improving
-              </span>
+              {/* Language */}
+              <div className="relative flex items-center bg-surface-1 border border-border-strong rounded-xl px-2 py-1">
+                <Code className="w-3.5 h-3.5 text-text-tertiary mr-1 shrink-0" />
+                <select
+                  value={langFilter}
+                  onChange={e => setLangFilter(e.target.value)}
+                  className="w-full bg-transparent text-[11px] text-text-primary focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Languages</option>
+                  {uniqueLanguages.map(l => <option key={l} value={l}>{l}</option>)}
+                </select>
+              </div>
+
+              {/* Severity */}
+              <div className="relative flex items-center bg-surface-1 border border-border-strong rounded-xl px-2 py-1">
+                <Funnel className="w-3.5 h-3.5 text-text-tertiary mr-1 shrink-0" />
+                <select
+                  value={severityFilter}
+                  onChange={e => setSeverityFilter(e.target.value as any)}
+                  className="w-full bg-transparent text-[11px] text-text-primary focus:outline-none cursor-pointer"
+                >
+                  <option value="all">All Risk Levels</option>
+                  <option value="high">High Risk (&gt;= 70)</option>
+                  <option value="moderate">Mod Risk (45-69)</option>
+                  <option value="low">Low Risk (&lt; 45)</option>
+                </select>
+              </div>
             </div>
-            <CardContent className="p-5 h-[180px] w-full text-xs">
+
+            {/* Slider for Complexity Floor */}
+            <div className="flex items-center gap-3 pt-2 border-t border-border-base/50 text-[11px]">
+              <span className="font-semibold text-text-secondary">Complexity Floor: {complexityThreshold}</span>
+              <input 
+                type="range"
+                min="0"
+                max={maxComplexity}
+                value={complexityThreshold}
+                onChange={e => setComplexityThreshold(parseInt(e.target.value))}
+                className="w-40 accent-accent cursor-pointer h-1 bg-surface-3 rounded-lg appearance-none"
+              />
+            </div>
+          </div>
+          
+          <CardContent className="p-6 h-[440px] w-full overflow-visible relative">
+            {treemapData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorHealth" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0.01}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
-                  <XAxis dataKey="commit" stroke="var(--text-tertiary)" tickLine={false} />
-                  <YAxis domain={[40, 100]} stroke="var(--text-tertiary)" tickLine={false} axisLine={false} />
+                <Treemap
+                  data={treemapData}
+                  dataKey="size"
+                  aspectRatio={4/3}
+                  stroke="var(--bg-base)"
+                  fill="#8884d8"
+                  isAnimationActive={false}
+                  content={<CustomizedTreemapContent />}
+                >
                   <Tooltip 
                     content={({ active, payload }) => {
                       if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        const calculatedLOC = Math.round(data.complexity * 45 + (data.churn * 15) + 30);
                         return (
-                          <div className="bg-surface-1 border border-border-strong p-3 rounded-xl shadow-md text-xs space-y-1">
-                            <p className="font-bold text-text-primary font-mono">{payload[0].payload.commit}</p>
-                            <p className="text-emerald-500 font-semibold">Health Score: {payload[0].value}%</p>
-                            <p className="text-amber-500 font-semibold">Debt Ratio: {payload[0].payload.debt}%</p>
+                          <div className="bg-surface-1/95 backdrop-blur-md p-4 rounded-2xl shadow-floating text-xs space-y-3 z-[100] border border-border-strong w-72 ring-1 ring-border-strong/50 pointer-events-none select-none">
+                            <p className="font-mono font-bold text-text-primary border-b border-border-base pb-2 truncate" title={data.path}>
+                              {data.name}
+                            </p>
+                            <div className="space-y-1.5 text-text-secondary text-[11px]">
+                              <div className="flex justify-between">
+                                <span>Path:</span>
+                                <span className="font-medium text-text-primary truncate max-w-[170px]" title={data.path}>{data.path}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Debt Score:</span>
+                                <span className="font-mono text-text-primary font-bold">{Math.round(data.hotspot_score)}/100</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Est. LOC:</span>
+                                <span className="font-mono text-text-primary font-bold">{calculatedLOC} lines</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Complexity:</span>
+                                <span className="font-mono text-text-primary font-bold">{data.complexity}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span>Churn (Edits):</span>
+                                <span className="font-mono text-text-primary font-bold">{data.churn}</span>
+                              </div>
+                            </div>
                           </div>
                         );
                       }
                       return null;
                     }}
                   />
-                  <Area type="monotone" dataKey="health" stroke="var(--color-success)" strokeWidth={2} fillOpacity={1} fill="url(#colorHealth)" />
-                </AreaChart>
+                </Treemap>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
+            ) : (
+              <div className="h-full flex flex-col items-center justify-center text-text-tertiary">
+                <CheckCircle className="w-12 h-12 text-success opacity-45 mb-2" />
+                <p className="font-semibold text-sm">No complex files found matching filters.</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
         </div>
 
-        {/* Right Side: Prioritized AI Recommendations List */}
+        {/* Right Side: AI Prioritized Actions */}
         <div className="lg:col-span-4 space-y-6">
-          <Card className="shadow-subtle border border-border-base rounded-xl overflow-hidden bg-surface-1">
-            <div className="p-5 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkle className="w-4.5 h-4.5 text-accent" />
-                <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wider">AI Prioritized Actions</h3>
-              </div>
-              <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-accent-subtle text-accent border border-accent/15">Ranked</Badge>
+        <Card className="shadow-subtle border border-border-base rounded-xl overflow-hidden bg-surface-1">
+          <div className="p-5 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkle className="w-4.5 h-4.5 text-accent" />
+              <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wider">AI Prioritized Actions</h3>
             </div>
-            
-            <CardContent className="p-4 space-y-4">
+            <Badge variant="outline" className="text-[10px] px-2 py-0.5 bg-accent-subtle text-accent border border-accent/15">Ranked</Badge>
+          </div>
+          
+          <CardContent className="p-4 space-y-4">
+            <div className="space-y-4">
               {aiRecommendations.map((rec, idx) => (
                 <div 
                   key={idx}
@@ -674,9 +581,109 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                   </div>
                 </div>
               ))}
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
         </div>
+
+      </div>
+
+      {/* Full-width 3-Column Metrics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Directory breakdown */}
+        <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
+          <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
+            <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
+              <Stack className="w-3.5 h-3.5 text-accent" /> Directory Debt share
+            </span>
+            <span className="text-[9px] font-mono text-text-tertiary font-bold">Sum of Scores</span>
+          </div>
+          <CardContent className="p-4 space-y-3.5">
+            {directoryBreakdown.map((item, idx) => (
+              <div key={idx} className="space-y-1">
+                <div className="flex items-center justify-between text-xs font-semibold">
+                  <span className="text-text-secondary font-mono">{item.name}/</span>
+                  <span className="text-text-primary">{item.debtShare} pts</span>
+                </div>
+                <div className="w-full bg-surface-3 h-1.5 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-accent h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${Math.min(100, (item.debtShare / (techDebt?.health_score * 3 || 100)) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Contributor ownership */}
+        <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
+          <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
+            <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
+              <Users className="w-3.5 h-3.5 text-accent" /> Contributor Complexity Share
+            </span>
+            <span className="text-[9px] font-mono text-text-tertiary font-bold">Files Owned</span>
+          </div>
+          <CardContent className="p-4 space-y-3">
+            {contributorBreakdown.map((item, idx) => (
+              <div key={idx} className="flex items-center justify-between text-xs py-0.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-6 h-6 rounded-full bg-accent-subtle text-accent font-bold font-display text-[9px] flex items-center justify-center border border-accent/15">
+                    {item.name.substring(0, 2).toUpperCase()}
+                  </div>
+                  <span className="font-semibold text-text-secondary truncate">{item.name}</span>
+                </div>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="text-text-tertiary text-[10px]">{item.files} files</span>
+                  <span className="font-mono text-text-primary font-bold">{item.totalScore} pts</span>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Historical Health Trend */}
+        <Card className="shadow-sm border border-border-base rounded-2xl bg-surface-1">
+          <div className="p-4 border-b border-border-subtle bg-surface-2 flex items-center justify-between">
+            <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider flex items-center gap-1.5">
+              <TrendUp className="w-3.5 h-3.5 text-accent" /> Historical Repository Health Trend
+            </span>
+            <span className="text-[9px] font-semibold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/15">
+              Improving
+            </span>
+          </div>
+          <CardContent className="p-5 h-[180px] w-full text-xs">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorHealth" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.15}/>
+                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0.01}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-subtle)" vertical={false} />
+                <XAxis dataKey="commit" stroke="var(--text-tertiary)" tickLine={false} />
+                <YAxis domain={[40, 100]} stroke="var(--text-tertiary)" tickLine={false} axisLine={false} />
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-surface-1 border border-border-strong p-3 rounded-xl shadow-md text-xs space-y-1">
+                          <p className="font-bold text-text-primary font-mono">{payload[0].payload.commit}</p>
+                          <p className="text-emerald-500 font-semibold">Health Score: {payload[0].value}%</p>
+                          <p className="text-amber-500 font-semibold">Debt Ratio: {payload[0].payload.debt}%</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area type="monotone" dataKey="health" stroke="var(--color-success)" strokeWidth={2} fillOpacity={1} fill="url(#colorHealth)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       </div>
 
