@@ -828,10 +828,10 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
           </Card>
 
           {/* Bus Factor - Spans 4 columns */}
-          <Card className={`md:col-span-4 shadow-subtle overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 ${busFactor?.bus_factor <= 1 ? "to-rose-500/[0.015] border border-rose-500/30" : "to-indigo-500/[0.015] border border-indigo-500/30"}`}>
+          <Card className={`md:col-span-4 shadow-subtle overflow-visible relative z-10 hover:z-30 focus-within:z-30 bg-gradient-to-br from-surface-1 ${busFactor?.bus_factor <= 1 ? "to-rose-500/[0.015] border border-rose-500/30" : "to-accent/[0.015] border border-accent/30"}`}>
             {/* Background design container */}
             <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
-              <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${busFactor?.bus_factor <= 1 ? "bg-rose-500/[0.1]" : "bg-indigo-500/[0.1]"}`} />
+              <div className={`absolute -right-8 -bottom-8 w-44 h-44 rounded-full blur-2xl opacity-80 ${busFactor?.bus_factor <= 1 ? "bg-rose-500/[0.1]" : "bg-accent/[0.1]"}`} />
               <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
                 <defs>
                   <pattern id="grid-bus" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
@@ -1271,9 +1271,14 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
                 </div>
 
                 <CardContent className="p-6 space-y-4 relative z-10">
-                  <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider">
-                    <span className="text-base">🎯</span> Priority Actions
-                  </h3>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20 shrink-0">
+                      <Target className="w-4.5 h-4.5" weight="fill" />
+                    </div>
+                    <h3 className="text-sm font-display font-bold text-text-primary uppercase tracking-wider">
+                      Priority Actions
+                    </h3>
+                  </div>
                   <div className="space-y-3">
                     {dynamicPriorityActions.map((action, idx) => {
                       const isOpen = openPriorityIndex === idx;

@@ -445,7 +445,7 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
               <p className="text-sm font-display font-black text-text-primary truncate" title={mostFilesOwner?.name || "None"}>{mostFilesOwner?.name || "None"}</p>
               <p className="text-[10px] text-text-tertiary font-mono">{mostFilesOwner?.owned_files?.length || 0} files owned</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20 shrink-0 ml-3">
+            <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20 shrink-0 ml-3">
               <span className="text-base">📁</span>
             </div>
           </CardContent>

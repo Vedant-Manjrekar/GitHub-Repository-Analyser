@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { 
   ShieldWarning, FileCode, GitCommit, User, ChartLine, Info, MagnifyingGlass, Funnel, Question, 
-  TrendUp, Code, Sparkle, Warning, Users, Calendar, CaretRight 
+  TrendUp, Code, Sparkle, Warning, Users, Calendar, CaretRight, Target 
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -134,21 +134,62 @@ export function RiskMap({ hotspots }: RiskMapProps) {
 
       {/* Guide Banner */}
       {showHowToRead && (
-        <div className="bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base flex flex-col md:flex-row gap-6 justify-between animate-in fade-in duration-300">
-          <div className="space-y-2">
-            <h4 className="font-display font-bold text-text-primary text-sm flex items-center gap-2">
-              <Info className="w-4 h-4 text-accent" /> Visual Landscape Guide
-            </h4>
-            <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
-              Each bubble represents a code file. Bubble size corresponds to the overall risk score. 
-              The quadrants segment files into distinct operational categories. Files in the <strong>Critical Hotspots (Top-Right)</strong> zone require immediate refactoring attention.
-            </p>
+        <div className="bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base space-y-6 animate-in fade-in duration-300">
+          <div className="flex flex-col md:flex-row gap-6 justify-between border-b border-border-base pb-5">
+            <div className="space-y-2">
+              <h4 className="font-display font-bold text-text-primary text-sm flex items-center gap-2">
+                <Info className="w-4 h-4 text-accent" /> Visual Landscape Guide
+              </h4>
+              <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
+                Each bubble represents a code file in the repository. Bubble size corresponds to the overall calculated risk score. 
+                The quadrants segment files into distinct operational categories. Files in the <strong>Critical Hotspots (Top-Right)</strong> zone require immediate refactoring attention.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-4 shrink-0 items-center md:justify-end">
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-critical block"></span><span className="text-xs font-semibold text-text-secondary">Critical (Score &gt;= 70)</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-orange-500 block"></span><span className="text-xs font-semibold text-text-secondary">High (Score 55-69)</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-warning block"></span><span className="text-xs font-semibold text-text-secondary">Moderate (Score 35-54)</span></div>
+              <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-success block"></span><span className="text-xs font-semibold text-text-secondary">Low</span></div>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-4 shrink-0 items-center">
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-critical block"></span><span className="text-xs font-semibold text-text-secondary">Critical (Score &gt;= 70)</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-orange-500 block"></span><span className="text-xs font-semibold text-text-secondary">High (Score 55-69)</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-warning block"></span><span className="text-xs font-semibold text-text-secondary">Moderate (Score 35-54)</span></div>
-            <div className="flex items-center gap-1.5"><span className="w-3 h-3 rounded-full bg-success block"></span><span className="text-xs font-semibold text-text-secondary">Low</span></div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="space-y-1.5 p-4 rounded-xl bg-surface-2/30 border border-border-base">
+              <h5 className="font-display font-bold text-xs text-text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Target className="w-4 h-4 text-accent" weight="fill" /> Purpose
+              </h5>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                This page maps code complexity against commit activity to identify files that act as logical bottlenecks. By highlighting high-risk areas, it helps prioritize codebase refactoring and prevent regressions before code modifications are merged.
+              </p>
+            </div>
+            
+            <div className="space-y-1.5 p-4 rounded-xl bg-surface-2/30 border border-border-base">
+              <h5 className="font-display font-bold text-xs text-text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <GitCommit className="w-4 h-4 text-accent" weight="bold" /> Why High Churn is Bad
+              </h5>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                High modification frequency (churn) indicates a file is constantly modified. This suggests architectural issues, such as a "god file" carrying too many responsibilities, resulting in persistent code conflicts and concurrent logic modifications.
+              </p>
+            </div>
+
+            <div className="space-y-1.5 p-4 rounded-xl bg-surface-2/30 border border-border-base">
+              <h5 className="font-display font-bold text-xs text-text-primary uppercase tracking-wider flex items-center gap-1.5">
+                <Code className="w-4 h-4 text-accent" weight="bold" /> Why High Complexity is Bad
+              </h5>
+              <p className="text-[11px] text-text-secondary leading-relaxed">
+                High cyclomatic complexity means a file contains too many branching pathways (if/else layers, loops). This makes the logic extremely difficult to reason about, maintain, or test, leaving it highly vulnerable to unexpected bugs and regressions.
+              </p>
+            </div>
+          </div>
+
+          <div className="bg-rose-500/[0.02] border border-rose-500/10 p-4 rounded-xl text-xs text-rose-600 flex items-start gap-2.5">
+            <Warning className="w-4 h-4 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold">The Risk Multiplier effect:</span>
+              <p className="text-text-secondary text-[11px] leading-relaxed">
+                When a file exhibits <strong>both</strong> high complexity and high churn (placed in the Top-Right quadrant), the likelihood of bugs grows exponentially. Because developers must frequently change code within a highly complex, difficult-to-test structure, even small modifications frequently lead to major runtime regression bugs.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -243,45 +284,47 @@ export function RiskMap({ hotspots }: RiskMapProps) {
           </CardContent>
         </Card>
       </div>
-
-      <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-1 p-4 rounded-xl border border-border-base shadow-subtle w-full">
-        <div className="relative w-full sm:w-80">
-          <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
-          <input 
-            type="text" 
-            placeholder="Filter files by path..."
-            value={searchFilter}
-            onChange={e => setSearchFilter(e.target.value)}
-            className="w-full bg-surface-1 border border-border-strong rounded-xl pl-10 pr-4 py-2 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle placeholder:text-text-tertiary/60"
-          />
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Funnel className="w-3.5 h-3.5 text-text-tertiary" />
-          <span className="text-xs text-text-secondary font-semibold mr-2">Severity:</span>
-          {(["all", "high", "moderate", "low"] as const).map(sev => (
-            <button
-              key={sev}
-              onClick={() => setSeverityFilter(sev)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all border ${severityFilter === sev ? "bg-accent text-white border-accent shadow-subtle" : "bg-surface-1 text-text-secondary border-border-strong hover:bg-surface-2"}`}
-            >
-              {sev.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Split Main Content Area */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* Left Side: Dynamic Chart Panel */}
         <div className="lg:col-span-8 space-y-6">
-          <Card className="shadow-subtle border border-border-base rounded-xl overflow-visible bg-surface-1">
+          <Card className="shadow-subtle border border-border-strong rounded-xl overflow-visible bg-surface-1">
+            {/* Merged Header Toolbar: Search + Severity Filters */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border-b border-border-base bg-surface-2/30 rounded-t-xl">
+              <div className="relative w-full sm:w-72">
+                <MagnifyingGlass className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" />
+                <input 
+                  type="text" 
+                  placeholder="Filter files by path..."
+                  value={searchFilter}
+                  onChange={e => setSearchFilter(e.target.value)}
+                  className="w-full bg-surface-1 border border-border-strong rounded-xl pl-9 pr-4 py-1.5 text-xs text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 transition-all shadow-subtle placeholder:text-text-tertiary/60"
+                />
+              </div>
+              
+              <div className="flex items-center gap-1.5 w-full sm:w-auto justify-end">
+                <Funnel className="w-3.5 h-3.5 text-text-tertiary" />
+                <span className="text-[11px] text-text-secondary font-bold mr-1 uppercase tracking-wider">Severity:</span>
+                <div className="flex bg-surface-2 p-0.5 rounded-lg border border-border-strong">
+                  {(["all", "high", "moderate", "low"] as const).map(sev => (
+                    <button
+                      key={sev}
+                      onClick={() => setSeverityFilter(sev)}
+                      className={`px-2.5 py-1 rounded-md text-[10px] font-black transition-all cursor-pointer ${severityFilter === sev ? "bg-surface-1 text-accent shadow-sm" : "text-text-tertiary hover:text-text-primary"}`}
+                    >
+                      {sev.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             <CardContent className="p-6 h-[550px] w-full text-xs overflow-visible relative">
               {filteredHotspots.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <ScatterChart margin={{ top: 25, right: 30, bottom: 20, left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border-strong)" vertical={true} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--text-tertiary)" strokeOpacity={0.3} vertical={true} />
                     <XAxis 
                       type="number" 
                       dataKey="churn" 
@@ -311,41 +354,41 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                       x2={maxChurn * 1.05} 
                       y1={midComplexity} 
                       y2={maxComplexity * 1.05} 
-                      fill="rgba(239, 68, 68, 0.03)" 
+                      fill="rgba(239, 68, 68, 0.12)" 
                       stroke="none"
-                      label={{ value: "🚨 Critical Hotspots", position: "insideTopRight", fill: "rgba(239, 68, 68, 0.4)", fontSize: 10, fontWeight: 700 }}
+                      label={{ value: "Critical Hotspots", position: "insideTopRight", fill: "rgba(220, 38, 38, 0.9)", fontSize: 11, fontWeight: 700 }}
                     />
                     <ReferenceArea 
                       x1={0} 
                       x2={midChurn} 
                       y1={midComplexity} 
                       y2={maxComplexity * 1.05} 
-                      fill="rgba(99, 102, 241, 0.015)" 
+                      fill="rgba(37, 99, 235, 0.08)" 
                       stroke="none"
-                      label={{ value: "🧠 Stable but Complex", position: "insideTopLeft", fill: "rgba(99, 102, 241, 0.35)", fontSize: 10, fontWeight: 700 }}
+                      label={{ value: "Stable but Complex", position: "insideTopLeft", fill: "rgba(29, 78, 216, 0.9)", fontSize: 11, fontWeight: 700 }}
                     />
                     <ReferenceArea 
                       x1={midChurn} 
                       x2={maxChurn * 1.05} 
                       y1={0} 
                       y2={midComplexity} 
-                      fill="rgba(245, 158, 11, 0.015)" 
+                      fill="rgba(245, 158, 11, 0.08)" 
                       stroke="none"
-                      label={{ value: "⚡ Active Development", position: "insideBottomRight", fill: "rgba(245, 158, 11, 0.35)", fontSize: 10, fontWeight: 700 }}
+                      label={{ value: "Active Development", position: "insideBottomRight", fill: "rgba(180, 83, 9, 0.9)", fontSize: 11, fontWeight: 700 }}
                     />
                     <ReferenceArea 
                       x1={0} 
                       x2={midChurn} 
                       y1={0} 
                       y2={midComplexity} 
-                      fill="rgba(16, 185, 129, 0.015)" 
+                      fill="rgba(16, 185, 129, 0.08)" 
                       stroke="none"
-                      label={{ value: "✅ Healthy Core", position: "insideBottomLeft", fill: "rgba(16, 185, 129, 0.35)", fontSize: 10, fontWeight: 700 }}
+                      label={{ value: "Healthy Core", position: "insideBottomLeft", fill: "rgba(4, 120, 87, 0.9)", fontSize: 11, fontWeight: 700 }}
                     />
-
-                    {/* Quadrants dividing lines */}
-                    <ReferenceLine x={midChurn} stroke="var(--border-strong)" strokeWidth={1} strokeDasharray="3 3" />
-                    <ReferenceLine y={midComplexity} stroke="var(--border-strong)" strokeWidth={1} strokeDasharray="3 3" />
+  
+                    {/* Quadrants dividing lines (Darkened) */}
+                    <ReferenceLine x={midChurn} stroke="var(--text-tertiary)" strokeOpacity={0.4} strokeWidth={1} strokeDasharray="3 3" />
+                    <ReferenceLine y={midComplexity} stroke="var(--text-tertiary)" strokeOpacity={0.4} strokeWidth={1} strokeDasharray="3 3" />
 
                     {/* Dynamic Crosshair Guide Lines on hover */}
                     {hoveredFile && (
