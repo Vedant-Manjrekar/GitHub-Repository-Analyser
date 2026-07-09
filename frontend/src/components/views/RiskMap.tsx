@@ -181,10 +181,28 @@ export function RiskMap({ hotspots }: RiskMapProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50 !overflow-visible relative z-20 hover:z-40 focus-within:z-40">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider">Avg Risk Index</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider">Avg Risk Index</span>
+                <InfoTooltip 
+                  title="Average Risk Index"
+                  whatIsIt="The weighted repository-wide risk average, computed by combining cyclomatic complexity and modification frequency (churn) across files."
+                  whyItMatters="A higher average risk indicates a codebase where modifications happen frequently on complex or hard-to-maintain files, increasing bug likelihood."
+                  healthyValues={[
+                    { label: "< 35", desc: "Low Risk", status: "success" },
+                    { label: "35 - 69", desc: "Moderate Risk", status: "warning" },
+                    { label: ">= 70", desc: "High Risk", status: "critical" }
+                  ]}
+                  howToImprove={[
+                    "Decompose hotspots with high change rates",
+                    "Spread task assignments to reduce churn density",
+                    "Refactor complex control flows into helper services"
+                  ]}
+                  align="right"
+                />
+              </div>
               <p className="text-2xl font-display font-black text-text-primary">{avgRiskScore.toFixed(1)}/100</p>
               <p className="text-[10px] text-text-tertiary">Weighted project risk average</p>
             </div>
@@ -194,10 +212,28 @@ export function RiskMap({ hotspots }: RiskMapProps) {
           </CardContent>
         </Card>
 
-        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50 !overflow-visible relative z-10 hover:z-30 focus-within:z-30">
           <CardContent className="p-5 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider">Avg Complexity</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider">Avg Complexity</span>
+                <InfoTooltip 
+                  title="Average Cyclomatic Complexity"
+                  whatIsIt="The average cyclomatic complexity (logical decision paths) computed across functions and code files."
+                  whyItMatters="High cyclomatic complexity means developers must reason through too many branching pathways (if/else), leading to higher bug rates."
+                  healthyValues={[
+                    { label: "1.0 - 5.0", desc: "Healthy (Easy to test)", status: "success" },
+                    { label: "5.1 - 10.0", desc: "Moderate (Review recommended)", status: "warning" },
+                    { label: "> 10.0", desc: "Monolithic (High regression risk)", status: "critical" }
+                  ]}
+                  howToImprove={[
+                    "Extract nested loops or conditionals into separate functions",
+                    "Use guard clauses (early returns) to flatten nesting",
+                    "Break large functions into single-purpose helpers"
+                  ]}
+                  align="right"
+                />
+              </div>
               <p className="text-2xl font-display font-black text-text-primary">{avgComplexity.toFixed(2)}</p>
               <p className="text-[10px] text-text-tertiary">Logical paths per codebase file</p>
             </div>

@@ -85,7 +85,7 @@ export function InfoTooltip({
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15 }}
             className={cn(
-              "absolute z-[100] top-full mt-2 w-80 sm:w-96 bg-surface-1 border border-border-strong rounded-2xl shadow-floating overflow-hidden text-left pointer-events-auto",
+              "absolute z-[999] top-full mt-2 w-80 sm:w-96 bg-surface-1 border border-border-strong rounded-2xl shadow-floating overflow-hidden text-left pointer-events-auto",
               alignClasses[align]
             )}
             onMouseEnter={() => setIsOpen(true)}

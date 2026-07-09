@@ -92,7 +92,6 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
 
   const risk = getRiskLevel(techDebt?.health_score || 100);
   const [rangeFilter, setRangeFilter] = useState<"7d" | "30d" | "90d" | "custom">("7d");
-  const [openRecIndex, setOpenRecIndex] = useState<number | null>(null);
   const [openPriorityIndex, setOpenPriorityIndex] = useState<number | null>(null);
 
   // Compute dynamic priority actions based on real codebase metrics
@@ -1257,138 +1256,88 @@ export function HeroDashboard({ dashboard, techDebt, busFactor, contributors = [
             <div className="lg:col-span-4 space-y-6">
               
               {/* Priority Actions Card */}
-              <div className="bg-surface-1 rounded-xl p-6 shadow-subtle space-y-4 border border-border-base relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-accent/5 rounded-full blur-xl pointer-events-none" />
-                <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider relative z-10">
-                  <span className="text-base">🎯</span> Priority Actions
-                </h3>
-                <div className="space-y-3 relative z-10">
-                  {dynamicPriorityActions.map((action, idx) => {
-                    const isOpen = openPriorityIndex === idx;
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        className="bg-bg-base rounded-xl border border-border-base hover:border-border-strong transition-all duration-200 overflow-hidden"
-                      >
-                        <button
-                          onClick={() => setOpenPriorityIndex(isOpen ? null : idx)}
-                          className="w-full text-left p-3 flex items-start justify-between gap-3 cursor-pointer select-none"
-                        >
-                          <div className="flex items-start gap-2.5 w-full">
-                            {/* Priority indicator dot */}
-                            <span className={cn("w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 shadow-sm", 
-                              action.severity === "critical" ? "bg-rose-500 shadow-rose-500/20" :
-                              action.severity === "high" ? "bg-amber-500 shadow-amber-500/20" :
-                              action.severity === "medium" ? "bg-yellow-500 shadow-yellow-500/20" :
-                              "bg-emerald-500 shadow-emerald-500/20"
-                            )} />
-                            <div className="flex-1 min-w-0 pr-2">
-                              <h4 className="text-xs font-bold text-text-primary leading-normal">{action.title}</h4>
-                              <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
-                                {action.metrics.map((m, mIdx) => (
-                                  <span key={mIdx} className="text-[10px] text-text-tertiary font-medium bg-surface-2 px-1.5 py-0.5 rounded border border-border-subtle/40 whitespace-nowrap">
-                                    {m.label === "Recommendation" || m.label === "Concentration" || m.label === "Unused Code" || m.label === "Churn" ? "" : `${m.label}: `}
-                                    <strong className="text-text-secondary">{m.value}</strong>
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                            <CaretRight 
-                              className={cn(
-                                "w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0 transition-transform duration-200",
-                                isOpen && "rotate-90"
-                              )}
-                            />
-                          </div>
-                        </button>
-                        
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="border-t border-border-base/50 bg-surface-2/40 px-3 pb-3 pt-2 text-[11px] leading-relaxed text-text-tertiary"
-                          >
-                            <div className="flex gap-2 p-2 bg-accent/5 rounded-lg border border-accent/10">
-                              <Sparkle className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-semibold text-accent block mb-0.5 uppercase tracking-wider text-[10px]">Recommended Remedy</span>
-                                <p className="text-text-secondary">{action.remedy}</p>
-                              </div>
-                            </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    );
-                  })}
+              <Card className="bg-gradient-to-br from-surface-1 to-accent/[0.015] shadow-subtle border border-border-base overflow-visible relative z-10 hover:z-30 focus-within:z-30">
+                {/* Background design container */}
+                <div className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+                  <div className="absolute -right-8 -bottom-8 w-44 h-44 rounded-full bg-accent/[0.08] blur-2xl opacity-75" />
+                  <svg className="absolute inset-0 w-full h-full stroke-text-primary/[0.035] [mask-image:radial-gradient(100%_100%_at_top_right,white,transparent)]" aria-hidden="true">
+                    <defs>
+                      <pattern id="grid-priority" width="16" height="16" patternUnits="userSpaceOnUse" x="-1" y="-1">
+                        <path d="M.5 16V.5H16" fill="none" />
+                      </pattern>
+                    </defs>
+                    <rect width="100%" height="100%" fill="url(#grid-priority)" />
+                  </svg>
                 </div>
-              </div>
-              
-              {/* Recommendations Card */}
-              <div className="bg-surface-1 rounded-xl p-6 shadow-subtle space-y-4 border border-border-base">
-                <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider">
-                  <Target className="w-4 h-4 text-accent" /> Action Items
-                </h3>
-                <div className="space-y-3">
-                  {parsedAI.recommendations.map((rec, idx) => {
-                    const hasColon = rec.includes(":") && rec.indexOf(":") < 30;
-                    const title = hasColon ? rec.substring(0, rec.indexOf(":")).trim() : "";
-                    const desc = hasColon ? rec.substring(rec.indexOf(":") + 1).trim() : rec;
-                    const isOpen = openRecIndex === idx;
-                    const remedy = getActionItemRemedy(rec);
-                    
-                    return (
-                      <div 
-                        key={idx} 
-                        className="bg-bg-base rounded-xl border border-border-base hover:border-border-strong transition-all duration-200 overflow-hidden"
-                      >
-                        <button
-                          onClick={() => setOpenRecIndex(isOpen ? null : idx)}
-                          className="w-full text-left p-3 flex items-start justify-between gap-3 cursor-pointer select-none"
+
+                <CardContent className="p-6 space-y-4 relative z-10">
+                  <h3 className="text-sm font-display font-bold text-text-primary flex items-center gap-2 uppercase tracking-wider">
+                    <span className="text-base">🎯</span> Priority Actions
+                  </h3>
+                  <div className="space-y-3">
+                    {dynamicPriorityActions.map((action, idx) => {
+                      const isOpen = openPriorityIndex === idx;
+                      
+                      return (
+                        <div 
+                          key={idx} 
+                          className="bg-bg-base rounded-xl border border-border-base hover:border-border-strong transition-all duration-200 overflow-hidden"
                         >
-                          <div className="flex items-start gap-2.5">
-                            <CaretRight 
-                              className={cn(
-                                "w-4 h-4 text-accent mt-0.5 shrink-0 transition-transform duration-200",
-                                isOpen && "rotate-90"
-                              )}
-                            />
-                            <div className="text-xs text-text-secondary font-medium leading-relaxed pr-2">
-                              {hasColon ? (
-                                <>
-                                  <strong className="text-text-primary">{title}:</strong> {desc}
-                                </>
-                              ) : (
-                                rec
-                              )}
-                            </div>
-                          </div>
-                        </button>
-                        
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="border-t border-border-base/50 bg-surface-2/40 px-3 pb-3 pt-2 text-[11px] leading-relaxed text-text-tertiary"
+                          <button
+                            onClick={() => setOpenPriorityIndex(isOpen ? null : idx)}
+                            className="w-full text-left p-3 flex items-start justify-between gap-3 cursor-pointer select-none"
                           >
-                            <div className="flex gap-2 p-2 bg-accent/5 rounded-lg border border-accent/10">
-                              <Sparkle className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-semibold text-accent block mb-0.5 uppercase tracking-wider text-[10px]">Recommended Remedy</span>
-                                <p className="text-text-secondary">{remedy}</p>
+                            <div className="flex items-start gap-2.5 w-full">
+                              {/* Priority indicator dot */}
+                              <span className={cn("w-2.5 h-2.5 rounded-full mt-1.5 shrink-0 shadow-sm", 
+                                action.severity === "critical" ? "bg-rose-500 shadow-rose-500/20" :
+                                action.severity === "high" ? "bg-amber-500 shadow-amber-500/20" :
+                                action.severity === "medium" ? "bg-yellow-500 shadow-yellow-500/20" :
+                                "bg-emerald-500 shadow-emerald-500/20"
+                              )} />
+                              <div className="flex-1 min-w-0 pr-2">
+                                <h4 className="text-xs font-bold text-text-primary leading-normal">{action.title}</h4>
+                                <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
+                                  {action.metrics.map((m, mIdx) => (
+                                    <span key={mIdx} className="text-[10px] text-text-tertiary font-medium bg-surface-2 px-1.5 py-0.5 rounded border border-border-subtle/40 whitespace-nowrap">
+                                      {m.label === "Recommendation" || m.label === "Concentration" || m.label === "Unused Code" || m.label === "Churn" ? "" : `${m.label}: `}
+                                      <strong className="text-text-secondary">{m.value}</strong>
+                                    </span>
+                                  ))}
+                                </div>
                               </div>
+                              <CaretRight 
+                                className={cn(
+                                  "w-3.5 h-3.5 text-text-tertiary mt-0.5 shrink-0 transition-transform duration-200",
+                                  isOpen && "rotate-90"
+                                )}
+                              />
                             </div>
-                          </motion.div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                          </button>
+                          
+                          {isOpen && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="border-t border-border-base/50 bg-surface-2/40 px-3 pb-3 pt-2 text-[11px] leading-relaxed text-text-tertiary"
+                            >
+                              <div className="flex gap-2 p-2 bg-accent/5 rounded-lg border border-accent/10">
+                                <Sparkle className="w-3.5 h-3.5 text-accent shrink-0 mt-0.5" />
+                                <div>
+                                  <span className="font-semibold text-accent block mb-0.5 uppercase tracking-wider text-[10px]">Recommended Remedy</span>
+                                  <p className="text-text-secondary">{action.remedy}</p>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
           </div>

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
 import { Drawer } from "@/components/ui/Drawer";
-import { Users, Warning, CheckCircle, GitCommit, Info, User, Envelope, ShieldWarning, Cpu, Folder, CaretDown, FileCode } from "@phosphor-icons/react";
+import { Users, Warning, CheckCircle, GitCommit, Info, User, Envelope, ShieldWarning, Cpu, Folder, CaretDown, FileCode, CaretRight } from "@phosphor-icons/react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,14 @@ const getLossRiskLabel = (score: number) => {
 export function ContributorIntel({ contributors, busFactor }: ContributorIntelProps) {
   const [selectedAuthor, setSelectedAuthor] = useState<any>(null);
   const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>({});
+
+  const totalContributors = contributors?.length || 0;
+  const totalCommits = contributors?.reduce((sum: number, item: any) => sum + item.commits, 0) || 0;
+  const sortedContributors = [...(contributors || [])].sort((a, b) => b.commits - a.commits);
+
+  const mostFilesOwner = [...(contributors || [])].sort((a, b) => 
+    (b.owned_files?.length || 0) - (a.owned_files?.length || 0)
+  )[0];
 
   const toggleFolder = (folder: string) => {
     setExpandedFolders(prev => ({
@@ -80,6 +88,14 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       
+      {/* Hidden SVG Filter for Coarse Metallic Texture */}
+      <svg className="absolute w-0 h-0 pointer-events-none select-none opacity-0" aria-hidden="true">
+        <filter id="metal-noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" stitchTiles="stitch" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0   0 0 0 0 0   0 0 0 0 0  0 0 0 0.12 0" />
+        </filter>
+      </svg>
+      
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-display font-black text-text-primary tracking-tight">Contributor Intelligence</h2>
@@ -89,361 +105,515 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
         </div>
       </div>
 
-      {/* Warning / Success Banner */}
-      {busFactor?.bus_factor <= 1.0 ? (
-        <motion.div 
-          initial={{ opacity: 0, y: -5 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="p-6 rounded-xl bg-rose-500/[0.03] border border-rose-500/10 flex items-start gap-4 shadow-subtle"
-        >
-          <div className="p-2.5 bg-rose-500/10 rounded-xl text-critical shrink-0 mt-1">
-            <Warning className="w-6 h-6" />
+      {/* 1. Top Contributors Podium */}
+      {sortedContributors.length > 0 && (
+        <div className="space-y-4 pt-2">
+          <div className="text-center max-w-md mx-auto mb-2 relative">
+            <h3 className="text-xl font-display font-black text-text-primary tracking-tight uppercase">Top Contributors</h3>
+            <p className="text-xs text-text-tertiary mt-1">Key developers ranked by commit volume and file ownership scope</p>
           </div>
-          <div>
-            <h4 className="font-bold text-text-primary text-base font-display flex items-center gap-1.5">
-              Knowledge Bottleneck Warning
-              <InfoTooltip 
-                title="Bus Factor Risk"
-                whatIsIt="The Bus Factor shows the absolute minimum number of engineers who can leave before repository progression fails."
-                whyItMatters="A factor of 1 implies a high-risk bottleneck where a single maintainer holds all core logic understanding."
-              />
-            </h4>
-            <p className="text-sm text-text-secondary mt-1 leading-relaxed max-w-4xl">
-              Over 50% of modifications in this repository were committed by a single engineer. 
-              The Bus Factor is currently <strong>{busFactor.bus_factor}</strong>. 
-              We recommend scheduling shared pair sessions or conducting code reviews to distribute expertise.
-            </p>
-          </div>
-        </motion.div>
-      ) : (
-        <div className="p-6 rounded-xl bg-emerald-500/[0.03] border border-emerald-500/10 flex items-start gap-4 shadow-subtle">
-          <div className="p-2.5 bg-emerald-500/10 rounded-xl text-success shrink-0 mt-1">
-            <CheckCircle className="w-6 h-6" />
-          </div>
-          <div>
-            <h4 className="font-bold text-text-primary text-base font-display">Resilient Knowledge Share</h4>
-            <p className="text-sm text-text-secondary mt-1 leading-relaxed">
-              Knowledge is distributed across multiple contributors. The Bus Factor is currently <strong>{busFactor?.bus_factor || 2}</strong>.
-            </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch pt-4 pb-2">
+            
+            {/* 2nd Place Contributor */}
+            {sortedContributors.length > 1 ? (
+              (() => {
+                const c = sortedContributors[1];
+                const share = totalCommits > 0 ? ((c.commits / totalCommits) * 100).toFixed(1) : "0.0";
+                return (
+                  <Card className="order-2 md:order-1 bg-surface-1 shadow-subtle rounded-3xl border border-border-base relative overflow-hidden z-10 hover:z-30 focus-within:z-30 md:scale-95 hover:scale-[0.98] transition-all duration-200 min-h-[320px] flex flex-col justify-between self-center">
+                    <CardContent className="p-5 flex flex-col items-center justify-between h-full flex-1">
+                      
+                      {/* Avatar with Concentric Circles (Scaled Down) */}
+                      <div className="relative w-full flex flex-col items-center pt-2">
+                        {/* Background Concentric Circles */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 flex items-center justify-center pointer-events-none select-none z-0">
+                          <div className="absolute w-22 h-22 rounded-full border border-border-base/[0.25]" />
+                          <div className="absolute w-30 h-30 rounded-full border border-border-base/[0.15]" />
+                          <div className="absolute w-38 h-38 rounded-full border border-border-base/[0.08]" />
+                          <svg className="absolute inset-0 w-full h-full stroke-slate-300/[0.25] stroke-[1] fill-none" style={{ animation: "spin 40s linear infinite" }} viewBox="0 0 100 100">
+                            <path d="M 50,2 A 48,48 0 0,1 98,50" strokeDasharray="3 3" />
+                            <path d="M 2,50 A 48,48 0 0,1 50,98" strokeWidth="0.5" />
+                          </svg>
+                        </div>
+                        
+                        <div className="relative w-16 h-16 shrink-0 flex items-center justify-center z-10">
+                          {/* Lustrous Metallic Silver Avatar ring with coarse noise filter */}
+                          <div 
+                            className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#94A3B8] via-[#F8FAFC] via-[#CBD5E1] via-[#FFFFFF] to-[#94A3B8] p-[2.5px] shadow-subtle relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay" style={{ filter: "url(#metal-noise)" }} />
+                            <div className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center font-display font-black text-xl text-[#334155] relative z-10">
+                              {c.name.substring(0, 1).toUpperCase()}
+                            </div>
+                          </div>
+                          {/* Top-Right Status Dot with Silver Gradient */}
+                          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-gradient-to-tr from-[#94A3B8] to-[#FFFFFF] rounded-full border-[2px] border-white dark:border-zinc-900 z-20 shadow-sm" />
+                          {/* Bottom-Right Rank Badge */}
+                          <span className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-r from-[#94A3B8] to-[#475569] text-[8px] font-bold text-white px-1.5 py-0.5 rounded-md border border-white z-20 shadow-sm">#2</span>
+                        </div>
+                      </div>
+                      
+                      {/* Name & Title */}
+                      <div className="text-center mt-3 z-10 relative space-y-1">
+                        <h4 className="font-bold text-sm text-text-primary truncate max-w-[150px]" title={c.name}>{c.name}</h4>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-[#94A3B8]/10 via-[#F8FAFC]/25 to-[#94A3B8]/10 text-[#475569] border border-[#94A3B8]/30 select-none">
+                          Core Collaborator
+                        </span>
+                      </div>
+
+                      {/* Git Stats */}
+                      <div className="flex items-center justify-between w-full my-4 px-2.5 py-2 bg-surface-2/45 rounded-2xl border border-border-base/30 z-10 relative">
+                        <div className="flex-1 text-center">
+                          <p className="font-mono font-black text-xs text-text-primary leading-tight">{c.commits}</p>
+                          <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Commits</p>
+                        </div>
+                        <div className="h-4 w-px bg-border-base/50" />
+                        <div className="flex-1 text-center">
+                          <p className="font-mono font-black text-xs text-text-primary leading-tight">{c.owned_files?.length || 0}</p>
+                          <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Files</p>
+                        </div>
+                        <div className="h-4 w-px bg-border-base/50" />
+                        <div className="flex-1 text-center">
+                          <p className="font-mono font-black text-xs text-text-primary leading-tight">{share}%</p>
+                          <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Share</p>
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="flex items-center gap-2 w-full mt-1 z-10 relative">
+                        <button 
+                          onClick={() => setSelectedAuthor(c)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#94A3B8] via-[#F8FAFC] to-[#94A3B8] hover:brightness-105 border border-[#CBD5E1]/40 rounded-full text-[9px] font-black uppercase tracking-wider text-[#1E293B] transition-all shadow-md flex-1 cursor-pointer select-none relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay" style={{ filter: "url(#metal-noise)" }} />
+                          <User className="w-3.5 h-3.5 text-[#1E293B]/80 relative z-10" />
+                          <span className="relative z-10">Profile</span>
+                        </button>
+                        
+                        <a 
+                          href={`mailto:${c.email}`}
+                          className="w-8 h-8 flex items-center justify-center bg-surface-2 hover:bg-surface-3 border border-border-strong rounded-full text-text-secondary transition-all shadow-subtle shrink-0 cursor-pointer"
+                          title="Email contributor"
+                        >
+                          <Envelope className="w-3.5 h-3.5 text-text-tertiary" />
+                        </a>
+                        
+                        <button 
+                          onClick={() => setSelectedAuthor(c)}
+                          className="w-8 h-8 flex items-center justify-center bg-surface-2 hover:bg-surface-3 border border-border-strong rounded-full text-text-secondary transition-all shadow-subtle shrink-0 cursor-pointer"
+                          title="View owned files"
+                        >
+                          <FileCode className="w-3.5 h-3.5 text-text-tertiary" />
+                        </button>
+                      </div>
+                      
+                    </CardContent>
+                  </Card>
+                );
+              })()
+            ) : (
+              <div className="order-2 md:order-1 h-1 md:block hidden"></div>
+            )}
+
+            {/* 1st Place Contributor */}
+            {(() => {
+              const c = sortedContributors[0];
+              const share = totalCommits > 0 ? ((c.commits / totalCommits) * 100).toFixed(1) : "0.0";
+              return (
+                <Card className="order-1 md:order-2 md:scale-105 bg-surface-1 shadow-elevated rounded-3xl border border-amber-500/25 relative overflow-hidden z-20 hover:scale-[1.07] transition-transform duration-200 min-h-[370px] flex flex-col justify-between">
+                  <CardContent className="p-6 flex flex-col items-center justify-between h-full flex-1">
+                    
+                    {/* Avatar with Concentric Circles */}
+                    <div className="relative w-full flex flex-col items-center pt-4">
+                      {/* Background Concentric Circles */}
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 flex items-center justify-center pointer-events-none select-none z-0">
+                        <div className="absolute w-28 h-28 rounded-full border border-amber-500/[0.25]" />
+                        <div className="absolute w-36 h-36 rounded-full border border-amber-500/[0.15]" />
+                        <div className="absolute w-44 h-44 rounded-full border border-amber-500/[0.08]" />
+                        <svg className="absolute inset-0 w-full h-full stroke-[#B38728]/[0.25] stroke-[1] fill-none" style={{ animation: "spin 40s linear infinite" }} viewBox="0 0 100 100">
+                          <path d="M 50,2 A 48,48 0 0,1 98,50" strokeDasharray="3 3" />
+                          <path d="M 2,50 A 48,48 0 0,1 50,98" strokeWidth="0.5" />
+                        </svg>
+                      </div>
+                      
+                      <div className="relative w-20 h-20 shrink-0 flex items-center justify-center z-10">
+                        {/* Lustrous Metallic Gold Avatar ring with coarse noise filter */}
+                        <div 
+                          className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#BF953F] via-[#FCF6BA] via-[#B38728] via-[#FBF5B7] to-[#AA771C] p-[3px] shadow-subtle relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 pointer-events-none opacity-45 mix-blend-overlay" style={{ filter: "url(#metal-noise)" }} />
+                          <div className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center font-display font-black text-2xl text-[#7A5712] relative z-10">
+                            {c.name.substring(0, 1).toUpperCase()}
+                          </div>
+                        </div>
+                        {/* Top-Right Status Dot with Gold Gradient */}
+                        <span className="absolute top-0.5 right-0.5 w-4 h-4 bg-gradient-to-tr from-[#B38728] to-[#FCF6BA] rounded-full border-[2.5px] border-white dark:border-zinc-900 z-20 shadow-sm" />
+                        {/* Bottom-Right Rank Badge */}
+                        <span className="absolute -bottom-1 -right-1 bg-gradient-to-r from-[#BF953F] to-[#AA771C] text-[8px] font-bold text-white px-1.5 py-0.5 rounded-md border border-white z-20 shadow-sm">#1</span>
+                      </div>
+                    </div>
+                    
+                    {/* Name & Title */}
+                    <div className="text-center mt-4 z-10 relative space-y-1.5">
+                      <h4 className="font-bold text-base text-text-primary truncate max-w-[190px] flex items-center justify-center gap-1" title={c.name}>
+                        {c.name}
+                        <CheckCircle className="w-4 h-4 text-[#B38728] shrink-0" weight="fill" />
+                      </h4>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-gradient-to-r from-[#BF953F]/10 via-[#FBF5B7]/20 to-[#B38728]/10 text-[#8A640F] border border-[#B38728]/35 select-none">
+                        Lead Maintainer
+                      </span>
+                    </div>
+
+                    {/* Git Stats */}
+                    <div className="flex items-center justify-between w-full my-5 px-3 py-2.5 bg-surface-2/45 rounded-2xl border border-border-base/30 z-10 relative">
+                      <div className="flex-1 text-center">
+                        <p className="font-mono font-black text-xs text-text-primary leading-tight">{c.commits}</p>
+                        <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Commits</p>
+                      </div>
+                      <div className="h-5 w-px bg-border-base/50" />
+                      <div className="flex-1 text-center">
+                        <p className="font-mono font-black text-xs text-text-primary leading-tight">{c.owned_files?.length || 0}</p>
+                        <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Files</p>
+                      </div>
+                      <div className="h-5 w-px bg-border-base/50" />
+                      <div className="flex-1 text-center">
+                        <p className="font-mono font-black text-xs text-text-primary leading-tight">{share}%</p>
+                        <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Share</p>
+                      </div>
+                    </div>
+
+                    {/* Action Bar */}
+                    <div className="flex items-center gap-2.5 w-full mt-1 z-10 relative">
+                      <button 
+                        onClick={() => setSelectedAuthor(c)}
+                        className="flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-[#BF953F] via-[#FCF6BA] to-[#B38728] hover:brightness-105 border border-[#AA771C]/40 rounded-full text-[10px] font-black uppercase tracking-wider text-[#4C3306] transition-all shadow-md flex-1 cursor-pointer select-none relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 pointer-events-none opacity-45 mix-blend-overlay" style={{ filter: "url(#metal-noise)" }} />
+                        <User className="w-3.5 h-3.5 text-[#4C3306]/85 relative z-10" />
+                        <span className="relative z-10">Profile</span>
+                      </button>
+                      
+                      <a 
+                        href={`mailto:${c.email}`}
+                        className="w-9 h-9 flex items-center justify-center bg-surface-2 hover:bg-surface-3 border border-border-strong rounded-full text-text-secondary transition-all shadow-subtle shrink-0 cursor-pointer"
+                        title="Email contributor"
+                      >
+                        <Envelope className="w-4 h-4 text-text-tertiary" />
+                      </a>
+                      
+                      <button 
+                        onClick={() => setSelectedAuthor(c)}
+                        className="w-9 h-9 flex items-center justify-center bg-surface-2 hover:bg-surface-3 border border-border-strong rounded-full text-text-secondary transition-all shadow-subtle shrink-0 cursor-pointer"
+                        title="View owned files"
+                      >
+                        <FileCode className="w-4 h-4 text-text-tertiary" />
+                      </button>
+                    </div>
+                    
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
+            {/* 3rd Place Contributor */}
+            {sortedContributors.length > 2 ? (
+              (() => {
+                const c = sortedContributors[2];
+                const share = totalCommits > 0 ? ((c.commits / totalCommits) * 100).toFixed(1) : "0.0";
+                return (
+                  <Card className="order-3 md:order-3 bg-surface-1 shadow-subtle rounded-3xl border border-border-base relative overflow-hidden z-10 hover:z-30 focus-within:z-30 md:scale-95 hover:scale-[0.98] transition-all duration-200 min-h-[320px] flex flex-col justify-between self-center">
+                    <CardContent className="p-5 flex flex-col items-center justify-between h-full flex-1">
+                      
+                      {/* Avatar with Concentric Circles (Scaled Down) */}
+                      <div className="relative w-full flex flex-col items-center pt-2">
+                        {/* Background Concentric Circles */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 flex items-center justify-center pointer-events-none select-none z-0">
+                          <div className="absolute w-22 h-22 rounded-full border border-border-base/[0.25]" />
+                          <div className="absolute w-30 h-30 rounded-full border border-border-base/[0.15]" />
+                          <div className="absolute w-38 h-38 rounded-full border border-border-base/[0.08]" />
+                          <svg className="absolute inset-0 w-full h-full stroke-[#995C00]/[0.25] stroke-[1] fill-none" style={{ animation: "spin 40s linear infinite" }} viewBox="0 0 100 100">
+                            <path d="M 50,2 A 48,48 0 0,1 98,50" strokeDasharray="3 3" />
+                            <path d="M 2,50 A 48,48 0 0,1 50,98" strokeWidth="0.5" />
+                          </svg>
+                        </div>
+                        
+                        <div className="relative w-16 h-16 shrink-0 flex items-center justify-center z-10">
+                          {/* Lustrous Metallic Bronze Avatar ring with coarse noise filter */}
+                          <div 
+                            className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#804A00] via-[#FFB85C] via-[#995C00] via-[#FFE0B2] to-[#663300] p-[2.5px] shadow-subtle relative overflow-hidden"
+                          >
+                            <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay" style={{ filter: "url(#metal-noise)" }} />
+                            <div className="w-full h-full rounded-full bg-surface-3 flex items-center justify-center font-display font-black text-xl text-[#804A00] relative z-10">
+                              {c.name.substring(0, 1).toUpperCase()}
+                            </div>
+                          </div>
+                          {/* Top-Right Status Dot with Bronze Gradient */}
+                          <span className="absolute top-0 right-0 w-3.5 h-3.5 bg-gradient-to-tr from-[#995C00] to-[#FFE0B2] rounded-full border-[2.5px] border-white dark:border-zinc-900 z-20 shadow-sm" />
+                          {/* Bottom-Right Rank Badge */}
+                          <span className="absolute -bottom-0.5 -right-0.5 bg-gradient-to-r from-[#804A00] to-[#663300] text-[8px] font-bold text-white px-1.5 py-0.5 rounded-md border border-white z-20 shadow-sm">#3</span>
+                        </div>
+                      </div>
+                      
+                      {/* Name & Title */}
+                      <div className="text-center mt-3 z-10 relative space-y-1">
+                        <h4 className="font-bold text-sm text-text-primary truncate max-w-[150px]" title={c.name}>{c.name}</h4>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider bg-gradient-to-r from-[#804A00]/10 via-[#FFE0B2]/20 to-[#995C00]/10 text-[#6E3C00] border border-[#995C00]/30 select-none">
+                          Active Contributor
+                        </span>
+                      </div>
+
+                      {/* Git Stats */}
+                      <div className="flex items-center justify-between w-full my-4 px-2.5 py-2 bg-surface-2/45 rounded-2xl border border-border-base/30 z-10 relative">
+                        <div className="flex-1 text-center">
+                          <p className="font-mono font-black text-xs text-text-primary leading-tight">{c.commits}</p>
+                          <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Commits</p>
+                        </div>
+                        <div className="h-4 w-px bg-border-base/50" />
+                        <div className="flex-1 text-center">
+                          <p className="font-mono font-black text-xs text-text-primary leading-tight">{c.owned_files?.length || 0}</p>
+                          <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Files</p>
+                        </div>
+                        <div className="h-4 w-px bg-border-base/50" />
+                        <div className="flex-1 text-center">
+                          <p className="font-mono font-black text-xs text-text-primary leading-tight">{share}%</p>
+                          <p className="text-[8px] font-mono text-text-tertiary mt-0.5 uppercase tracking-wider">Share</p>
+                        </div>
+                      </div>
+
+                      {/* Action Bar */}
+                      <div className="flex items-center gap-2 w-full mt-1 z-10 relative">
+                        <button 
+                          onClick={() => setSelectedAuthor(c)}
+                          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-[#804A00] via-[#FFB85C] to-[#995C00] hover:brightness-105 border border-[#7C3F00]/40 rounded-full text-[9px] font-black uppercase tracking-wider text-[#402000] transition-all shadow-md flex-1 cursor-pointer select-none relative overflow-hidden"
+                        >
+                          <div className="absolute inset-0 pointer-events-none opacity-40 mix-blend-overlay" style={{ filter: "url(#metal-noise)" }} />
+                          <User className="w-3 h-3 text-[#402000]/80 relative z-10" />
+                          <span className="relative z-10">Profile</span>
+                        </button>
+                        
+                        <a 
+                          href={`mailto:${c.email}`}
+                          className="w-8 h-8 flex items-center justify-center bg-surface-2 hover:bg-surface-3 border border-border-strong rounded-full text-text-secondary transition-all shadow-subtle shrink-0 cursor-pointer"
+                          title="Email contributor"
+                        >
+                          <Envelope className="w-3.5 h-3.5 text-text-tertiary" />
+                        </a>
+                        
+                        <button 
+                          onClick={() => setSelectedAuthor(c)}
+                          className="w-8 h-8 flex items-center justify-center bg-surface-2 hover:bg-surface-3 border border-border-strong rounded-full text-text-secondary transition-all shadow-subtle shrink-0 cursor-pointer"
+                          title="View owned files"
+                        >
+                          <FileCode className="w-3.5 h-3.5 text-text-tertiary" />
+                        </button>
+                      </div>
+                      
+                    </CardContent>
+                  </Card>
+                );
+              })()
+            ) : (
+              <div className="order-3 md:order-3 h-1 md:block hidden"></div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Charts & Table Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* 2. Highlights Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        {/* Recharts Commit distribution bar chart - Spans 8 Columns */}
-        <div className="lg:col-span-8 flex flex-col h-[400px] bg-surface-1 rounded-xl p-6 shadow-subtle border border-border-base">
-          <div className="flex items-center justify-between border-b border-border-base pb-3 mb-4">
-            <h3 className="text-base font-display font-bold text-text-primary">Contribution Timeline Distribution</h3>
-            <Badge variant="outline" className="rounded-lg bg-bg-base">Commits Share</Badge>
-          </div>
-          
-          <div className="flex-1 w-full flex items-center justify-center p-4">
-            {contributors && contributors.length > 0 ? (
-              (() => {
-                const y_base = 210;
-                const max_h = 160;
-                const w = 48;
-                const skew_x = 12;
-                const skew_y = 8;
-                const cap_h = 8;
-                const numItems = Math.min(contributors.length, 6);
-                
-                // Dynamically calculate spacing and bounds based on contributor count to center chart layout
-                const desiredStep = numItems > 1 ? Math.min(130, 580 / (numItems - 1)) : 130;
-                const plotWidth = numItems > 1 ? desiredStep * (numItems - 1) : w;
-                const plotStart = (800 - plotWidth) / 2;
-                
-                const x_axis_start = plotStart - 40;
-                const x_axis_end = plotStart + plotWidth + 40;
+        {/* Top Committer Card */}
+        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-1 min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Top Committer</span>
+              <p className="text-sm font-display font-black text-text-primary truncate" title={sortedContributors[0]?.name || "None"}>{sortedContributors[0]?.name || "None"}</p>
+              <p className="text-[10px] text-text-tertiary font-mono">{sortedContributors[0]?.commits || 0} commits total</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20 shrink-0 ml-3">
+              <span className="text-base">⚡</span>
+            </div>
+          </CardContent>
+        </Card>
 
-                const maxCommits = Math.max(...contributors.map(item => item.commits)) || 1;
-                const totalCommits = contributors.reduce((sum, item) => sum + item.commits, 0) || 1;
+        {/* Broadest Footprint Card */}
+        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-1 min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Broadest Scope</span>
+              <p className="text-sm font-display font-black text-text-primary truncate" title={mostFilesOwner?.name || "None"}>{mostFilesOwner?.name || "None"}</p>
+              <p className="text-[10px] text-text-tertiary font-mono">{mostFilesOwner?.owned_files?.length || 0} files owned</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20 shrink-0 ml-3">
+              <span className="text-base">📁</span>
+            </div>
+          </CardContent>
+        </Card>
 
-                return (
-                  <svg viewBox="0 0 800 400" className="w-full h-full select-none">
-                    <defs>
-                      {/* Modern bright zinc linear gradients for clean 3D body depth */}
-                      <linearGradient id="bodyFront" x1="0%" y1="100%" x2="0%" y2="0%">
-                        <stop offset="0%" stopColor="#e4e4e7" />
-                        <stop offset="100%" stopColor="#ffffff" />
-                      </linearGradient>
-                      <linearGradient id="bodySide" x1="0%" y1="100%" x2="0%" y2="0%">
-                        <stop offset="0%" stopColor="#a1a1aa" />
-                        <stop offset="100%" stopColor="#d4d4d8" />
-                      </linearGradient>
-                    </defs>
+        {/* Concentration Share Card */}
+        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-1 min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Commit Concentration</span>
+              <p className="text-base font-display font-black text-text-primary">
+                {totalCommits > 0 && sortedContributors.length > 0
+                  ? ((sortedContributors[0].commits / totalCommits) * 100).toFixed(0)
+                  : "0"}%
+              </p>
+              <p className="text-[10px] text-text-tertiary truncate">Owned by rank #1 developer</p>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center text-rose-500 border border-rose-500/20 shrink-0 ml-3">
+              <span className="text-base">🔥</span>
+            </div>
+          </CardContent>
+        </Card>
 
-                    {/* 1. Grid Lines (Horizontal, dashed) */}
-                    {(() => {
-                      const gridLines = [0, 0.25, 0.5, 0.75, 1];
-                      return gridLines.map((ratio, idx) => {
-                        const y = y_base - max_h * ratio;
-                        return (
-                          <line
-                            key={idx}
-                            x1={x_axis_start}
-                            y1={y}
-                            x2={x_axis_end}
-                            y2={y}
-                            stroke="rgba(255, 255, 255, 0.04)"
-                            strokeDasharray="4 4"
-                            strokeWidth="1"
-                          />
-                        );
-                      });
-                    })()}
-
-                    {/* 2. Y-Axis and Ticks / Labels */}
-                    {(() => {
-                      const ticks = [
-                        { ratio: 0, label: "0%" },
-                        { ratio: 0.25, label: "25%" },
-                        { ratio: 0.5, label: "50%" },
-                        { ratio: 0.75, label: "75%" },
-                        { ratio: 1, label: "100%" }
-                      ];
-                      return (
-                        <g>
-                          {/* Y-Axis Line */}
-                          <line x1={x_axis_start} y1={y_base} x2={x_axis_start} y2="50" stroke="#3f3f46" strokeWidth="1.5" />
-                          {/* Y-Axis Title with dynamic coordinate centering */}
-                          <text 
-                            x={x_axis_start - 45} 
-                            y="135" 
-                            transform={`rotate(-90 ${x_axis_start - 45} 135)`} 
-                            textAnchor="middle" 
-                            fill="#71717a" 
-                            fontSize="9"
-                            className="font-sans font-bold uppercase tracking-wider"
-                          >
-                            Commit Share
-                          </text>
-                          {ticks.map((t, idx) => {
-                            const y = y_base - max_h * t.ratio;
-                            return (
-                              <g key={idx}>
-                                {/* Tick mark */}
-                                <line x1={x_axis_start - 6} y1={y} x2={x_axis_start} y2={y} stroke="#3f3f46" strokeWidth="1.5" />
-                                {/* Label */}
-                                <text 
-                                  x={x_axis_start - 12} 
-                                  y={y + 4} 
-                                  textAnchor="end" 
-                                  fill="#71717a" 
-                                  fontSize="9"
-                                  className="font-mono font-medium"
-                                >
-                                  {t.label}
-                                </text>
-                              </g>
-                            );
-                          })}
-                        </g>
-                      );
-                    })()}
-
-                    {/* 3. X-Axis and Labels */}
-                    <line x1={x_axis_start} y1={y_base} x2={x_axis_end} y2={y_base} stroke="#3f3f46" strokeWidth="1.5" />
-                    <text 
-                      x={(x_axis_start + x_axis_end) / 2} 
-                      y="260" 
-                      textAnchor="middle" 
-                      fill="#71717a" 
-                      fontSize="9"
-                      className="font-sans font-bold uppercase tracking-wider"
-                    >
-                      Contributors
-                    </text>
-
-                    {/* 4. 3D Columns and X Ticks */}
-                    {contributors.slice(0, numItems).map((c, index) => {
-                      const x = plotStart + index * desiredStep;
-                      const h = Math.max((c.commits / maxCommits) * max_h, 35);
-                      
-                      const percentVal = ((c.commits / totalCommits) * 100).toFixed(1);
-                      const isHighest = index === 0;
-
-                      // Cap faces: Highest gets vibrant coral-red, others get dark metallic zinc-charcoal
-                      const capFrontColor = isHighest ? "#ff6b6b" : "#3f3f46"; // coral-red vs charcoal
-                      const capSideColor = isHighest ? "#fa5252" : "#27272a";  // dark coral vs dark grey
-                      const capTopColor = isHighest ? "#ffa8a8" : "#52525b";   // light coral vs medium grey
-                      
-                      const bodyFrontColor = "url(#bodyFront)";
-                      const bodySideColor = "url(#bodySide)";
-                      
-                      const strokeColor = "#27272a";
-                      const strokeWidth = "1.2";
-
-                      const bodyFront = `${x - w/2},${y_base} ${x + w/2},${y_base} ${x + w/2},${y_base - h + cap_h} ${x - w/2},${y_base - h + cap_h}`;
-                      const bodySide = `${x + w/2},${y_base} ${x + w/2 + skew_x},${y_base - skew_y} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2},${y_base - h + cap_h}`;
-                      const capFront = `${x - w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h + cap_h} ${x + w/2},${y_base - h} ${x - w/2},${y_base - h}`;
-                      const capSide = `${x + w/2},${y_base - h + cap_h} ${x + w/2 + skew_x},${y_base - h + cap_h - skew_y} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x + w/2},${y_base - h}`;
-                      const capTop = `${x - w/2},${y_base - h} ${x + w/2},${y_base - h} ${x + w/2 + skew_x},${y_base - h - skew_y} ${x - w/2 + skew_x},${y_base - h - skew_y}`;
-                      const shadowPoints = `${x - w/2},${y_base + 3} ${x + w/2},${y_base + 3} ${x + w/2 + skew_x},${y_base + 3 - skew_y} ${x - w/2 + skew_x},${y_base + 3 - skew_y}`;
-
-                      // Dynamic text for commit count inside the column face
-                      const commitsText = h > 65 ? `${c.commits} commits` : `${c.commits}`;
-
-                      // Truncate name helper to prevent overlapping on dynamic/narrow sizes
-                      const displayName = c.name.split(" ")[0];
-                      const truncatedName = displayName.length > 8 ? displayName.substring(0, 7) + ".." : displayName;
-
-                      return (
-                        <g 
-                          key={c.email || index} 
-                          className="group cursor-pointer"
-                          onClick={() => setSelectedAuthor(c)}
-                        >
-                          {/* Shadow */}
-                          <polygon points={shadowPoints} fill="rgba(0, 0, 0, 0.4)" filter="blur(2px)" />
-
-                          {/* Column body front */}
-                          <polygon 
-                            points={bodyFront} 
-                            fill={bodyFrontColor} 
-                            stroke={strokeColor} 
-                            strokeWidth={strokeWidth}
-                            className="transition-all duration-300 group-hover:brightness-105"
-                          />
-
-                          {/* Column body side */}
-                          <polygon 
-                            points={bodySide} 
-                            fill={bodySideColor} 
-                            stroke={strokeColor} 
-                            strokeWidth={strokeWidth}
-                            className="transition-all duration-300 group-hover:brightness-105"
-                          />
-
-                          {/* Cap front */}
-                          <polygon 
-                            points={capFront} 
-                            fill={capFrontColor} 
-                            stroke={strokeColor} 
-                            strokeWidth={strokeWidth}
-                          />
-                          
-                          {/* Cap side */}
-                          <polygon 
-                            points={capSide} 
-                            fill={capSideColor} 
-                            stroke={strokeColor} 
-                            strokeWidth={strokeWidth}
-                          />
-                          
-                          {/* Cap top */}
-                          <polygon 
-                            points={capTop} 
-                            fill={capTopColor} 
-                            stroke={strokeColor} 
-                            strokeWidth={strokeWidth}
-                          />
-
-                          {/* X-Axis Tick */}
-                          <line 
-                            x1={x + skew_x / 2} 
-                            y1={y_base} 
-                            x2={x + skew_x / 2} 
-                            y2={y_base + 6} 
-                            stroke="#3f3f46" 
-                            strokeWidth="1.5" 
-                          />
-
-                          {/* Percentage Label - Floating with proper spacing above the cap */}
-                          <text 
-                            x={x + skew_x / 2} 
-                            y={y_base - h - skew_y - 12} 
-                            textAnchor="middle" 
-                            fill={isHighest ? "#ff6b6b" : "#ffffff"} 
-                            fontSize="11"
-                            className="font-mono font-black tracking-tight"
-                          >
-                            {percentVal}%
-                          </text>
-
-                          {/* Commits Label - Written directly on the body front face */}
-                          <text 
-                            x={x} 
-                            y={y_base - (h - cap_h) / 2 + 4} 
-                            textAnchor="middle" 
-                            fill="#18181b" 
-                            fontSize="9"
-                            className="font-mono font-bold pointer-events-none text-center"
-                          >
-                            {commitsText}
-                          </text>
-
-                          {/* Contributor Name */}
-                          <text 
-                            x={x + skew_x / 2} 
-                            y={y_base + 24} 
-                            textAnchor="middle" 
-                            fill="#a1a1aa" 
-                            fontSize="10"
-                            className="font-sans font-bold tracking-tight group-hover:fill-accent transition-colors"
-                          >
-                            {truncatedName}
-                          </text>
-                        </g>
-                      );
-                    })}
-                  </svg>
-                );
-              })()
-            ) : (
-              <div className="text-zinc-500 text-xs italic">No contributions found to display.</div>
-            )}
-          </div>
-        </div>
-
-        {/* Contributor list sidebar - Spans 4 Columns */}
-        <Card className="lg:col-span-4 flex flex-col h-[400px] shadow-subtle ring-1 ring-border-base/50">
-          <CardHeader className="border-b border-border-base bg-surface-2 py-4">
-            <CardTitle className="text-sm flex justify-between items-center">
-              Active Contributors
-              <Badge className="bg-bg-base text-text-secondary border border-border-strong rounded-lg">{contributors?.length || 0}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex-1 overflow-y-auto pt-4 space-y-3 pr-2">
-            {contributors && contributors.length > 0 ? (
-              contributors.map((c: any, index: number) => (
-                <div 
-                  key={c.email} 
-                  onClick={() => setSelectedAuthor(c)}
-                  className="group p-3.5 rounded-2xl border border-border-base hover:border-border-strong hover:bg-surface-2 transition-all duration-300 flex items-center justify-between cursor-pointer"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-10 h-10 rounded-2xl flex items-center justify-center font-display text-text-primary font-bold shadow-subtle transition-transform group-hover:scale-105", 
-                      index === 0 ? 'bg-accent/10 text-accent border border-accent/20' : 'bg-surface-3 border border-border-strong'
-                    )}>
-                      {c.name.substring(0, 1).toUpperCase()}
-                    </div>
-                    <div className="space-y-0.5">
-                      <p className="font-bold text-xs text-text-primary group-hover:text-accent transition-colors truncate max-w-[120px]">{c.name}</p>
-                      <p className="text-[10px] text-text-tertiary truncate max-w-[110px]">{c.email}</p>
-                    </div>
-                  </div>
-                  <div className="text-right shrink-0">
-                    <span className="font-mono font-bold text-xs text-text-primary flex items-center justify-end gap-1">
-                      {c.commits} <GitCommit className="w-3.5 h-3.5 text-text-tertiary" />
-                    </span>
-                    <span className="text-[9px] font-mono text-text-tertiary font-semibold block mt-0.5">Rank #{index + 1}</span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center h-full text-text-tertiary space-y-2">
-                <Users className="w-8 h-8 opacity-20" />
-                <p className="text-sm">No developers detected.</p>
-              </div>
-            )}
+        {/* Resiliency Status Card */}
+        <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div className="space-y-1 min-w-0 flex-1">
+              <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Knowledge Resiliency</span>
+              <p className={`text-sm font-display font-black ${busFactor?.bus_factor <= 1.0 ? 'text-critical' : 'text-success'}`}>
+                {busFactor?.bus_factor <= 1.0 ? "Bottleneck Warning" : "Distributed Share"}
+              </p>
+              <p className="text-[10px] text-text-tertiary font-mono">Bus Factor = {busFactor?.bus_factor || 1}</p>
+            </div>
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 ml-3 ${busFactor?.bus_factor <= 1.0 ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+              <span className="text-base">🛡️</span>
+            </div>
           </CardContent>
         </Card>
 
       </div>
+
+      {/* 3. Contributor Rankings Table */}
+      <Card className="shadow-subtle ring-1 ring-border-base/50 overflow-hidden">
+        <CardHeader className="border-b border-border-base bg-surface-2 py-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-sm">Team Contributor Rankings</CardTitle>
+            <Badge variant="outline" className="rounded-lg bg-bg-base text-text-secondary border-border-strong font-mono">
+              {totalContributors} Contributors
+            </Badge>
+          </div>
+        </CardHeader>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-border-base bg-surface-2/40 text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider select-none">
+                <th className="py-3 px-5 text-center w-16">Rank</th>
+                <th className="py-3 px-4">Developer</th>
+                <th className="py-3 px-4">Role</th>
+                <th className="py-3 px-4 text-center">Owned Files</th>
+                <th className="py-3 px-4 text-center">Commits</th>
+                <th className="py-3 px-4 text-center">Share</th>
+                <th className="py-3 px-4 text-center">Risk Level</th>
+                <th className="py-3 px-5 text-right w-16"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border-base/50">
+              {sortedContributors.map((c, index) => {
+                const share = totalCommits > 0 ? ((c.commits / totalCommits) * 100).toFixed(1) : "0.0";
+                
+                // Styling details for metallic ranks with lustre
+                const rankStyles = 
+                  index === 0 ? { border: "border-amber-500/10 bg-amber-500/[0.005]", dot: "bg-gradient-to-tr from-[#BF953F] via-[#FCF6BA] to-[#B38728] text-[#4C3306] font-black border border-[#AA771C]/50 shadow-sm" } :
+                  index === 1 ? { border: "border-slate-300/20 bg-slate-300/[0.002]", dot: "bg-gradient-to-tr from-[#94A3B8] via-[#F8FAFC] to-[#94A3B8] text-[#1E293B] font-black border border-[#CBD5E1]/50 shadow-sm" } :
+                  index === 2 ? { border: "border-amber-700/10 bg-amber-700/[0.002]", dot: "bg-gradient-to-tr from-[#804A00] via-[#FFB85C] to-[#995C00] text-[#402000] font-black border border-[#7C3F00]/45 shadow-sm" } :
+                  { border: "border-transparent", dot: "bg-surface-3 text-text-secondary font-medium border border-border-strong/50" };
+ 
+                const role = 
+                  index === 0 ? "Lead Maintainer" :
+                  c.commits > 25 ? "Core Collaborator" : 
+                  "Active Contributor";
+ 
+                const risk = c.commits > 50 ? 85 : c.commits > 20 ? 55 : 25;
+                const riskLabel = getLossRiskLabel(risk);
+                const riskBadge = 
+                  riskLabel === "High" ? "bg-rose-500/10 text-rose-500 border border-rose-500/20" :
+                  riskLabel === "Medium" ? "bg-amber-500/10 text-amber-500 border border-amber-500/20" :
+                  "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20";
+ 
+                return (
+                  <tr 
+                    key={c.email}
+                    onClick={() => setSelectedAuthor(c)}
+                    className={cn(
+                      "hover:bg-surface-2 transition-colors cursor-pointer group border-l-2",
+                      index === 0 ? "border-l-[#B38728]" :
+                      index === 1 ? "border-l-[#94A3B8]" :
+                      index === 2 ? "border-l-[#995C00]" :
+                      "border-l-transparent",
+                      rankStyles.border
+                    )}
+                  >
+                    <td className="py-4 px-5 text-center">
+                      <div className="flex items-center justify-center">
+                        <span className={cn(
+                          "w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-mono",
+                          rankStyles.dot
+                        )}>
+                          {index + 1}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-surface-3 flex items-center justify-center font-display font-bold text-xs text-text-primary border border-border-strong select-none">
+                          {c.name.substring(0, 1).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className={cn(
+                            "text-xs font-bold text-text-primary transition-colors flex items-center gap-1",
+                            index === 0 ? "group-hover:text-[#B38728]" :
+                            index === 1 ? "group-hover:text-text-primary" :
+                            index === 2 ? "group-hover:text-[#995C00]" :
+                            "group-hover:text-accent"
+                          )}>
+                            {c.name}
+                            {index === 0 && <CheckCircle className="w-3.5 h-3.5 text-[#B38728]" weight="fill" />}
+                          </p>
+                          <p className="text-[10px] text-text-tertiary select-all">{c.email}</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-4 px-4">
+                      <span className={cn(
+                        "text-[10px] font-bold px-2 py-0.5 rounded-lg whitespace-nowrap border select-none",
+                        index === 0 ? "bg-gradient-to-r from-[#BF953F]/10 via-[#FBF5B7]/15 to-[#B38728]/10 text-[#8A640F] border-[#B38728]/35" :
+                        index === 1 ? "bg-gradient-to-r from-[#94A3B8]/10 via-[#F8FAFC]/15 to-[#94A3B8]/10 text-[#475569] border-[#94A3B8]/30" :
+                        index === 2 ? "bg-gradient-to-r from-[#804A00]/10 via-[#FFE0B2]/15 to-[#995C00]/10 text-[#6E3C00] border-[#995C00]/30" :
+                        "bg-surface-3 text-text-tertiary border-border-strong/50"
+                      )}>
+                        {role}
+                      </span>
+                    </td>
+                    <td className="py-4 px-4 text-center font-mono font-semibold text-xs text-text-primary">
+                      {c.owned_files?.length || 0}
+                    </td>
+                    <td className="py-4 px-4 text-center font-mono font-bold text-xs text-text-primary">
+                      {c.commits}
+                    </td>
+                    <td className="py-4 px-4 text-center font-mono font-semibold text-xs text-text-secondary">
+                      {share}%
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <span className={cn("text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-lg", riskBadge)}>
+                        {riskLabel}
+                      </span>
+                    </td>
+                    <td className="py-4 px-5 text-right">
+                      <div className="flex justify-end text-text-tertiary group-hover:text-accent transition-colors">
+                        <CaretRight className="w-4 h-4 transition-transform group-hover:translate-x-0.5" />
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </Card>
 
       {/* Contributor Profile Drawer */}
       <Drawer 

@@ -17,7 +17,7 @@ const navItems = [
   { id: "overview", label: "Executive Summary", icon: ChartLine },
   { id: "contributors", label: "Contributor Intel", icon: Users },
   { id: "divider1", isDivider: true },
-  { id: "hotspots", label: "Risk Landscape", icon: ShieldWarning },
+  { id: "hotspots", label: "Risk Insights", icon: ShieldWarning },
   { id: "debt", label: "Technical Debt", icon: Cpu },
   { id: "explorer", label: "Repository Explorer", icon: FolderSimple },
 ];
