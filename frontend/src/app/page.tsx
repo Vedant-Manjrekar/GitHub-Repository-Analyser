@@ -227,7 +227,7 @@ export default function Home() {
             transition={{ duration: 0.2 }}
             className="h-full"
           >
-            {tab === "overview" && <HeroDashboard dashboard={dashboard} techDebt={techDebt} busFactor={busFactor} contributors={contributors} />}
+            {tab === "overview" && <HeroDashboard dashboard={dashboard} techDebt={techDebt} busFactor={busFactor} contributors={contributors} hotspots={hotspots} />}
             {tab === "hotspots" && <RiskMap hotspots={hotspots} />}
             {tab === "debt" && <TechDebtVisualizer techDebt={techDebt} complexityFiles={complexityFiles} />}
             {tab === "contributors" && <ContributorIntel contributors={contributors} busFactor={busFactor} />}

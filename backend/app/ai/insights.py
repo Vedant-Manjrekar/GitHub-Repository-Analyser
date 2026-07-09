@@ -53,8 +53,11 @@ def generate_fallback_insights(repo_name: str, metrics: Dict[str, Any]) -> str:
 
 ### 1. Codebase Maintainability (Technical Debt)
 * **Large Files**: There are `{large_files_count}` files exceeding 500 lines of code. These files represent potential monolithic structures that make readability and testability challenging.
-* **Code Smells (Comment Tags)**: Detected `{total_todos}` code debt tags (`TODO`/`FIXME`/`HACK`) remaining in the codebase.
+"""
+    if total_todos > 0:
+        markdown += f"* **Code Smells (Comment Tags)**: Detected `{total_todos}` code debt tags (`TODO`/`FIXME`/`HACK`) remaining in the codebase.\n"
 
+    markdown += """
 ### 2. Contributor Dependency (Bus Factor)
 """
 
