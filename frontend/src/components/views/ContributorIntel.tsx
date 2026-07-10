@@ -103,8 +103,13 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
   const authorDetails = getAuthorDetails(selectedAuthor);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div className="space-y-8 animate-in fade-in duration-700 relative overflow-visible z-0">
       
+      {/* Premium ambient background color glows (mesh gradients) */}
+      <div className="absolute top-0 left-1/4 w-[450px] h-[450px] bg-accent/6 rounded-full filter blur-[110px] pointer-events-none -translate-x-1/2 -z-10" />
+      <div className="absolute top-64 right-1/4 w-[380px] h-[380px] bg-violet-500/5 rounded-full filter blur-[90px] pointer-events-none translate-x-1/2 -z-10" />
+      <div className="absolute bottom-10 left-1/3 w-[300px] h-[300px] bg-emerald-500/4 rounded-full filter blur-[80px] pointer-events-none -z-10" />
+
       {/* Hidden SVG Filter for Coarse Metallic Texture */}
       <svg className="absolute w-0 h-0 pointer-events-none select-none opacity-0" aria-hidden="true">
         <filter id="metal-noise">
@@ -124,7 +129,35 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
 
       {/* 1. Top Contributors Podium */}
       {sortedContributors.length > 0 && (
-        <div className="space-y-4 pt-2">
+        <div className="space-y-4 pt-2 relative overflow-visible z-0">
+          
+          {/* Subtle ranking design watermark (podium steps, star points, concentric tier arcs) */}
+          <div className="absolute inset-0 top-16 flex items-center justify-center pointer-events-none select-none -z-10 opacity-[0.16] dark:opacity-[0.22]">
+            <svg viewBox="0 0 800 400" className="w-full max-w-[650px] h-auto text-text-tertiary/75 fill-none stroke-current" strokeWidth="2.5">
+              {/* Step levels */}
+              <path d="M 120,380 L 290,380 L 290,260 L 510,260 L 510,380 L 680,380" strokeDasharray="8 8" />
+              {/* Radial rank tier paths */}
+              <circle cx="400" cy="220" r="120" strokeDasharray="4 4" />
+              <circle cx="400" cy="220" r="220" strokeDasharray="6 6" />
+              <circle cx="400" cy="220" r="320" strokeDasharray="8 8" />
+              
+              {/* Star elements */}
+              <polygon points="400,85 403,92 411,93 405,98 407,106 400,101 393,106 395,98 389,93 397,92" fill="currentColor" stroke="none" />
+              <polygon points="205,215 207,220 212,221 208,225 209,230 205,227 201,230 202,225 198,221 203,220" fill="currentColor" stroke="none" />
+              <polygon points="595,215 597,220 602,221 598,225 599,230 595,227 591,230 592,225 588,221 593,220" fill="currentColor" stroke="none" />
+              
+              {/* Connectors */}
+              <line x1="400" y1="260" x2="400" y2="380" strokeDasharray="4 4" />
+              <line x1="205" y1="380" x2="205" y2="400" strokeDasharray="4 4" />
+              <line x1="595" y1="380" x2="595" y2="400" strokeDasharray="4 4" />
+            </svg>
+          </div>
+
+          {/* Large "Top Contributors" text watermark in the background */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none -z-10 font-display font-black text-5xl md:text-7xl lg:text-[88px] whitespace-nowrap leading-none text-text-tertiary/[0.08] dark:text-text-tertiary/[0.12] tracking-tight uppercase">
+            Top Contributors
+          </div>
+
           <div className="text-center max-w-md mx-auto mb-2 relative">
             <h3 className="text-xl font-display font-black text-text-primary tracking-tight uppercase">Top Contributors</h3>
             <p className="text-xs text-text-tertiary mt-1">Key developers ranked by commit volume and file ownership scope</p>
