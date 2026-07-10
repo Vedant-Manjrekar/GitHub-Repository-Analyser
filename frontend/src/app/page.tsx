@@ -29,6 +29,9 @@ import { RiskMap } from "@/components/views/RiskMap";
 import { TechDebtVisualizer } from "@/components/views/TechDebtVisualizer";
 import { ContributorIntel } from "@/components/views/ContributorIntel";
 import { VSCodeExplorer } from "@/components/views/VSCodeExplorer";
+import { AuthModal } from "@/components/ui/AuthModal";
+import { AuthLock } from "@/components/ui/AuthLock";
+
 
 type ViewMode = "landing" | "loading" | "dashboard";
 type TabMode = "overview" | "hotspots" | "debt" | "contributors" | "explorer";
@@ -58,11 +61,24 @@ export default function Home() {
   const [techDebt, setTechDebt] = useState<any>(null);
   const [complexityFiles, setComplexityFiles] = useState<any[]>([]);
 
+  // Authentication State
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+
   useEffect(() => {
     const saved = localStorage.getItem("recent_repositories");
     if (saved) {
       try {
         setRecentRepos(JSON.parse(saved));
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    const savedUser = localStorage.getItem("current_user");
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
       } catch (e) {
         console.error(e);
       }
@@ -206,35 +222,103 @@ export default function Home() {
 
   // If in Dashboard View, render the entire AppShell and Tab content
   if (view === "dashboard") {
-    return (
-      <AppShell 
-        activeTab={tab} 
-        onTabChange={(t) => setTab(t as TabMode)} 
-        repoName={dashboard?.repository?.name}
-        onBackToWorkspace={() => {
-          const url = new URL(window.location.href);
-          url.searchParams.delete("repoId");
-          window.history.pushState({}, "", url.toString());
-          setView("landing");
-        }}
-      >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={tab}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.2 }}
-            className="h-full"
+    const renderTabContent = () => {
+      if (!user && tab !== "overview") {
+        let featureName = "Risk Insights";
+        let featureDesc = "Unlock interactive hotspot clustering, file churn risk maps, and historical regression trackers to pinpoint code instability.";
+        
+        if (tab === "debt") {
+          featureName = "Technical Debt Modularity";
+          featureDesc = "Unlock the codebase modularity treemap, density analytics, and AI recommendations checklists to clean up monolith files.";
+        } else if (tab === "contributors") {
+          featureName = "Contributor Intelligence";
+          featureDesc = "Unlock detailed developer ranking, expertise profiles, files ownership summaries, and knowledge concentration metrics.";
+        } else if (tab === "explorer") {
+          featureName = "Repository Explorer";
+          featureDesc = "Unlock the high fidelity repository tree explorer, inline complexity score highlights, and AI-powered refactoring suggestions.";
+        }
+        
+        const previewComponent = (() => {
+          switch (tab) {
+            case "hotspots":
+              return <RiskMap hotspots={hotspots} />;
+            case "debt":
+              return <TechDebtVisualizer techDebt={techDebt} complexityFiles={complexityFiles} />;
+            case "contributors":
+              return <ContributorIntel contributors={contributors} busFactor={busFactor} />;
+            case "explorer":
+              return <VSCodeExplorer hotspots={hotspots} />;
+            default:
+              return null;
+          }
+        })();
+
+        return (
+          <AuthLock 
+            onLoginClick={() => setShowAuthModal(true)} 
+            featureName={featureName} 
+            featureDesc={featureDesc}
           >
-            {tab === "overview" && <HeroDashboard dashboard={dashboard} techDebt={techDebt} busFactor={busFactor} contributors={contributors} hotspots={hotspots} />}
-            {tab === "hotspots" && <RiskMap hotspots={hotspots} />}
-            {tab === "debt" && <TechDebtVisualizer techDebt={techDebt} complexityFiles={complexityFiles} />}
-            {tab === "contributors" && <ContributorIntel contributors={contributors} busFactor={busFactor} />}
-            {tab === "explorer" && <VSCodeExplorer hotspots={hotspots} />}
-          </motion.div>
-        </AnimatePresence>
-      </AppShell>
+            {previewComponent}
+          </AuthLock>
+        );
+      }
+
+      switch (tab) {
+        case "overview":
+          return <HeroDashboard dashboard={dashboard} techDebt={techDebt} busFactor={busFactor} contributors={contributors} hotspots={hotspots} />;
+        case "hotspots":
+          return <RiskMap hotspots={hotspots} />;
+        case "debt":
+          return <TechDebtVisualizer techDebt={techDebt} complexityFiles={complexityFiles} />;
+        case "contributors":
+          return <ContributorIntel contributors={contributors} busFactor={busFactor} />;
+        case "explorer":
+          return <VSCodeExplorer hotspots={hotspots} />;
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <>
+        <AppShell 
+          activeTab={tab} 
+          onTabChange={(t) => setTab(t as TabMode)} 
+          repoName={dashboard?.repository?.name}
+          onBackToWorkspace={() => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("repoId");
+            window.history.pushState({}, "", url.toString());
+            setView("landing");
+          }}
+          user={user}
+          onLoginClick={() => setShowAuthModal(true)}
+          onLogout={() => {
+            localStorage.removeItem("current_user");
+            setUser(null);
+          }}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              {renderTabContent()}
+            </motion.div>
+          </AnimatePresence>
+        </AppShell>
+
+        <AuthModal 
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={(u) => setUser(u)}
+        />
+      </>
     );
   }
 
@@ -253,6 +337,34 @@ export default function Home() {
           <span className="font-display font-bold text-lg tracking-tight text-text-primary">
             ANTIGRAVITY
           </span>
+        </div>
+        <div>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-accent/15 text-accent flex items-center justify-center font-display font-bold text-xs border border-accent/20">
+                  {user.name.split(" ").map(p => p[0]).join("").toUpperCase().slice(0, 2)}
+                </div>
+                <span className="text-xs font-semibold text-text-primary hidden sm:inline">{user.name}</span>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem("current_user");
+                  setUser(null);
+                }}
+                className="text-xs font-semibold text-critical hover:bg-critical/10 px-3 py-1.5 rounded-xl border border-transparent transition-colors cursor-pointer"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold tracking-wide transition-all shadow-sm cursor-pointer"
+            >
+              Sign In
+            </button>
+          )}
         </div>
       </header>
 
@@ -469,6 +581,12 @@ export default function Home() {
 
         </AnimatePresence>
       </main>
+
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={(u) => setUser(u)}
+      />
     </div>
   );
 }

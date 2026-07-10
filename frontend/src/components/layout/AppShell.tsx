@@ -9,9 +9,21 @@ interface AppShellProps {
   repoName?: string;
   onBackToWorkspace: () => void;
   children: React.ReactNode;
+  user: { name: string; email: string } | null;
+  onLoginClick: () => void;
+  onLogout: () => void;
 }
 
-export function AppShell({ activeTab, onTabChange, repoName, onBackToWorkspace, children }: AppShellProps) {
+export function AppShell({ 
+  activeTab, 
+  onTabChange, 
+  repoName, 
+  onBackToWorkspace, 
+  children,
+  user,
+  onLoginClick,
+  onLogout
+}: AppShellProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
@@ -22,13 +34,21 @@ export function AppShell({ activeTab, onTabChange, repoName, onBackToWorkspace, 
         onTabChange={onTabChange} 
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        user={user}
+        onLoginClick={onLoginClick}
+        onLogout={onLogout}
         className="hidden lg:flex" 
       />
 
       {/* Main Content Area */}
       <div className={cn("flex-1 flex flex-col min-w-0 h-full overflow-hidden transition-all duration-300", isCollapsed ? "lg:pl-20" : "lg:pl-64")}>
         {/* Top Command Bar */}
-        <TopCommandBar repoName={repoName} onBackToWorkspace={onBackToWorkspace} />
+        <TopCommandBar 
+          repoName={repoName} 
+          onBackToWorkspace={onBackToWorkspace} 
+          user={user}
+          onLoginClick={onLoginClick}
+        />
 
         {/* Scrollable View Area */}
         <div className="flex-1 overflow-y-auto px-6 py-8 md:px-10 lg:px-12 bg-bg-base">

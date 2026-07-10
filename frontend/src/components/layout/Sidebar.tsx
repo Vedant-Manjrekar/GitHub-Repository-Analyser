@@ -11,6 +11,9 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   className?: string;
+  user: { name: string; email: string } | null;
+  onLoginClick: () => void;
+  onLogout: () => void;
 }
 
 const navItems = [
@@ -22,7 +25,22 @@ const navItems = [
   { id: "explorer", label: "Repository Explorer", icon: FolderSimple },
 ];
 
-export function Sidebar({ activeTab, onTabChange, isCollapsed, onToggleCollapse, className }: SidebarProps) {
+export function Sidebar({ 
+  activeTab, 
+  onTabChange, 
+  isCollapsed, 
+  onToggleCollapse, 
+  className,
+  user,
+  onLoginClick,
+  onLogout
+}: SidebarProps) {
+  const [showDropdown, setShowDropdown] = React.useState(false);
+
+  const getInitials = (n: string) => {
+    return n.split(" ").map(p => p[0]).join("").toUpperCase().slice(0, 2);
+  };
+
   return (
     <aside className={cn(
       "bg-white border-r border-[#E9ECEF] flex flex-col h-screen fixed left-0 top-0 z-30 transition-all duration-300 shadow-sm",
@@ -31,21 +49,26 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
     )}>
       
       {/* Top Profile Card Container */}
-      <div className={cn("p-4 border-b border-[#E9ECEF]", isCollapsed && "p-3 flex justify-center")}>
-        <div className={cn(
-          "relative rounded-xl border border-[#E9ECEF] bg-white p-2 flex items-center justify-between transition-all duration-300",
-          isCollapsed ? "justify-center border-none p-0 bg-transparent" : "gap-3"
-        )}>
-          <div className="flex items-center gap-3">
+      <div className={cn("p-4 border-b border-[#E9ECEF] relative", isCollapsed && "p-3 flex justify-center")}>
+        <div 
+          onClick={user ? () => setShowDropdown(!showDropdown) : onLoginClick}
+          className={cn(
+            "relative rounded-xl border border-[#E9ECEF] bg-white p-2 flex items-center justify-between transition-all duration-300 cursor-pointer hover:bg-bg-base/60",
+            isCollapsed ? "justify-center border-none p-0 bg-transparent" : "gap-3"
+          )}
+        >
+          <div className="flex items-center gap-3 min-w-0">
             <div className="relative">
               {/* Profile Avatar Card representation */}
-              <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#FFB085] flex items-center justify-center shrink-0 border border-black/5 shadow-sm">
-                <svg viewBox="0 0 32 32" className="w-8 h-8 mt-1.5">
-                  <circle cx="16" cy="13" r="6" fill="#FAD0C4" />
-                  <path d="M10 29c0-3.5 3.5-5.5 6-5.5s6 2 6 5.5" fill="#FAD0C4" />
-                  <path d="M9 11c0-2.5 3-3.5 7-3.5s7 1 7 3.5c0 0.5-0.5 1-1.5 1h-11C9 12 9 11.5 9 11z" fill="#E05A47" />
-                </svg>
-              </div>
+              {user ? (
+                <div className="w-9 h-9 rounded-xl bg-accent/15 text-accent flex items-center justify-center font-display font-bold text-sm border border-accent/25 shrink-0 select-none shadow-sm">
+                  {getInitials(user.name)}
+                </div>
+              ) : (
+                <div className="w-9 h-9 rounded-xl bg-surface-3 flex items-center justify-center text-text-tertiary border border-border-strong shrink-0 select-none shadow-sm">
+                  G
+                </div>
+              )}
               {/* Tiny Logo Badge */}
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-md bg-black border border-white flex items-center justify-center text-[7px] font-bold text-white shadow-subtle shrink-0">
                 <span className="scale-90">AG</span>
@@ -54,8 +77,12 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
             
             {!isCollapsed && (
               <div className="min-w-0">
-                <p className="text-xs font-bold text-text-primary truncate">Vedant Manjrekar</p>
-                <p className="text-[10px] text-[#8E959E] font-mono truncate">vedant@riverstone.com</p>
+                <p className="text-xs font-bold text-text-primary truncate">
+                  {user ? user.name : "Guest Account"}
+                </p>
+                <p className="text-[10px] text-[#8E959E] font-mono truncate">
+                  {user ? user.email : "Click to Login"}
+                </p>
               </div>
             )}
           </div>
@@ -64,6 +91,21 @@ export function Sidebar({ activeTab, onTabChange, isCollapsed, onToggleCollapse,
             <CaretUpDown className="w-3.5 h-3.5 text-[#8E959E] shrink-0" />
           )}
         </div>
+
+        {/* Dropdown menu for logout */}
+        {showDropdown && user && !isCollapsed && (
+          <div className="absolute top-full left-4 right-4 mt-1 bg-surface-1 border border-border-strong rounded-xl shadow-floating p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150">
+            <button
+              onClick={() => {
+                onLogout();
+                setShowDropdown(false);
+              }}
+              className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold text-critical hover:bg-critical/10 transition-colors cursor-pointer"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Navigation List Container */}
