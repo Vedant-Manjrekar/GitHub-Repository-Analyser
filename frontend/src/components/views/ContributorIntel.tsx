@@ -55,20 +55,37 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
   // Derive Mocked timelines & owned files for the selection drawer to show rich profiles
   const getAuthorDetails = (author: any) => {
     if (!author) return null;
-    
-    // Simple mock calculation based on commit levels
-    const riskScore = author.commits > 50 ? 85 : author.commits > 20 ? 55 : 25;
-    const expertise = author.commits > 50 
-      ? ["Core Architecture", "Database Migrations", "API Endpoints"] 
-      : ["UI Components", "Unit Testing", "Styling Systems"];
 
-    const mockFiles = author.owned_files && author.owned_files.length > 0
+    const riskScore = author.commits > 50 ? 85 : author.commits > 20 ? 55 : 25;
+
+    // Derive expertise from owned files using path/extension patterns
+    const files: string[] = author.owned_files && author.owned_files.length > 0
       ? author.owned_files
-      : [
-          "src/app/page.tsx",
-          "src/components/layout/AppShell.tsx",
-          "src/utils/api.ts"
-        ];
+      : ["src/app/page.tsx", "src/components/layout/AppShell.tsx", "src/utils/api.ts"];
+
+    const rules: { match: (f: string) => boolean; tag: string }[] = [
+      { match: f => /\.(test|spec)\.(ts|tsx|js|jsx|py)$/.test(f),                              tag: "Testing" },
+      { match: f => /\.(css|scss|sass|less)$/.test(f) || f.includes("styles"),                  tag: "Styling" },
+      { match: f => /migrations?\/|\.sql$/.test(f),                                             tag: "Database" },
+      { match: f => /docs?\/|readme|\.md$/i.test(f),                                            tag: "Documentation" },
+      { match: f => /(api|routes?|endpoints?|views?)\/.*\.(py|ts|js)$/.test(f),                 tag: "API Endpoints" },
+      { match: f => /components\/.*\.(tsx|jsx)$/.test(f),                                       tag: "UI Components" },
+      { match: f => /(app|pages?)\/.*\.(tsx|jsx|ts|js)$/.test(f) && !f.includes("component"),   tag: "App Architecture" },
+      { match: f => /\.(py)$/.test(f) && /(service|handler|manager|core)/.test(f),              tag: "Backend Logic" },
+      { match: f => /config|settings|env|\.toml$|\.yaml$|\.yml$/.test(f),                       tag: "Config & DevOps" },
+      { match: f => /(hooks?|context|store|state|redux|zustand)/.test(f),                       tag: "State Management" },
+      { match: f => /(utils?|helpers?|lib)\/.+\.(ts|js|py)$/.test(f),                          tag: "Utilities" },
+      { match: f => /\.(sh|dockerfile|docker|ci|github\/workflows)/i.test(f),                   tag: "CI / Infra" },
+    ];
+
+    const matchedTags = rules
+      .filter(rule => files.some(f => rule.match(f)))
+      .map(r => r.tag)
+      .slice(0, 5);
+
+    const expertise = matchedTags.length > 0 ? matchedTags : ["General Development"];
+
+    const mockFiles = files;
 
     return {
       riskScore,
@@ -620,96 +637,166 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
         isOpen={!!selectedAuthor} 
         onClose={() => setSelectedAuthor(null)} 
         title={selectedAuthor ? selectedAuthor.name : "Developer Profile"}
+        subtitle={selectedAuthor?.email}
+        avatarLetter={selectedAuthor ? selectedAuthor.name.substring(0, 1).toUpperCase() : undefined}
         width="lg"
       >
         {selectedAuthor && authorDetails && (
-          <div className="space-y-6">
-            
-            {/* Header info */}
-            <div className="bg-surface-2 rounded-2xl p-5 border border-border-base flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-accent/10 text-accent flex items-center justify-center font-display font-black text-xl shadow-subtle border border-accent/20">
-                {selectedAuthor.name.substring(0, 1).toUpperCase()}
-              </div>
-              <div className="space-y-0.5">
-                <h4 className="font-display font-bold text-text-primary text-base">{selectedAuthor.name}</h4>
-                <p className="text-xs text-text-tertiary flex items-center gap-1.5 mt-1 font-mono">
-                  <Envelope className="w-3.5 h-3.5" /> {selectedAuthor.email}
-                </p>
-              </div>
-            </div>
-
-            {/* Critical Stats */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-surface-2 rounded-2xl p-4 border border-border-base flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary">Loss Impact Risk</p>
-                  <p className="text-lg font-bold font-display text-text-primary mt-0.5">{getLossRiskLabel(authorDetails.riskScore)}</p>
+          <div>
+            {/* Contact Info Grid Cards */}
+            <div className="px-5 pt-4 pb-2">
+              {/* Email — full width */}
+              <div className="mb-3 rounded-xl border border-border-strong bg-surface-2 px-4 py-3 flex items-center gap-3 shadow-subtle">
+                <div className="w-8 h-8 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                  <Envelope className="w-4 h-4 text-accent" />
                 </div>
-                <ShieldWarning className={`w-5 h-5 ${authorDetails.riskScore > 70 ? 'text-critical' : 'text-warning'}`} />
-              </div>
-
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Total Commits</p>
-                  <p className="font-mono font-bold text-text-primary text-lg">{selectedAuthor.commits}</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider">Email</p>
+                  <p className="text-xs font-medium text-text-primary truncate mt-0.5">{selectedAuthor.email}</p>
                 </div>
-                <GitCommit className="w-5 h-5 text-accent" />
               </div>
-            </div>
 
-            {/* Expertise Areas */}
-            <div className="space-y-3">
-              <h5 className="text-xs font-bold font-mono uppercase tracking-wider text-text-tertiary">Areas of Expertise</h5>
-              <div className="flex flex-wrap gap-2">
-                {authorDetails.expertise.map((exp, idx) => (
-                  <Badge key={idx} variant="outline" className="px-3 py-1 bg-surface-1 rounded-lg">
-                    {exp}
-                  </Badge>
+              {/* 2-col grid for the rest */}
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {
+                    icon: <ShieldWarning className="w-4 h-4" />,
+                    label: "Loss Risk",
+                    value: getLossRiskLabel(authorDetails.riskScore),
+                    color: authorDetails.riskScore > 70 ? "text-rose-400 bg-rose-500/10 border-rose-500/20" : authorDetails.riskScore > 40 ? "text-amber-400 bg-amber-500/10 border-amber-500/20" : "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+                    valueColor: authorDetails.riskScore > 70 ? "text-rose-400" : authorDetails.riskScore > 40 ? "text-amber-400" : "text-emerald-400",
+                  },
+                  {
+                    icon: <GitCommit className="w-4 h-4" />,
+                    label: "Total Commits",
+                    value: String(selectedAuthor.commits),
+                    color: "text-accent bg-accent/10 border-accent/20",
+                    valueColor: "text-text-primary",
+                  },
+                  {
+                    icon: <Cpu className="w-4 h-4" />,
+                    label: "Files Owned",
+                    value: String(selectedAuthor.owned_files?.length || 0),
+                    color: "text-violet-400 bg-violet-500/10 border-violet-500/20",
+                    valueColor: "text-text-primary",
+                  },
+                  {
+                    icon: <Folder className="w-4 h-4" />,
+                    label: "Role",
+                    value: authorDetails.riskScore > 70 ? "Lead Maintainer" : authorDetails.riskScore > 40 ? "Core Collaborator" : "Active Contributor",
+                    color: "text-sky-400 bg-sky-500/10 border-sky-500/20",
+                    valueColor: "text-text-primary",
+                  },
+                ].map(({ icon, label, value, color, valueColor }, i) => (
+                  <div key={i} className="rounded-xl border border-border-strong bg-surface-2 px-3.5 py-3.5 flex flex-col gap-2.5 shadow-subtle">
+                    <div className={`w-8 h-8 rounded-lg border flex items-center justify-center shrink-0 ${color}`}>
+                      {icon}
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider">{label}</p>
+                      <p className={`text-sm font-bold mt-0.5 truncate ${valueColor}`}>{value}</p>
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
 
-            {/* Owned / Primary Files */}
-            <div className="space-y-3 pt-2 border-t border-border-base">
-              <h5 className="text-xs font-bold font-mono uppercase tracking-wider text-text-tertiary">Primary Owned Files</h5>
-              <div className="space-y-3">
+            {/* Collapsible Accordion Sections */}
+            <div className="pt-2 border-t border-border-subtle/40 mt-1 space-y-0">
+            {[
+              {
+                label: "Areas of Expertise",
+                content: (
+                  <div className="flex flex-wrap gap-2 px-4 pt-3 pb-4">
+                    {authorDetails.expertise.map((exp: string, idx: number) => (
+                      <Badge key={idx} variant="outline" className="px-3 py-1 bg-surface-1 rounded-lg text-xs">
+                        {exp}
+                      </Badge>
+                    ))}
+                  </div>
+                ),
+              },
+              {
+                label: "Commit Timeline",
+                content: (
+                  <div className="px-4 pt-3 pb-4 space-y-2">
+                    {authorDetails.commitTimeline.map((entry: { month: string; commits: number }, idx: number) => (
+                      <div key={idx} className="flex items-center gap-3">
+                        <span className="text-xs font-mono text-text-tertiary w-8 shrink-0">{entry.month}</span>
+                        <div className="flex-1 h-2 bg-surface-3 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-accent/70 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(100, (entry.commits / (selectedAuthor.commits || 1)) * 100 * 3)}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-mono text-text-secondary w-6 text-right shrink-0">{entry.commits}</span>
+                      </div>
+                    ))}
+                  </div>
+                ),
+              },
+            ].map(({ label, content }, i) => {
+              const key = `accordion-${i}`;
+              const isExpanded = expandedFolders[key] === true;
+              return (
+                <div key={i} className="px-5 pb-3 last:pb-5">
+                  <div className="rounded-xl border border-border-base bg-surface-1 overflow-hidden">
+                    <button
+                      onClick={() => toggleFolder(key)}
+                      className="w-full flex items-center justify-between px-4 py-3.5 text-sm font-semibold text-text-primary hover:bg-surface-2/60 transition-colors"
+                    >
+                      {label}
+                      <CaretDown className={cn("w-4 h-4 text-text-tertiary transition-transform duration-200", isExpanded && "rotate-180")} />
+                    </button>
+                    {isExpanded && (
+                      <div className="border-t border-border-subtle/50 bg-surface-2/30">
+                        {content}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            </div>
+
+            {/* Primary Owned Files Section */}
+            <div className="px-5 pt-2 pb-5 border-t border-border-subtle/40">
+              <h5 className="text-sm font-bold text-text-primary mb-3 pt-3">Primary Owned Files</h5>
+
+              {/* Files list */}
+              <div className="space-y-2.5">
                 {(() => {
                   const filesList = authorDetails.mockFiles || [];
                   if (filesList.length === 0) {
                     return (
-                      <div className="py-8 text-center text-text-tertiary text-xs italic">
+                      <div className="py-6 text-center text-text-tertiary text-xs italic">
                         No owned files found.
                       </div>
                     );
                   }
-                  
                   const folderGroups = getFolderGroups(filesList);
                   return Object.keys(folderGroups).sort().map(folder => {
                     const isOpen = expandedFolders[folder] !== false;
                     const folderFiles = folderGroups[folder];
-                    
                     return (
-                      <div key={folder} className="border border-border-base rounded-2xl overflow-hidden bg-surface-2/45">
-                        {/* Folder Header */}
+                      <div key={folder} className="rounded-xl overflow-hidden border border-border-base bg-surface-2/30">
                         <button
                           onClick={() => toggleFolder(folder)}
-                          className="w-full px-4 py-3 flex items-center justify-between text-xs font-bold bg-surface-2 hover:bg-surface-3 transition-colors text-left"
+                          className="w-full px-3.5 py-2.5 flex items-center justify-between text-xs font-semibold bg-surface-2/60 hover:bg-surface-3 transition-colors text-left"
                         >
-                          <div className="flex items-center gap-2 truncate">
-                            <Folder className="w-4 h-4 text-accent shrink-0" />
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Folder className="w-3.5 h-3.5 text-accent shrink-0" />
                             <span className="font-mono text-text-primary truncate">{folder}</span>
-                            <Badge variant="outline" className="px-1.5 py-0.5 rounded text-[9px] shrink-0 font-normal">
-                              {folderFiles.length} {folderFiles.length === 1 ? 'file' : 'files'}
-                            </Badge>
+                            <span className="text-[9px] font-bold bg-surface-3 border border-border-base rounded px-1.5 py-0.5 text-text-tertiary shrink-0">
+                              {folderFiles.length}
+                            </span>
                           </div>
                           <CaretDown className={cn("w-3.5 h-3.5 text-text-tertiary shrink-0 transition-transform duration-200", isOpen && "rotate-180")} />
                         </button>
-                        
-                        {/* Folder Files List */}
                         {isOpen && (
-                          <div className="p-2.5 space-y-1 bg-surface-1 border-t border-border-base/50 divide-y divide-border-subtle/30">
+                          <div className="divide-y divide-border-subtle/30 bg-surface-1">
                             {folderFiles.map((fileName, idx) => (
-                              <div key={idx} className="flex items-center gap-2.5 py-2 px-2.5 text-xs text-text-secondary hover:text-text-primary transition-colors">
+                              <div key={idx} className="flex items-center gap-2.5 py-2 px-3.5 text-xs text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors">
                                 <FileCode className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
                                 <span className="font-mono truncate">{fileName}</span>
                               </div>
@@ -722,7 +809,6 @@ export function ContributorIntel({ contributors, busFactor }: ContributorIntelPr
                 })()}
               </div>
             </div>
-
           </div>
         )}
       </Drawer>

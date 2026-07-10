@@ -1,17 +1,19 @@
 import React, { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "@phosphor-icons/react";
+import { X, ArrowSquareOut } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface DrawerProps {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  subtitle?: string;
+  avatarLetter?: string;
   children: React.ReactNode;
   width?: "sm" | "md" | "lg" | "xl";
 }
 
-export function Drawer({ isOpen, onClose, title, children, width = "md" }: DrawerProps) {
+export function Drawer({ isOpen, onClose, title, subtitle, avatarLetter, children, width = "md" }: DrawerProps) {
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -60,21 +62,46 @@ export function Drawer({ isOpen, onClose, title, children, width = "md" }: Drawe
               widths[width]
             )}
           >
-            {/* Header */}
-            <div className="h-16 px-6 flex items-center justify-between border-b border-border-subtle shrink-0 bg-surface-1">
-              {title ? (
-                <h2 className="font-display font-semibold text-lg text-text-primary truncate pr-4">{title}</h2>
-              ) : <div></div>}
-              <button 
-                onClick={onClose}
-                className="p-2 -mr-2 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-2 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+            {/* Rich Header */}
+            <div className="px-5 pt-5 pb-4 border-b border-border-subtle shrink-0 bg-surface-1">
+              <div className="flex items-start justify-between gap-3">
+                {/* Avatar + Name + Subtitle */}
+                <div className="flex items-center gap-3 min-w-0">
+                  {avatarLetter ? (
+                    <div className="w-12 h-12 rounded-full bg-accent/15 text-accent flex items-center justify-center font-display font-black text-xl border border-accent/25 shrink-0 select-none">
+                      {avatarLetter}
+                    </div>
+                  ) : null}
+                  <div className="min-w-0">
+                    {title && (
+                      <h2 className="font-display font-bold text-base text-text-primary truncate leading-tight">{title}</h2>
+                    )}
+                    {subtitle && (
+                      <p className="text-xs text-text-tertiary mt-0.5 truncate font-mono">{subtitle}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Icons */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-2 transition-colors"
+                    title="Open in new tab"
+                  >
+                    <ArrowSquareOut className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={onClose}
+                    className="p-1.5 rounded-lg text-text-tertiary hover:text-text-primary hover:bg-surface-2 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
             </div>
             
             {/* Body */}
-            <div className="flex-1 overflow-y-auto p-6 bg-bg-base/50">
+            <div className="flex-1 overflow-y-auto bg-bg-base/50">
               {children}
             </div>
           </motion.div>
