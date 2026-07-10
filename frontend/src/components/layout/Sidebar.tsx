@@ -1,7 +1,7 @@
 import React from "react";
 import { 
   ChartLine, ShieldWarning, Cpu, Users, FolderSimple, Gear, 
-  CaretUpDown, MagnifyingGlass, Question, CaretLeft, CheckCircle 
+  CaretUpDown, MagnifyingGlass, Question, CaretLeft 
 } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
@@ -43,17 +43,17 @@ export function Sidebar({
 
   return (
     <aside className={cn(
-      "bg-white border-r border-[#E9ECEF] flex flex-col h-screen fixed left-0 top-0 z-30 transition-all duration-300 shadow-sm",
+      "bg-surface-1 border-r border-border-base flex flex-col h-screen fixed left-0 top-0 z-30 transition-all duration-300 shadow-sm",
       isCollapsed ? "w-20" : "w-64",
       className
     )}>
       
       {/* Top Profile Card Container */}
-      <div className={cn("p-4 border-b border-[#E9ECEF] relative", isCollapsed && "p-3 flex justify-center")}>
+      <div className={cn("p-4 border-b border-border-base relative", isCollapsed && "p-3 flex justify-center")}>
         <div 
           onClick={user ? () => setShowDropdown(!showDropdown) : onLoginClick}
           className={cn(
-            "relative rounded-xl border border-[#E9ECEF] bg-white p-2 flex items-center justify-between transition-all duration-300 cursor-pointer hover:bg-bg-base/60",
+            "relative rounded-xl border border-border-base bg-surface-1 p-2 flex items-center justify-between transition-all duration-300 cursor-pointer hover:bg-surface-2",
             isCollapsed ? "justify-center border-none p-0 bg-transparent" : "gap-3"
           )}
         >
@@ -80,7 +80,7 @@ export function Sidebar({
                 <p className="text-xs font-bold text-text-primary truncate">
                   {user ? user.name : "Guest Account"}
                 </p>
-                <p className="text-[10px] text-[#8E959E] font-mono truncate">
+                <p className="text-[10px] text-text-tertiary font-mono truncate">
                   {user ? user.email : "Click to Login"}
                 </p>
               </div>
@@ -88,7 +88,7 @@ export function Sidebar({
           </div>
           
           {!isCollapsed && (
-            <CaretUpDown className="w-3.5 h-3.5 text-[#8E959E] shrink-0" />
+            <CaretUpDown className="w-3.5 h-3.5 text-text-tertiary shrink-0" />
           )}
         </div>
 
@@ -114,19 +114,19 @@ export function Sidebar({
         {/* Search Mockup */}
         <div className={cn("relative mb-6", isCollapsed && "flex justify-center")}>
           {isCollapsed ? (
-            <button className="w-9 h-9 rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] hover:bg-[#E9ECEF]/55 flex items-center justify-center text-[#6C757D] hover:text-text-primary transition-colors cursor-pointer shadow-subtle">
+            <button className="w-9 h-9 rounded-xl border border-border-base bg-surface-2 hover:bg-surface-3 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors cursor-pointer shadow-subtle">
               <MagnifyingGlass className="w-4 h-4" />
             </button>
           ) : (
             <div className="relative w-full">
-              <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8E959E]" />
+              <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
               <input
                 type="text"
                 readOnly
                 placeholder="Search"
-                className="w-full pl-9.5 pr-8 py-2 rounded-xl border border-[#E9ECEF] bg-[#F8F9FA] text-xs font-medium text-[#6C757D] placeholder-[#8E959E] focus:outline-none cursor-pointer hover:bg-[#E9ECEF]/30 transition-colors"
+                className="w-full pl-9.5 pr-8 py-2 rounded-xl border border-border-base bg-surface-2 text-xs font-medium text-text-secondary placeholder-text-tertiary focus:outline-none cursor-pointer hover:bg-surface-3 transition-colors"
               />
-              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold bg-white border border-[#E9ECEF] px-1.5 py-0.5 rounded text-[#8E959E] shadow-subtle">K</kbd>
+              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold bg-surface-1 border border-border-base px-1.5 py-0.5 rounded text-text-tertiary shadow-subtle">K</kbd>
             </div>
           )}
         </div>
@@ -135,7 +135,7 @@ export function Sidebar({
         <nav className="space-y-1.5">
           {navItems.map((item) => {
             if (item.isDivider) {
-              return <div key={item.id} className="border-t border-dashed border-[#E9ECEF] my-4 mx-2" />;
+              return <div key={item.id} className="border-t border-dashed border-border-base my-4 mx-2" />;
             }
 
             const isActive = activeTab === item.id;
@@ -149,11 +149,11 @@ export function Sidebar({
                   "w-full flex items-center rounded-xl transition-all duration-150 group cursor-pointer relative",
                   isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 justify-start gap-3.5",
                   isActive 
-                    ? "bg-[#212529] text-white shadow-subtle border border-[#212529]" 
-                    : "text-[#6C757D] hover:text-text-primary hover:bg-[#F8F9FA] border border-transparent"
+                    ? "bg-text-primary text-surface-1 shadow-subtle border border-text-primary" 
+                    : "text-text-secondary hover:text-text-primary hover:bg-surface-2 border border-transparent"
                 )}
               >
-                <Icon className={cn("w-4.5 h-4.5 shrink-0", isActive ? "text-white" : "text-[#8E959E] group-hover:text-[#495057]")} />
+                <Icon className={cn("w-4.5 h-4.5 shrink-0", isActive ? "text-surface-1" : "text-text-tertiary group-hover:text-text-secondary")} />
                 
                 {!isCollapsed && (
                   <span className="text-xs font-semibold text-left">{item.label}</span>
@@ -165,34 +165,34 @@ export function Sidebar({
       </div>
 
       {/* Footer Support / Options */}
-      <div className={cn("p-4 border-t border-[#E9ECEF] bg-[#F8F9FA]/40 space-y-1", isCollapsed && "p-3 flex flex-col items-center")}>
+      <div className={cn("p-4 border-t border-border-base bg-surface-2/40 space-y-1", isCollapsed && "p-3 flex flex-col items-center")}>
         {/* Support Link */}
         <button className={cn(
-          "w-full flex items-center rounded-xl text-xs font-semibold text-[#6C757D] hover:text-text-primary hover:bg-[#F8F9FA] transition-colors cursor-pointer",
+          "w-full flex items-center rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer",
           isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 gap-3.5"
         )}>
-          <Question className="w-4.5 h-4.5 text-[#8E959E] shrink-0" />
-          {!isCollapsed && <span className="text-[#6C757D] hover:text-[#495057]">Support / Help</span>}
+          <Question className="w-4.5 h-4.5 text-text-tertiary shrink-0" />
+          {!isCollapsed && <span className="text-text-secondary hover:text-text-primary">Support / Help</span>}
         </button>
 
         {/* Workspace Settings Link */}
         <button className={cn(
-          "w-full flex items-center rounded-xl text-xs font-semibold text-[#6C757D] hover:text-text-primary hover:bg-[#F8F9FA] transition-colors cursor-pointer",
+          "w-full flex items-center rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer",
           isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 gap-3.5"
         )}>
-          <Gear className="w-4.5 h-4.5 text-[#8E959E] shrink-0" />
-          {!isCollapsed && <span className="text-[#6C757D] hover:text-[#495057]">Settings</span>}
+          <Gear className="w-4.5 h-4.5 text-text-tertiary shrink-0" />
+          {!isCollapsed && <span className="text-text-secondary hover:text-text-primary">Settings</span>}
         </button>
 
         {/* Toggle Collapse Menu Button */}
         <button 
           onClick={onToggleCollapse}
           className={cn(
-            "w-full flex items-center rounded-xl text-xs font-semibold text-[#6C757D] hover:text-text-primary hover:bg-[#F8F9FA] transition-colors cursor-pointer border border-transparent",
+            "w-full flex items-center rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer border border-transparent",
             isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 gap-3.5"
           )}
         >
-          <CaretLeft className={cn("w-4.5 h-4.5 text-[#8E959E] shrink-0 transition-transform duration-300", isCollapsed && "rotate-180")} />
+          <CaretLeft className={cn("w-4.5 h-4.5 text-text-tertiary shrink-0 transition-transform duration-300", isCollapsed && "rotate-180")} />
           {!isCollapsed && <span>Collapse Sidebar</span>}
         </button>
       </div>

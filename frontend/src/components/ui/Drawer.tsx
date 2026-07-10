@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ArrowSquareOut } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,13 @@ interface DrawerProps {
 }
 
 export function Drawer({ isOpen, onClose, title, subtitle, avatarLetter, children, width = "md" }: DrawerProps) {
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted state
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Handle escape key
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -37,7 +45,9 @@ export function Drawer({ isOpen, onClose, title, subtitle, avatarLetter, childre
     xl: "max-w-2xl"
   };
 
-  return (
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -48,7 +58,7 @@ export function Drawer({ isOpen, onClose, title, subtitle, avatarLetter, childre
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="fixed inset-0 bg-bg-base/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-bg-base/80 backdrop-blur-sm z-[100]"
           />
           
           {/* Drawer Panel */}
@@ -58,7 +68,7 @@ export function Drawer({ isOpen, onClose, title, subtitle, avatarLetter, childre
             exit={{ x: "100%", opacity: 0.5 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
             className={cn(
-              "fixed inset-y-0 right-0 z-50 w-full bg-surface-1 border-l border-border-base shadow-floating flex flex-col",
+              "fixed inset-y-0 right-0 z-[100] w-full bg-surface-1 border-l border-border-base shadow-floating flex flex-col",
               widths[width]
             )}
           >
@@ -107,6 +117,7 @@ export function Drawer({ isOpen, onClose, title, subtitle, avatarLetter, childre
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

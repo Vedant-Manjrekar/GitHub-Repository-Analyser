@@ -36,28 +36,28 @@ html {
 }
 
 .dark {
-  /* Fallback dark theme, but primary focus is clean premium light mode */
-  --bg-base: #0b0f19;
-  --bg-surface-1: #111827;
-  --bg-surface-2: #1f2937;
-  --bg-surface-3: #374151;
-  --bg-surface-4: #4b5563;
+  /* True premium black/charcoal dark theme */
+  --bg-base: #09090b;
+  --bg-surface-1: #121214;
+  --bg-surface-2: #18181b;
+  --bg-surface-3: #27272a;
+  --bg-surface-4: #3f3f46;
   
-  --border-subtle: #111827;
-  --border-base: #1f2937;
-  --border-strong: #374151;
+  --border-subtle: #121214;
+  --border-base: #1f1f23;
+  --border-strong: #2d2d30;
   
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-tertiary: #71717a;
   
-  --color-accent: #3b82f6;
-  --color-accent-hover: #2563eb;
-  --color-accent-subtle: rgba(59, 130, 246, 0.1);
+  --color-accent: #3f83f8;
+  --color-accent-hover: #2c6be0;
+  --color-accent-subtle: rgba(63, 131, 248, 0.08);
   
-  --color-success: #34d399;
-  --color-warning: #fbbf24;
-  --color-critical: #f87171;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-critical: #ef4444;
   
   --shadow-subtle: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
   --shadow-elevated: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 10px 15px -3px rgba(0, 0, 0, 0.3);

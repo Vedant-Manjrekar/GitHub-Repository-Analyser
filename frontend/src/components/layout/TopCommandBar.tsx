@@ -1,5 +1,5 @@
-import React from "react";
-import { MagnifyingGlass, Bell, ArrowLeft, SignIn } from "@phosphor-icons/react";
+import React, { useState, useEffect } from "react";
+import { MagnifyingGlass, Bell, ArrowLeft, SignIn, Sun, Moon } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 interface TopCommandBarProps {
@@ -11,6 +11,33 @@ interface TopCommandBarProps {
 }
 
 export function TopCommandBar({ repoName, onBackToWorkspace, className, user, onLoginClick }: TopCommandBarProps) {
+  const [isDark, setIsDark] = useState(false);
+
+  // Sync theme with HTML class and localStorage on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (savedTheme === "dark" || (!savedTheme && prefersDark)) {
+      setIsDark(true);
+      document.documentElement.classList.add("dark");
+    } else {
+      setIsDark(false);
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    if (isDark) {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+      setIsDark(false);
+    } else {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+      setIsDark(true);
+    }
+  };
+
   return (
     <header className={cn("h-16 bg-surface-1 border-b border-border-base flex items-center justify-between px-8 sticky top-0 z-20", className)}>
       <div className="flex items-center gap-4">
@@ -33,6 +60,15 @@ export function TopCommandBar({ repoName, onBackToWorkspace, className, user, on
             <span>Search anything...</span>
           </div>
           <kbd className="text-[9px] font-mono bg-surface-3 px-1.5 py-0.5 rounded text-text-tertiary font-bold shadow-subtle">⌘K</kbd>
+        </button>
+
+        {/* Theme Toggler */}
+        <button 
+          onClick={toggleTheme}
+          className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer"
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
         <button className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors relative cursor-pointer">
