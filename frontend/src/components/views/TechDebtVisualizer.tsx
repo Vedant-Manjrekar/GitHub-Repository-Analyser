@@ -709,50 +709,75 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Complexity Score</p>
-                  <p className="font-mono font-bold text-text-primary text-xl">{selectedFile.complexity}</p>
-                </div>
-                <ChartLine className="w-4 h-4 text-text-tertiary mt-2 self-end" />
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Complexity Score</span>
+                    <p className="text-sm font-display font-black text-text-primary">{Number(selectedFile.complexity).toFixed(2)}</p>
+                    <p className="text-[10px] text-text-tertiary font-mono">cyclomatic index</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20 shrink-0 ml-3">
+                    <ChartLine className="w-5 h-5" />
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Historical Edits</p>
-                  <p className="font-mono font-bold text-text-primary text-xl">{selectedFile.churn}</p>
-                </div>
-                <GitCommit className="w-4 h-4 text-text-tertiary mt-2 self-end" />
-              </div>
+              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Historical Edits</span>
+                    <p className="text-sm font-display font-black text-text-primary">{selectedFile.churn}</p>
+                    <p className="text-[10px] text-text-tertiary font-mono">commit churn count</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400 border border-violet-500/20 shrink-0 ml-3">
+                    <GitCommit className="w-5 h-5" />
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Est. Lines of Code</p>
-                  <p className="font-mono font-bold text-text-primary text-xl">
-                    {Math.round(selectedFile.complexity * 45 + (selectedFile.churn * 15) + 30)}
-                  </p>
-                </div>
-                <Code className="w-4 h-4 text-text-tertiary mt-2 self-end" />
-              </div>
+              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Est. Lines of Code</span>
+                    <p className="text-sm font-display font-black text-text-primary">
+                      {Math.round(selectedFile.complexity * 45 + (selectedFile.churn * 15) + 30)}
+                    </p>
+                    <p className="text-[10px] text-text-tertiary font-mono">estimated LOC</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center text-sky-400 border border-sky-500/20 shrink-0 ml-3">
+                    <Code className="w-5 h-5" />
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
-                <div>
-                  <p className="text-[10px] text-text-tertiary">Active Contributors</p>
-                  <p className="font-mono font-bold text-text-primary text-xl">
-                    {Math.max(1, Math.min(6, Math.floor(selectedFile.churn / 3) + 1))}
-                  </p>
-                </div>
-                <Users className="w-4 h-4 text-text-tertiary mt-2 self-end" />
-              </div>
+              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Active Contributors</span>
+                    <p className="text-sm font-display font-black text-text-primary">
+                      {Math.max(1, Math.min(6, Math.floor(selectedFile.churn / 3) + 1))}
+                    </p>
+                    <p className="text-[10px] text-text-tertiary font-mono">developers involved</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 border border-emerald-500/20 shrink-0 ml-3">
+                    <Users className="w-5 h-5" />
+                  </div>
+                </CardContent>
+              </Card>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base col-span-2 flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] uppercase font-mono text-text-tertiary">Primary Owner</p>
-                  <p className="font-semibold text-text-primary text-sm mt-0.5">{selectedFile.owner.split(" <")[0]}</p>
-                </div>
-                <User className="w-5 h-5 text-text-tertiary" />
-              </div>
+              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50 col-span-2">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="space-y-1 min-w-0 flex-1">
+                    <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Primary Owner</span>
+                    <p className="text-sm font-display font-black text-text-primary truncate">{selectedFile.owner.split(" <")[0]}</p>
+                    <p className="text-[10px] text-text-tertiary font-mono truncate">{selectedFile.owner.includes("<") ? selectedFile.owner.match(/<(.+)>/)?.[1] ?? "—" : "—"}</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20 shrink-0 ml-3">
+                    <User className="w-5 h-5" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             <div className="space-y-2">

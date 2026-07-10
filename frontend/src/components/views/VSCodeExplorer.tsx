@@ -62,8 +62,7 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
           </div>
         </div>
         
-        {/* Folder / File Tree list */}
-        <div className="flex-1 overflow-y-auto py-3 space-y-0.5">
+        <div className="flex-1 overflow-y-auto py-2 space-y-1 px-2">
           {filteredFiles.length > 0 ? (
             filteredFiles.map((f: any) => {
               const segments = f.path.split("/");
@@ -74,17 +73,27 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
                 <div 
                   key={f.id}
                   onClick={() => setSelectedFile(f)}
-                  className={`px-4 py-2 cursor-pointer flex items-center justify-between text-xs transition-all border-l-2 ${selectedFile?.id === f.id ? "border-accent bg-accent-subtle/50 text-text-primary" : "border-transparent hover:bg-surface-2 text-text-secondary"}`}
+                  className={`px-3 py-2.5 rounded-xl cursor-pointer flex items-center justify-between transition-all border ${
+                    selectedFile?.id === f.id
+                      ? "border-accent/30 bg-accent/8 text-text-primary"
+                      : "border-transparent hover:border-border-base hover:bg-surface-2 text-text-secondary"
+                  }`}
                 >
-                  <div className="flex items-center gap-2 truncate">
-                    <FileCode className={`w-3.5 h-3.5 shrink-0 ${selectedFile?.id === f.id ? "text-accent" : "text-text-tertiary"}`} />
-                    <div className="truncate">
-                      <span className="font-semibold text-text-primary">{fileName}</span>
-                      {folderPath && <span className="text-[9px] text-text-tertiary ml-2 block sm:inline truncate">({folderPath})</span>}
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${
+                      selectedFile?.id === f.id
+                        ? "bg-accent/15 border-accent/30 text-accent"
+                        : "bg-surface-3 border-border-strong text-text-tertiary"
+                    }`}>
+                      <FileCode className="w-3.5 h-3.5" />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="font-semibold text-xs text-text-primary block truncate">{fileName}</span>
+                      {folderPath && <span className="text-[10px] text-text-tertiary block truncate mt-0.5">{folderPath}</span>}
                     </div>
                   </div>
                   {f.hotspot_score >= 60 && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-critical shrink-0 shadow-[0_0_6px_rgba(239,68,68,0.5)]"></span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-critical shrink-0 ml-2 shadow-[0_0_6px_rgba(239,68,68,0.5)]"></span>
                   )}
                 </div>
               );
@@ -124,35 +133,48 @@ export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
               
               {/* Layout splits: File Metadata and Visual Metrics cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
+
                 {/* Complexity Card */}
-                <div className="p-4 bg-surface-2 rounded-2xl border border-border-base flex items-center justify-between">
-                  <div>
-                    <span className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Complexity</span>
-                    <p className="text-xl font-bold font-mono text-text-primary mt-1">{selectedFile.complexity}</p>
-                  </div>
-                  <div className="w-9 h-9 rounded-xl bg-surface-2 flex items-center justify-center border border-border-strong shrink-0">
-                    <Hash className="w-5 h-5 text-text-tertiary" />
-                  </div>
-                </div>
+                <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Complexity</span>
+                      <p className="text-sm font-display font-black text-text-primary">{Number(selectedFile.complexity).toFixed(2)}</p>
+                      <p className="text-[10px] text-text-tertiary font-mono">cyclomatic index</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent border border-accent/20 shrink-0 ml-3">
+                      <Hash className="w-5 h-5" />
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Churn Card */}
-                <div className="p-4 bg-surface-2 rounded-2xl border border-border-base flex items-center justify-between">
-                  <div>
-                    <span className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Edits (Churn)</span>
-                    <p className="text-xl font-bold font-mono text-text-primary mt-1">{selectedFile.churn}</p>
-                  </div>
-                  <GitCommit className="w-5 h-5 text-text-tertiary" />
-                </div>
+                <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Edits (Churn)</span>
+                      <p className="text-sm font-display font-black text-text-primary">{selectedFile.churn}</p>
+                      <p className="text-[10px] text-text-tertiary font-mono">commit churn count</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center text-violet-400 border border-violet-500/20 shrink-0 ml-3">
+                      <GitCommit className="w-5 h-5" />
+                    </div>
+                  </CardContent>
+                </Card>
 
                 {/* Primary Author Card */}
-                <div className="p-4 bg-surface-2 rounded-2xl border border-border-base flex items-center justify-between">
-                  <div>
-                    <span className="text-[9px] uppercase font-mono font-bold text-text-tertiary">Primary Owner</span>
-                    <p className="text-xs font-bold text-text-primary mt-1.5 truncate max-w-[120px]">{selectedFile.owner.split(" <")[0]}</p>
-                  </div>
-                  <User className="w-5 h-5 text-text-tertiary" />
-                </div>
+                <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Primary Owner</span>
+                      <p className="text-sm font-display font-black text-text-primary truncate">{selectedFile.owner.split(" <")[0]}</p>
+                      <p className="text-[10px] text-text-tertiary font-mono truncate">{selectedFile.owner.includes("<") ? selectedFile.owner.match(/<(.+)>/)?.[1] ?? "—" : "—"}</p>
+                    </div>
+                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400 border border-amber-500/20 shrink-0 ml-3">
+                      <User className="w-5 h-5" />
+                    </div>
+                  </CardContent>
+                </Card>
 
               </div>
 
