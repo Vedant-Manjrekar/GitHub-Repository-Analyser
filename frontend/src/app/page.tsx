@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { GitBranch, CloudArrowDown, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { GitBranch, CloudArrowDown, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight, X, ShieldWarning, Users, Cpu, FolderSimple } from "@phosphor-icons/react";
+import { motion, AnimatePresence, Variants } from "framer-motion";
 
 // Backend APIs
 import {
@@ -36,6 +36,34 @@ import { AuthLock } from "@/components/ui/AuthLock";
 type ViewMode = "landing" | "loading" | "dashboard";
 type TabMode = "overview" | "hotspots" | "debt" | "contributors" | "explorer";
 
+const panelVariants: Variants = {
+  initial: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? 220 : -220,
+    filter: "blur(6px)"
+  }),
+  animate: {
+    opacity: 1,
+    x: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      damping: 26,
+      stiffness: 170,
+      mass: 1
+    }
+  },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction > 0 ? -220 : 220,
+    filter: "blur(6px)",
+    transition: {
+      ease: "easeInOut",
+      duration: 0.25
+    }
+  })
+};
+
 export default function Home() {
   const [view, setView] = useState<ViewMode>("landing");
   const [tab, setTab] = useState<TabMode>("overview");
@@ -64,6 +92,19 @@ export default function Home() {
   // Authentication State
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Redesigned Landing Page Slide Transitions
+  const [activePanel, setActivePanel] = useState<"hero" | "clone" | "zip">("hero");
+  const [direction, setDirection] = useState(1);
+
+  const navigateTo = (panel: "hero" | "clone" | "zip") => {
+    if (panel === "hero") {
+      setDirection(-1);
+    } else {
+      setDirection(1);
+    }
+    setActivePanel(panel);
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("recent_repositories");
@@ -329,111 +370,337 @@ export default function Home() {
 
   // Otherwise, render Landing or Loading (Clean, Centered experiences)
   return (
-    <div className="min-h-screen bg-bg-base flex flex-col font-sans selection:bg-accent-subtle selection:text-accent overflow-hidden relative">
+    <div className="h-screen w-screen bg-[#030712] text-white flex flex-col font-sans selection:bg-[#00d8f6]/30 selection:text-[#00d8f6] overflow-hidden relative z-0">
       
-      {/* Premium Background Gradient (Subtle) */}
-      <div className="absolute top-0 inset-x-0 h-[500px] bg-gradient-to-b from-accent/5 to-transparent pointer-events-none"></div>
+      {/* Premium futuristic background glowing elements */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-cyan-500/10 rounded-full filter blur-[130px] pointer-events-none -z-10" />
+      <div className="absolute -top-40 -right-40 w-[450px] h-[450px] bg-indigo-500/10 rounded-full filter blur-[110px] pointer-events-none -z-10" />
 
-      <header className="h-20 flex items-center justify-between px-8 relative z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-text-primary text-bg-base flex items-center justify-center">
-            <GitBranch className="w-4 h-4" />
+      {/* Decorative Git commit graph line artwork on the left background */}
+      <div className="absolute left-[3%] top-1/4 h-[420px] w-[260px] pointer-events-none select-none -z-10 opacity-[0.06] dark:opacity-[0.09] hidden md:block">
+        <svg viewBox="0 0 200 400" className="w-full h-full text-[#00d8f6] fill-none stroke-current" strokeWidth="2">
+          <defs>
+            <linearGradient id="git-grad-1" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#00d8f6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#818cf8" stopOpacity="0.2" />
+            </linearGradient>
+          </defs>
+          {/* Main branch */}
+          <line x1="50" y1="20" x2="50" y2="380" stroke="url(#git-grad-1)" strokeWidth="2.5" />
+          
+          {/* Feature 1 */}
+          <path d="M 50,60 C 90,80 90,110 90,130 C 90,150 90,170 50,190" strokeDasharray="3 3" />
+          
+          {/* Feature 2 */}
+          <path d="M 50,150 C 130,170 130,200 130,225 C 130,250 130,270 50,290" />
+          
+          {/* Bugfix */}
+          <path d="M 50,220 C 10,240 10,270 10,290 C 10,310 10,330 50,350" />
+
+          {/* Commits nodes circles */}
+          <circle cx="50" cy="30" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="2" />
+          <circle cx="50" cy="60" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="2" />
+          <circle cx="90" cy="130" r="4" fill="#030712" stroke="#818cf8" strokeWidth="2" />
+          <circle cx="50" cy="150" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="2" />
+          <circle cx="130" cy="225" r="4" fill="#030712" stroke="#818cf8" strokeWidth="2" />
+          <circle cx="50" cy="190" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="2" />
+          <circle cx="50" cy="290" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="2" />
+          <circle cx="10" cy="290" r="4" fill="#030712" stroke="#fb7185" strokeWidth="2" />
+          <circle cx="50" cy="350" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="2" />
+
+          {/* Text labels */}
+          <text x="62" y="34" className="font-mono text-[9px] fill-neutral-500 font-bold stroke-none">main</text>
+          <text x="102" y="134" className="font-mono text-[8px] fill-neutral-600 stroke-none">feat/auth</text>
+          <text x="142" y="229" className="font-mono text-[8px] fill-neutral-600 stroke-none">feat/insights</text>
+          <text x="22" y="294" className="font-mono text-[8px] fill-[#fb7185]/70 stroke-none">bug/fix</text>
+        </svg>
+      </div>
+
+      {/* Decorative System Topology / Dependency network chart on the right background */}
+      <div className="absolute right-[3%] top-1/4 h-[420px] w-[260px] pointer-events-none select-none -z-10 opacity-[0.06] dark:opacity-[0.09] hidden md:block">
+        <svg viewBox="0 0 200 400" className="w-full h-full text-[#00d8f6] fill-none stroke-current" strokeWidth="1.5">
+          {/* Concentric tier rings */}
+          <circle cx="100" cy="200" r="40" strokeDasharray="4 4" className="text-neutral-700" />
+          <circle cx="100" cy="200" r="80" strokeDasharray="6 6" className="text-neutral-700" />
+          <circle cx="100" cy="200" r="120" strokeDasharray="8 8" className="text-neutral-800" />
+
+          {/* Radial axis lines */}
+          <line x1="100" y1="80" x2="100" y2="320" strokeDasharray="2 6" className="text-neutral-800" />
+          <line x1="20" y1="200" x2="180" y2="200" strokeDasharray="2 6" className="text-neutral-800" />
+
+          {/* Connected nodes */}
+          <circle cx="100" cy="200" r="6" fill="#030712" stroke="#00d8f6" strokeWidth="2.5" />
+          
+          <circle cx="100" cy="160" r="4" fill="#030712" stroke="#818cf8" strokeWidth="2" />
+          <circle cx="140" cy="200" r="4" fill="#030712" stroke="#818cf8" strokeWidth="2" />
+          <circle cx="100" cy="240" r="4" fill="#030712" stroke="#818cf8" strokeWidth="2" />
+          <circle cx="60" cy="200" r="4" fill="#030712" stroke="#818cf8" strokeWidth="2" />
+
+          <circle cx="156" cy="144" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="1.5" />
+          <circle cx="44" cy="256" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="1.5" />
+          <circle cx="156" cy="256" r="4" fill="#030712" stroke="#fb7185" strokeWidth="1.5" />
+          <circle cx="44" cy="144" r="4" fill="#030712" stroke="#00d8f6" strokeWidth="1.5" />
+
+          {/* Connection vectors */}
+          <path d="M 100,160 Q 120,150 156,144" />
+          <path d="M 140,200 Q 150,230 156,256" />
+          <path d="M 100,240 Q 70,250 44,256" />
+          <path d="M 60,200 Q 50,170 44,144" />
+
+          {/* Nodes text descriptors */}
+          <text x="108" y="163" className="font-mono text-[7px] fill-neutral-500 font-bold stroke-none">api.ts</text>
+          <text x="148" y="203" className="font-mono text-[7px] fill-neutral-500 font-bold stroke-none">db.py</text>
+          <text x="164" y="147" className="font-mono text-[7px] fill-neutral-600 stroke-none">auth.py</text>
+          <text x="164" y="259" className="font-mono text-[7px] fill-[#fb7185]/70 stroke-none">cache.ts</text>
+        </svg>
+      </div>
+
+      {/* Landing Header */}
+      <header className="h-20 flex items-center justify-between px-8 border-b border-white/5 relative z-10 bg-transparent shrink-0">
+        {/* Left Logo branding */}
+        <div className="flex items-center gap-3 select-none">
+          <div className="w-8 h-8 rounded-lg bg-neutral-950 border border-white/10 flex items-center justify-center shrink-0">
+            <svg viewBox="0 0 32 32" className="w-4 h-4 text-[#00d8f6] fill-none stroke-current" strokeWidth="2.5">
+              <rect x="4" y="4" width="9" height="9" rx="1.5" className="fill-[#00d8f6]" />
+              <rect x="19" y="4" width="9" height="9" rx="1.5" />
+              <rect x="4" y="19" width="9" height="9" rx="1.5" />
+              <rect x="19" y="19" width="9" height="9" rx="1.5" />
+            </svg>
           </div>
-          <span className="font-display font-bold text-lg tracking-tight text-text-primary">
+          <span className="font-display font-black text-sm tracking-[0.25em] text-white">
             ANTIGRAVITY
           </span>
         </div>
-        <div>
-          {user ? (
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-accent/15 text-accent flex items-center justify-center font-display font-bold text-xs border border-accent/20">
-                  {user.name.split(" ").map(p => p[0]).join("").toUpperCase().slice(0, 2)}
-                </div>
-                <span className="text-xs font-semibold text-text-primary hidden sm:inline">{user.name}</span>
-              </div>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("current_user");
-                  setUser(null);
-                }}
-                className="text-xs font-semibold text-critical hover:bg-critical/10 px-3 py-1.5 rounded-xl border border-transparent transition-colors cursor-pointer"
-              >
-                Sign Out
-              </button>
-            </div>
-          ) : (
+
+        {/* Middle Navigation mock links from reference image */}
+        <div className="hidden md:flex items-center gap-8 text-[10px] font-mono tracking-[0.2em] text-neutral-400 select-none">
+          <a href="#" className="hover:text-[#00d8f6] transition-colors">INTELLIGENCE</a>
+          <a href="#" className="hover:text-[#00d8f6] transition-colors">PROTOCOL</a>
+          <a href="#" className="hover:text-[#00d8f6] transition-colors">NODES</a>
+          <a href="#" className="hover:text-[#00d8f6] transition-colors">NEXUS</a>
+        </div>
+
+        {/* Right Authentication states */}
+        <div className="flex items-center gap-5">
+          <button 
+            onClick={() => setShowAuthModal(true)} 
+            className="text-[10px] font-mono tracking-[0.2em] text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          >
+            {user ? user.name.toUpperCase() : "ACCESS"}
+          </button>
+
+          {user && (
             <button
-              onClick={() => setShowAuthModal(true)}
-              className="flex items-center gap-1.5 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-xl text-xs font-semibold tracking-wide transition-all shadow-sm cursor-pointer"
+              onClick={() => {
+                localStorage.removeItem("current_user");
+                setUser(null);
+              }}
+              className="text-[10px] font-mono tracking-[0.2em] text-critical/80 hover:text-critical transition-colors cursor-pointer"
             >
-              Sign In
+              LOGOUT
             </button>
           )}
+
+          <button 
+            onClick={() => navigateTo("clone")}
+            className="px-5 py-2 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-lg text-[10px] font-mono font-bold tracking-[0.2em] transition-all shadow-[0_0_15px_rgba(0,216,246,0.25)] hover:shadow-[0_0_25px_rgba(0,216,246,0.45)] cursor-pointer"
+          >
+            INITIALIZE
+          </button>
         </div>
       </header>
 
-      <main className="flex-1 flex items-center justify-center p-6 relative z-10">
-        <AnimatePresence mode="wait">
+      {/* Main Container - strictly centered 100vh with screen transitions */}
+      <main className="flex-1 flex items-center justify-center p-6 relative z-10 overflow-hidden">
+        <AnimatePresence custom={direction} mode="wait">
           
-          {view === "landing" && (
+          {/* Centered Hero Section */}
+          {view === "landing" && activePanel === "hero" && (
             <motion.div 
-              key="landing"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-5xl"
+              key="hero"
+              custom={direction}
+              variants={panelVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-3xl text-center flex flex-col items-center justify-center"
             >
-              <div className="text-center mb-16 space-y-4">
-                <h1 className="text-5xl md:text-7xl font-display font-bold text-text-primary tracking-tight">
-                  Engineering <span className="text-accent">Intelligence.</span>
-                </h1>
-                <p className="text-lg md:text-xl text-text-secondary max-w-2xl mx-auto font-medium">
-                  Connect your repository to identify critical maintenance hotspots, trace single-developer dependencies, and access AI-generated refactoring guides.
-                </p>
-                
-                {submitError && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 p-4 rounded-xl border border-critical/20 bg-critical/10 text-critical text-sm flex items-center justify-center gap-2 max-w-md mx-auto">
-                    <Warning className="w-5 h-5 flex-shrink-0" />
-                    <span>{submitError}</span>
-                  </motion.div>
-                )}
+              {/* Tagline */}
+              <div className="flex flex-col items-center">
+                <span className="text-[10px] font-mono tracking-[0.35em] text-[#00d8f6] uppercase">
+                  CLARITY IN CHAOS
+                </span>
+                <div className="w-44 h-[1.2px] bg-gradient-to-r from-transparent via-[#00d8f6]/30 to-transparent my-3.5" />
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {/* Clone Panel */}
-                <Card className="bg-surface-1 border border-border-base shadow-subtle">
-                  <CardContent className="p-8">
-                    <div className="w-12 h-12 rounded-xl bg-accent-subtle/40 border border-accent/10 flex items-center justify-center mb-6">
-                      <GitBranch className="w-5 h-5 text-accent" />
-                    </div>
-                    <h3 className="font-display font-bold text-lg mb-2 text-text-primary tracking-tight">Clone Repository</h3>
-                    <p className="text-sm text-text-secondary mb-8 leading-relaxed">Analyze any public repository directly by pasting its HTTPS clone address.</p>
-                    
-                    <form onSubmit={handleCloneSubmit} className="space-y-5">
-                      <div>
-                        <label className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block mb-2">Repository URL</label>
-                        <input 
-                          type="url" 
-                          placeholder="https://github.com/username/repo.git" 
-                          value={cloneUrl}
-                          onChange={e => setCloneUrl(e.target.value)}
-                          className="w-full bg-surface-1 border border-border-strong rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 text-text-primary transition-all duration-150 placeholder:text-text-tertiary/60 shadow-subtle"
-                          required
-                        />
-                      </div>
-                      
-                      <Button type="submit" disabled={isSubmitting} className="w-full h-12 mt-2">
-                        {isSubmitting ? <ArrowsCounterClockwise className="w-4 h-4 animate-spin" /> : <>Run Analysis <ArrowRight className="w-4 h-4 ml-2" /></>}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
+              {/* Title Header */}
+              <h1 className="text-5xl md:text-7xl lg:text-[80px] font-display font-black tracking-tight leading-[1.05] text-center mt-2 select-none">
+                <span className="block md:whitespace-nowrap">
+                  <span className="text-white">Deep </span>
+                  <span className="text-[#00d8f6]">Codebase Insights</span>
+                </span>
+                <span className="text-neutral-400 block mt-2 text-3xl md:text-5xl lg:text-6xl">Beyond Git History</span>
+              </h1>
 
-                {/* Upload Panel */}
-                <Card 
-                  className={`bg-surface-1 shadow-subtle border transition-all duration-200 ${dragOver ? "border-accent bg-accent-subtle/10 scale-[1.01]" : "border-border-base"}`}
+              {/* Subheading/Description */}
+              <p className="text-xs md:text-sm text-neutral-400 max-w-2xl mt-6 leading-relaxed select-none">
+                Analyze GitHub repositories to uncover technical debt, code hotspots, contributor dependencies, complexity trends, and AI-powered insights that help teams build healthier software.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-center gap-4 mt-10">
+                <button
+                  onClick={() => navigateTo("clone")}
+                  className="px-8 py-3.5 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-xl text-xs font-bold uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(0,216,246,0.3)] hover:shadow-[0_0_35px_rgba(0,216,246,0.5)] cursor-pointer"
+                >
+                  Analyze Repository
+                </button>
+                <button
+                  onClick={() => navigateTo("zip")}
+                  className="px-8 py-3.5 bg-transparent border border-[#00d8f6]/30 hover:border-[#00d8f6]/60 text-[#00d8f6] hover:bg-[#00d8f6]/5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer"
+                >
+                  Upload Repository ZIP
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Centered Clone Repository Screen */}
+          {view === "landing" && activePanel === "clone" && (
+            <motion.div 
+              key="clone"
+              custom={direction}
+              variants={panelVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-xl flex flex-col items-center justify-center relative text-white"
+            >
+              {/* Back Trigger */}
+              <button
+                onClick={() => navigateTo("hero")}
+                className="flex items-center gap-2 mb-6 text-[10px] font-mono tracking-[0.2em] text-neutral-400 hover:text-white transition-colors cursor-pointer group"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-0.5 transition-transform" />
+                <span>GO BACK</span>
+              </button>
+
+              {/* Header */}
+              <div className="text-center mb-8">
+                <span className="text-[10px] font-mono tracking-[0.3em] text-[#00d8f6] uppercase">
+                  Initialize
+                </span>
+                <h3 className="font-display font-black text-2xl text-white mt-1.5 uppercase tracking-tight">
+                  Clone Public Repository
+                </h3>
+                <p className="text-xs text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
+                  Paste any repository HTTPS address below to begin code intelligence mining.
+                </p>
+              </div>
+
+              <form onSubmit={handleCloneSubmit} className="space-y-5 w-full bg-neutral-950/40 border border-neutral-800/80 rounded-3xl p-8 shadow-floating">
+                <div>
+                  <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">Repository URL</label>
+                  <input 
+                    type="url" 
+                    placeholder="https://github.com/username/repo.git" 
+                    value={cloneUrl}
+                    onChange={e => setCloneUrl(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm font-mono text-white focus:outline-none focus:border-[#00d8f6] focus:ring-1 focus:ring-[#00d8f6]/30 transition-all placeholder:text-neutral-600"
+                    required
+                  />
+                </div>
+                
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className="w-full h-12 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-xl text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(0,216,246,0.2)]"
+                >
+                  {isSubmitting ? <ArrowsCounterClockwise className="w-4.5 h-4.5 animate-spin" /> : "Run Analysis"}
+                </button>
+              </form>
+
+              {/* Quick Toggle Link */}
+              <div className="mt-5 text-center">
+                <button
+                  onClick={() => navigateTo("zip")}
+                  className="text-xs text-neutral-400 hover:text-[#00d8f6] font-semibold transition-colors cursor-pointer"
+                >
+                  Or upload a ZIP codebase file instead
+                </button>
+              </div>
+
+              {/* Mini Recent Projects */}
+              {recentRepos.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-neutral-900 w-full max-w-md">
+                  <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400 block mb-3.5 text-center">Recent Projects</span>
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {recentRepos.map(repo => (
+                      <div 
+                        key={repo.id}
+                        onClick={() => handleRecentClick(repo.id, repo.name)}
+                        className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/40 hover:border-neutral-700/60 cursor-pointer transition-all"
+                      >
+                        <span className="text-xs font-semibold text-neutral-200 truncate">{repo.name}</span>
+                        <CaretRight className="w-4 h-4 text-neutral-500" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          )}
+
+          {/* Centered ZIP Upload Screen */}
+          {view === "landing" && activePanel === "zip" && (
+            <motion.div 
+              key="zip"
+              custom={direction}
+              variants={panelVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-xl flex flex-col items-center justify-center relative text-white"
+            >
+              {/* Back Trigger */}
+              <button
+                onClick={() => navigateTo("hero")}
+                className="flex items-center gap-2 mb-6 text-[10px] font-mono tracking-[0.2em] text-neutral-400 hover:text-white transition-colors cursor-pointer group"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-0.5 transition-transform" />
+                <span>GO BACK</span>
+              </button>
+
+              {/* Header */}
+              <div className="text-center mb-8">
+                <span className="text-[10px] font-mono tracking-[0.3em] text-[#00d8f6] uppercase">
+                  Transmission
+                </span>
+                <h3 className="font-display font-black text-2xl text-white mt-1.5 uppercase tracking-tight">
+                  Upload ZIP Codebase
+                </h3>
+                <p className="text-xs text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
+                  Drag and drop or select a ZIP bundle containing your repository files.
+                </p>
+              </div>
+
+              <form onSubmit={handleZipSubmit} className="space-y-5 w-full bg-neutral-950/40 border border-neutral-800/80 rounded-3xl p-8 shadow-floating">
+                <div>
+                  <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">Project Name</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. legacy-backend" 
+                    value={zipName}
+                    onChange={e => setZipName(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#00d8f6] focus:ring-1 focus:ring-[#00d8f6]/30 transition-all placeholder:text-neutral-600"
+                    required
+                  />
+                </div>
+
+                <div 
+                  className={`border border-dashed rounded-xl p-8 text-center cursor-pointer transition-all relative ${
+                    dragOver ? "border-[#00d8f6] bg-[#00d8f6]/5" : "border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900/50"
+                  }`}
                   onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
                   onDragLeave={() => setDragOver(false)}
                   onDrop={(e) => {
@@ -446,76 +713,48 @@ export default function Home() {
                     } else setSubmitError("Only ZIP files are supported.");
                   }}
                 >
-                  <CardContent className="p-8">
-                    <div className="w-12 h-12 rounded-xl bg-accent-subtle/40 border border-accent/10 flex items-center justify-center mb-6">
-                      <CloudArrowDown className="w-5 h-5 text-accent" />
-                    </div>
-                    <h3 className="font-display font-bold text-lg mb-2 text-text-primary tracking-tight">Upload ZIP Codebase</h3>
-                    <p className="text-sm text-text-secondary mb-8 leading-relaxed">Drag and drop or select a ZIP bundle containing your repository files.</p>
-                    
-                    <form onSubmit={handleZipSubmit} className="space-y-5">
-                      <div>
-                        <label className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block mb-2">Project Name</label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. legacy-backend" 
-                          value={zipName}
-                          onChange={e => setZipName(e.target.value)}
-                          className="w-full bg-surface-1 border border-border-strong rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent-subtle/40 text-text-primary transition-all duration-150 placeholder:text-text-tertiary/60 shadow-subtle"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="border border-dashed border-border-strong rounded-xl p-8 text-center cursor-pointer transition-all duration-150 relative hover:bg-surface-2/50 hover:border-accent">
-                        <input 
-                          type="file" 
-                          accept=".zip" 
-                          className="absolute inset-0 opacity-0 cursor-pointer"
-                          onChange={e => {
-                            const files = e.target.files;
-                            if (files && files.length > 0) {
-                              setZipFile(files[0]);
-                              if (!zipName) setZipName(files[0].name.replace(/\.[^/.]+$/, ""));
-                            }
-                          }}
-                        />
-                        <CloudArrowDown className="w-5 h-5 text-text-tertiary mx-auto mb-3" />
-                        {zipFile ? (
-                          <p className="text-xs font-semibold text-text-primary truncate">{zipFile.name}</p>
-                        ) : (
-                          <p className="text-xs text-text-tertiary">Drop ZIP file here or click to browse</p>
-                        )}
-                      </div>
-                      
-                      <Button variant="secondary" type="submit" disabled={isSubmitting || !zipFile} className="w-full h-12 mt-2">
-                        {isSubmitting ? <ArrowsCounterClockwise className="w-4 h-4 animate-spin" /> : "Upload & Analyze"}
-                      </Button>
-                    </form>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {recentRepos.length > 0 && (
-                <div className="max-w-4xl mx-auto mt-12 animate-in fade-in duration-300">
-                  <h4 className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider mb-4 px-1">Recent Projects</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {recentRepos.map(repo => (
-                      <Card key={repo.id} interactive onClick={() => handleRecentClick(repo.id, repo.name)} className="bg-surface-1 hover:bg-surface-2/45 border border-border-base shadow-subtle">
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="truncate">
-                            <p className="font-bold text-xs text-text-primary truncate">{repo.name}</p>
-                            <p className="text-[9px] font-mono text-text-tertiary mt-1">{repo.date}</p>
-                          </div>
-                          <CaretRight className="w-4 h-4 text-text-tertiary shrink-0" />
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
+                  <input 
+                    type="file" 
+                    accept=".zip" 
+                    className="absolute inset-0 opacity-0 cursor-pointer"
+                    onChange={e => {
+                      const files = e.target.files;
+                      if (files && files.length > 0) {
+                        setZipFile(files[0]);
+                        if (!zipName) setZipName(files[0].name.replace(/\.[^/.]+$/, ""));
+                      }
+                    }}
+                  />
+                  <CloudArrowDown className="w-6 h-6 text-neutral-500 mx-auto mb-3.5" />
+                  {zipFile ? (
+                    <p className="text-xs font-semibold text-white truncate px-3">{zipFile.name}</p>
+                  ) : (
+                    <p className="text-xs text-neutral-400 font-medium">Drop ZIP file here or click to browse</p>
+                  )}
                 </div>
-              )}
+                
+                <button 
+                  type="submit" 
+                  disabled={isSubmitting || !zipFile}
+                  className="w-full h-12 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-xl text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(0,216,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? <ArrowsCounterClockwise className="w-4.5 h-4.5 animate-spin" /> : "Upload & Analyze"}
+                </button>
+              </form>
+
+              {/* Quick Toggle Link */}
+              <div className="mt-5 text-center">
+                <button
+                  onClick={() => navigateTo("clone")}
+                  className="text-xs text-neutral-400 hover:text-[#00d8f6] font-semibold transition-colors cursor-pointer"
+                >
+                  Or clone a public repository URL instead
+                </button>
+              </div>
             </motion.div>
           )}
 
+          {/* Redesigned Loading Visualization Container (Dark theme to match) */}
           {view === "loading" && (
             <motion.div 
               key="loading"
@@ -523,43 +762,43 @@ export default function Home() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 1.03 }}
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-              className="w-full max-w-xl bg-surface-1 border border-border-base rounded-xl p-8 shadow-floating text-center"
+              className="w-full max-w-md bg-neutral-950/85 backdrop-blur-md border border-neutral-800 rounded-3xl p-8 shadow-floating text-center"
             >
-              <div className="relative w-20 h-20 mx-auto mb-8">
-                <svg className="animate-spin w-full h-full text-border-strong" viewBox="0 0 100 100">
+              <div className="relative w-16 h-16 mx-auto mb-6">
+                <svg className="animate-spin w-full h-full text-neutral-800" viewBox="0 0 100 100">
                   <circle cx="50" cy="50" r="45" fill="none" strokeWidth="2" stroke="currentColor" />
-                  <circle cx="50" cy="50" r="45" fill="none" strokeWidth="4" stroke="var(--color-accent)" strokeDasharray="70 210" strokeLinecap="round" />
+                  <circle cx="50" cy="50" r="45" fill="none" strokeWidth="4" stroke="#00d8f6" strokeDasharray="70 210" strokeLinecap="round" />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <ChartLine className="w-6 h-6 text-accent animate-pulse" />
+                  <ChartLine className="w-5 h-5 text-[#00d8f6] animate-pulse" />
                 </div>
               </div>
 
-              <h3 className="font-display font-bold text-2xl text-text-primary mb-2 tracking-tight">Analyzing Repository</h3>
-              <p className="text-sm text-text-secondary mb-10 max-w-sm mx-auto">Mining Git history logs, evaluating code complexities, and extracting AI intelligence.</p>
+              <h3 className="font-display font-bold text-lg text-white mb-1.5 tracking-tight">Analyzing Repository</h3>
+              <p className="text-xs text-neutral-400 mb-8 max-w-xs mx-auto">Mining Git history logs, evaluating code complexities, and extracting AI intelligence.</p>
 
-              {/* Animated Pipeline Visualization */}
-              <div className="space-y-3 text-left max-w-md mx-auto">
+              {/* Animated Pipeline steps */}
+              <div className="space-y-2.5 text-left max-w-xs mx-auto">
                 {pipelineSteps.map((step, idx) => {
                   const isActive = currentStepIndex === idx;
                   const isDone = currentStepIndex > idx || status === "failed";
                   
                   return (
-                    <div key={step} className="flex items-center gap-4">
-                      <div className="relative flex items-center justify-center w-8 h-8 shrink-0">
+                    <div key={step} className="flex items-center gap-3.5">
+                      <div className="relative flex items-center justify-center w-7 h-7 shrink-0">
                         {isDone ? (
-                          <CheckCircle className="w-5 h-5 text-success" />
+                          <CheckCircle className="w-4.5 h-4.5 text-success" />
                         ) : isActive ? (
                           <>
-                            <span className="absolute inline-flex h-5 w-5 rounded-full bg-accent/20 animate-ping"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                            <span className="absolute inline-flex h-4 w-4 rounded-full bg-[#00d8f6]/25 animate-ping"></span>
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#00d8f6]"></span>
                           </>
                         ) : (
-                          <div className="w-2 h-2 rounded-full bg-border-strong"></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-neutral-800"></div>
                         )}
                       </div>
-                      <div className={`flex-1 p-3 rounded-xl border transition-all duration-200 ${isActive ? "bg-accent-subtle/25 border-accent/20" : isDone ? "bg-surface-1 border-border-base" : "bg-transparent border-transparent opacity-40"}`}>
-                        <span className={`font-semibold text-xs capitalize ${isActive ? "text-accent" : isDone ? "text-text-primary" : "text-text-tertiary"}`}>
+                      <div className={`flex-1 p-2.5 rounded-xl border transition-all duration-200 ${isActive ? "bg-[#00d8f6]/5 border-[#00d8f6]/10" : isDone ? "bg-neutral-900 border-neutral-800/80" : "bg-transparent border-transparent opacity-30"}`}>
+                        <span className={`font-semibold text-[10px] uppercase font-mono tracking-wider ${isActive ? "text-[#00d8f6]" : isDone ? "text-neutral-200" : "text-neutral-500"}`}>
                           {step === "pending" ? "Job Queued" : step}
                         </span>
                       </div>
@@ -569,14 +808,14 @@ export default function Home() {
               </div>
 
               {errorMessage && (
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8 p-6 rounded-xl border border-critical/20 bg-critical/10 text-left">
-                  <div className="flex items-center gap-2 text-critical font-semibold mb-3">
-                    <Warning className="w-5 h-5" /> Analysis Failed
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-6 p-4 rounded-xl border border-critical/20 bg-critical/10 text-left">
+                  <div className="flex items-center gap-2 text-critical font-semibold mb-2.5 text-xs">
+                    <Warning className="w-4.5 h-4.5" /> Analysis Failed
                   </div>
-                  <p className="font-mono bg-bg-base p-3 rounded-lg border border-critical/10 text-xs text-text-secondary max-h-32 overflow-y-auto mb-4">
+                  <p className="font-mono bg-neutral-900 p-2.5 rounded-lg border border-neutral-800 text-[10px] text-neutral-400 max-h-24 overflow-y-auto mb-3">
                     {errorMessage}
                   </p>
-                  <Button variant="outline" className="w-full" onClick={() => setView("landing")}>
+                  <Button variant="outline" className="w-full text-xs" onClick={() => setView("landing")}>
                     Return to Workspace
                   </Button>
                 </motion.div>
@@ -586,6 +825,45 @@ export default function Home() {
 
         </AnimatePresence>
       </main>
+
+      {/* Structural technical mesh grid backdrop */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff03_1px,transparent_1px),linear-gradient(to_bottom,#ffffff03_1px,transparent_1px)] bg-[size:32px_32px] pointer-events-none -z-20" />
+
+      {/* Bottom Floating Features Panel */}
+      <footer className="h-16 border-t border-white/5 bg-neutral-950/40 backdrop-blur-md flex items-center justify-center gap-6 px-8 relative z-10 shrink-0 select-none">
+        <span className="text-[9px] font-mono tracking-widest text-neutral-500 uppercase mr-2">MODULES:</span>
+        <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-1">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-[#00d8f6]/30 hover:bg-[#00d8f6]/5 text-xs text-neutral-300 transition-all cursor-help group relative">
+            <ShieldWarning className="w-3.5 h-3.5 text-[#00d8f6]" />
+            <span>Risk Map</span>
+            {/* Tooltip */}
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all origin-bottom bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 py-1.5 px-3 rounded-lg whitespace-nowrap shadow-floating z-50">
+              Trace file change frequencies and code hotspots.
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-[#00d8f6]/30 hover:bg-[#00d8f6]/5 text-xs text-neutral-300 transition-all cursor-help group relative">
+            <Users className="w-3.5 h-3.5 text-[#00d8f6]" />
+            <span>Contributor Intel</span>
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all origin-bottom bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 py-1.5 px-3 rounded-lg whitespace-nowrap shadow-floating z-50">
+              Analyze developer bus-factor and knowledge bottlenecks.
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-[#00d8f6]/30 hover:bg-[#00d8f6]/5 text-xs text-neutral-300 transition-all cursor-help group relative">
+            <Cpu className="w-3.5 h-3.5 text-[#00d8f6]" />
+            <span>Tech Debt Tracker</span>
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all origin-bottom bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 py-1.5 px-3 rounded-lg whitespace-nowrap shadow-floating z-50">
+              Calculate code complexity, duplication and tech debt.
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 hover:border-[#00d8f6]/30 hover:bg-[#00d8f6]/5 text-xs text-neutral-300 transition-all cursor-help group relative">
+            <FolderSimple className="w-3.5 h-3.5 text-[#00d8f6]" />
+            <span>Visual Explorer</span>
+            <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 scale-0 group-hover:scale-100 transition-all origin-bottom bg-neutral-900 border border-neutral-800 text-[10px] text-neutral-300 py-1.5 px-3 rounded-lg whitespace-nowrap shadow-floating z-50">
+              Navigate codebases interactively in a mock IDE view.
+            </span>
+          </div>
+        </div>
+      </footer>
 
       <AuthModal 
         isOpen={showAuthModal}
