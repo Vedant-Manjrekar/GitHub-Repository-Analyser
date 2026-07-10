@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { GitBranch, CloudArrowDown, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight, X, ShieldWarning, Users, Cpu, FolderSimple } from "@phosphor-icons/react";
+import { GitBranch, CloudArrowDown, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight, X, ShieldWarning, Users, User, Cpu, FolderSimple, Envelope, Lock, SignIn, UserPlus } from "@phosphor-icons/react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 // Backend APIs
@@ -93,17 +93,80 @@ export default function Home() {
   const [user, setUser] = useState<{ name: string; email: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  // Auth Form State for sliding screen
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authName, setAuthName] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+
   // Redesigned Landing Page Slide Transitions
-  const [activePanel, setActivePanel] = useState<"hero" | "clone" | "zip">("hero");
+  const [activePanel, setActivePanel] = useState<"hero" | "clone" | "zip" | "auth">("hero");
   const [direction, setDirection] = useState(1);
 
-  const navigateTo = (panel: "hero" | "clone" | "zip") => {
+  const navigateTo = (panel: "hero" | "clone" | "zip" | "auth") => {
     if (panel === "hero") {
       setDirection(-1);
     } else {
       setDirection(1);
     }
     setActivePanel(panel);
+  };
+
+  const handleAuthSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError(null);
+
+    if (!authEmail || !authPassword || (authMode === "signup" && !authName)) {
+      setAuthError("Please fill in all fields.");
+      return;
+    }
+
+    if (!authEmail.includes("@")) {
+      setAuthError("Please enter a valid email address.");
+      return;
+    }
+
+    if (authPassword.length < 6) {
+      setAuthError("Password must be at least 6 characters.");
+      return;
+    }
+
+    // Simulated login/signup logic
+    if (authMode === "signup") {
+      const users = JSON.parse(localStorage.getItem("simulated_users") || "[]");
+      if (users.some((u: any) => u.email === authEmail)) {
+        setAuthError("User with this email already exists.");
+        return;
+      }
+      const newUser = { name: authName, email: authEmail, password: authPassword };
+      users.push(newUser);
+      localStorage.setItem("simulated_users", JSON.stringify(users));
+      localStorage.setItem("current_user", JSON.stringify({ name: authName, email: authEmail }));
+      setUser({ name: authName, email: authEmail });
+      navigateTo("hero");
+    } else {
+      const users = JSON.parse(localStorage.getItem("simulated_users") || "[]");
+      const foundUser = users.find((u: any) => u.email === authEmail && u.password === authPassword);
+      
+      // Default fallback demo user for convenience
+      if (authEmail === "demo@example.com" && authPassword === "password") {
+        const demoUser = { name: "Demo User", email: "demo@example.com" };
+        localStorage.setItem("current_user", JSON.stringify(demoUser));
+        setUser(demoUser);
+        navigateTo("hero");
+        return;
+      }
+
+      if (!foundUser) {
+        setAuthError("Invalid email or password. Use demo@example.com / password for quick access.");
+        return;
+      }
+
+      localStorage.setItem("current_user", JSON.stringify({ name: foundUser.name, email: foundUser.email }));
+      setUser({ name: foundUser.name, email: foundUser.email });
+      navigateTo("hero");
+    }
   };
 
   useEffect(() => {
@@ -494,7 +557,13 @@ export default function Home() {
         {/* Right Authentication states */}
         <div className="flex items-center gap-5">
           <button 
-            onClick={() => setShowAuthModal(true)} 
+            onClick={() => {
+              if (view === "landing") {
+                navigateTo("auth");
+              } else {
+                setShowAuthModal(true);
+              }
+            }} 
             className="text-[10px] font-mono tracking-[0.2em] text-neutral-400 hover:text-white transition-colors cursor-pointer"
           >
             {user ? user.name.toUpperCase() : "ACCESS"}
@@ -757,6 +826,157 @@ export default function Home() {
                   Or clone a public repository URL instead
                 </button>
               </div>
+            </motion.div>
+          )}
+
+          {/* Centered Authentication Screen */}
+          {view === "landing" && activePanel === "auth" && (
+            <motion.div 
+              key="auth"
+              custom={direction}
+              variants={panelVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              className="w-full max-w-xl flex flex-col items-center justify-center relative text-white"
+            >
+              {/* Back Trigger */}
+              <button
+                onClick={() => navigateTo("hero")}
+                className="flex items-center gap-2 mb-6 text-[10px] font-mono tracking-[0.2em] text-neutral-400 hover:text-white transition-colors cursor-pointer group"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-0.5 transition-transform" />
+                <span>GO BACK</span>
+              </button>
+
+              {/* Mode Toggle Switch */}
+              <div className="flex border border-neutral-800 bg-neutral-950/60 p-1 rounded-xl mb-6">
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("login"); setAuthError(null); }}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                    authMode === "login"
+                      ? "bg-neutral-900 text-white shadow-subtle border border-neutral-800"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  <SignIn className="w-3.5 h-3.5" /> Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAuthMode("signup"); setAuthError(null); }}
+                  className={`flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all ${
+                    authMode === "signup"
+                      ? "bg-neutral-900 text-white shadow-subtle border border-neutral-800"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  <UserPlus className="w-3.5 h-3.5" /> Sign Up
+                </button>
+              </div>
+
+              {/* Header */}
+              <div className="text-center mb-8">
+                <span className="text-[10px] font-mono tracking-[0.3em] text-[#00d8f6] uppercase">
+                  {authMode === "login" ? "Welcome Back" : "Create Account"}
+                </span>
+                <h3 className="font-display font-black text-2xl text-white mt-1.5 uppercase tracking-tight">
+                  {authMode === "login" ? "Access Gateway" : "Register Profile"}
+                </h3>
+                <p className="text-xs text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
+                  {authMode === "login"
+                    ? "Sign in to unlock all advanced analysis tabs and AI recommendations."
+                    : "Register to analyze repos with real-time complexity tracking and hotspots."}
+                </p>
+              </div>
+
+              {/* Error Alert */}
+              {authError && (
+                <div className="mb-5 p-3 rounded-xl bg-critical/10 border border-critical/20 text-critical text-xs font-medium w-full">
+                  {authError}
+                </div>
+              )}
+
+              <form onSubmit={handleAuthSubmit} className="space-y-5 w-full bg-neutral-950/40 border border-neutral-800/80 rounded-3xl p-8 shadow-floating">
+                {authMode === "signup" && (
+                  <div>
+                    <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">
+                      Full Name
+                    </label>
+                    <div className="relative">
+                      <User className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                      <input
+                        type="text"
+                        placeholder="John Doe"
+                        value={authName}
+                        onChange={(e) => setAuthName(e.target.value)}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9.5 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#00d8f6] focus:ring-1 focus:ring-[#00d8f6]/30 transition-all placeholder:text-neutral-600"
+                        required
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Envelope className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                    <input
+                      type="email"
+                      placeholder="you@example.com"
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9.5 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#00d8f6] focus:ring-1 focus:ring-[#00d8f6]/30 transition-all placeholder:text-neutral-600"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-xl pl-9.5 pr-4 py-3 text-sm text-white focus:outline-none focus:border-[#00d8f6] focus:ring-1 focus:ring-[#00d8f6]/30 transition-all placeholder:text-neutral-600"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  className="w-full h-12 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-xl text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(0,216,246,0.2)]"
+                >
+                  {authMode === "login" ? "Login" : "Register"}
+                </button>
+              </form>
+
+              {/* Demo Login Assist */}
+              {authMode === "login" && (
+                <div className="mt-5 pt-4 border-t border-neutral-900 text-center w-full max-w-md">
+                  <p className="text-xs text-neutral-400 leading-relaxed">
+                    Demo credentials:{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthEmail("demo@example.com");
+                        setAuthPassword("password");
+                      }}
+                      className="text-[#00d8f6] hover:underline font-bold"
+                    >
+                    demo@example.com / password
+                    </button>
+                  </p>
+                </div>
+              )}
             </motion.div>
           )}
 
