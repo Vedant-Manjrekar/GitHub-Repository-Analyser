@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { InfoTooltip } from "@/components/ui/InfoTooltip";
@@ -14,6 +14,17 @@ interface VSCodeExplorerProps {
 export function VSCodeExplorer({ hotspots }: VSCodeExplorerProps) {
   const [searchFilter, setSearchFilter] = useState("");
   const [selectedFile, setSelectedFile] = useState<any>(null);
+
+  useEffect(() => {
+    if (hotspots && hotspots.length > 0) {
+      const exists = hotspots.some(h => h.id === selectedFile?.id);
+      if (!exists) {
+        setSelectedFile(hotspots[0]);
+      }
+    } else {
+      setSelectedFile(null);
+    }
+  }, [hotspots, selectedFile]);
 
   const filteredFiles = hotspots?.filter(f => f.path.toLowerCase().includes(searchFilter.toLowerCase())) || [];
 

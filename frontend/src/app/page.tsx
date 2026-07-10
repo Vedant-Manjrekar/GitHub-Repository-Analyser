@@ -110,7 +110,21 @@ export default function Home() {
     const saved = localStorage.getItem("recent_repositories");
     if (saved) {
       try {
-        setRecentRepos(JSON.parse(saved));
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const unique: any[] = [];
+          const seenNames = new Set<string>();
+          const seenIds = new Set<string>();
+          for (const item of parsed) {
+            const lowerName = item.name?.toLowerCase()?.trim();
+            if (item.id && item.name && !seenNames.has(lowerName) && !seenIds.has(item.id)) {
+              seenNames.add(lowerName);
+              seenIds.add(item.id);
+              unique.push(item);
+            }
+          }
+          setRecentRepos(unique);
+        }
       } catch (e) {
         console.error(e);
       }
@@ -137,7 +151,7 @@ export default function Home() {
 
   const saveToRecents = (id: string, name: string) => {
     const list = [...recentRepos];
-    const filtered = list.filter(r => r.id !== id);
+    const filtered = list.filter(r => r.id !== id && r.name?.toLowerCase()?.trim() !== name?.toLowerCase()?.trim());
     const updated = [{ id, name, date: new Date().toLocaleDateString() }, ...filtered].slice(0, 5);
     setRecentRepos(updated);
     localStorage.setItem("recent_repositories", JSON.stringify(updated));
@@ -153,8 +167,9 @@ export default function Home() {
         setStatus(res.status);
         
         if (res.status === "completed") {
-          await loadDashboard(selectedRepoId);
-          saveToRecents(selectedRepoId, cloneName || zipName || "Repository");
+          const dash = await loadDashboard(selectedRepoId);
+          const nameToSave = dash?.repository?.name || cloneName || zipName || "Repository";
+          saveToRecents(selectedRepoId, nameToSave);
           setView("dashboard");
         } else if (res.status === "failed") {
           setErrorMessage(res.error_message || "Analysis pipeline execution encountered an error.");
@@ -167,7 +182,7 @@ export default function Home() {
     };
     checkStatus();
     return () => { if (timer) clearTimeout(timer); };
-  }, [view, selectedRepoId]);
+  }, [view, selectedRepoId, cloneName, zipName]);
 
   const loadDashboard = async (repoId: string) => {
     try {
@@ -185,9 +200,11 @@ export default function Home() {
       setContributors(contrib);
       setTechDebt(debt);
       setComplexityFiles(comp);
+      return dash;
     } catch (e: any) {
       console.error(e);
       setSubmitError(e.message || "Failed to load dashboard metrics.");
+      return null;
     }
   };
 
@@ -467,18 +484,12 @@ export default function Home() {
               <rect x="19" y="19" width="9" height="9" rx="1.5" />
             </svg>
           </div>
-          <span className="font-display font-black text-sm tracking-[0.25em] text-white">
-            ANTIGRAVITY
+          <span className="font-display font-black text-sm tracking-[0.2em] text-white">
+            REPO-LYTICS
           </span>
         </div>
 
-        {/* Middle Navigation mock links from reference image */}
-        <div className="hidden md:flex items-center gap-8 text-[10px] font-mono tracking-[0.2em] text-neutral-400 select-none">
-          <a href="#" className="hover:text-[#00d8f6] transition-colors">INTELLIGENCE</a>
-          <a href="#" className="hover:text-[#00d8f6] transition-colors">PROTOCOL</a>
-          <a href="#" className="hover:text-[#00d8f6] transition-colors">NODES</a>
-          <a href="#" className="hover:text-[#00d8f6] transition-colors">NEXUS</a>
-        </div>
+
 
         {/* Right Authentication states */}
         <div className="flex items-center gap-5">
@@ -501,12 +512,7 @@ export default function Home() {
             </button>
           )}
 
-          <button 
-            onClick={() => navigateTo("clone")}
-            className="px-5 py-2 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-lg text-[10px] font-mono font-bold tracking-[0.2em] transition-all shadow-[0_0_15px_rgba(0,216,246,0.25)] hover:shadow-[0_0_25px_rgba(0,216,246,0.45)] cursor-pointer"
-          >
-            INITIALIZE
-          </button>
+
         </div>
       </header>
 

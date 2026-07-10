@@ -15,7 +15,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Git Analytics - Codebase Risk & Health Platform",
+  title: "Repo-lytics - Codebase Risk & Health Platform",
   description: "Analyze commits, authors, complexity, code churn, and hotspots of any Git repository to track technical debt, bus factor, and secure AI refactoring codebase reviews.",
 };
 
