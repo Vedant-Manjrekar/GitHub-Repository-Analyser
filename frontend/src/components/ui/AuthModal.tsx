@@ -17,6 +17,18 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = "login" }:
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  // Disable body scroll when modal is active
+  React.useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -89,10 +101,10 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = "login" }:
           {/* Modal Card */}
           <div className="fixed inset-0 flex items-center justify-center p-4 z-[101] pointer-events-none">
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              initial={{ scale: 0.96, opacity: 0, y: 8 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 15 }}
-              transition={{ type: "spring", duration: 0.35 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ ease: "easeOut", duration: 0.22 }}
               className="bg-surface-1 border border-border-strong rounded-3xl p-6 w-full max-w-md shadow-floating relative pointer-events-auto flex flex-col"
             >
               {/* Close Button */}

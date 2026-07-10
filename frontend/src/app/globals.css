@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+html {
+  scrollbar-gutter: stable;
+}
+
 :root {
   /* Premium Airy Light Theme (Stripe, Linear, Apple inspired) */
   --bg-base: #f8fafc;

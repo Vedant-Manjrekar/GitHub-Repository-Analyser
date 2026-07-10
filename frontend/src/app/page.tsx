@@ -222,22 +222,22 @@ export default function Home() {
 
   // If in Dashboard View, render the entire AppShell and Tab content
   if (view === "dashboard") {
+    let featureName = "Risk Insights";
+    let featureDesc = "Unlock interactive hotspot clustering, file churn risk maps, and historical regression trackers to pinpoint code instability.";
+    
+    if (tab === "debt") {
+      featureName = "Technical Debt Modularity";
+      featureDesc = "Unlock the codebase modularity treemap, density analytics, and AI recommendations checklists to clean up monolith files.";
+    } else if (tab === "contributors") {
+      featureName = "Contributor Intelligence";
+      featureDesc = "Unlock detailed developer ranking, expertise profiles, files ownership summaries, and knowledge concentration metrics.";
+    } else if (tab === "explorer") {
+      featureName = "Repository Explorer";
+      featureDesc = "Unlock the high fidelity repository tree explorer, inline complexity score highlights, and AI-powered refactoring suggestions.";
+    }
+
     const renderTabContent = () => {
       if (!user && tab !== "overview") {
-        let featureName = "Risk Insights";
-        let featureDesc = "Unlock interactive hotspot clustering, file churn risk maps, and historical regression trackers to pinpoint code instability.";
-        
-        if (tab === "debt") {
-          featureName = "Technical Debt Modularity";
-          featureDesc = "Unlock the codebase modularity treemap, density analytics, and AI recommendations checklists to clean up monolith files.";
-        } else if (tab === "contributors") {
-          featureName = "Contributor Intelligence";
-          featureDesc = "Unlock detailed developer ranking, expertise profiles, files ownership summaries, and knowledge concentration metrics.";
-        } else if (tab === "explorer") {
-          featureName = "Repository Explorer";
-          featureDesc = "Unlock the high fidelity repository tree explorer, inline complexity score highlights, and AI-powered refactoring suggestions.";
-        }
-        
         const previewComponent = (() => {
           switch (tab) {
             case "hotspots":
@@ -254,13 +254,9 @@ export default function Home() {
         })();
 
         return (
-          <AuthLock 
-            onLoginClick={() => setShowAuthModal(true)} 
-            featureName={featureName} 
-            featureDesc={featureDesc}
-          >
+          <div className="select-none pointer-events-none filter blur-[8px] opacity-25 transition-all duration-300 h-full">
             {previewComponent}
-          </AuthLock>
+          </div>
         );
       }
 
@@ -312,6 +308,15 @@ export default function Home() {
             </motion.div>
           </AnimatePresence>
         </AppShell>
+
+        {!user && tab !== "overview" && (
+          <AuthLock 
+            onLoginClick={() => setShowAuthModal(true)} 
+            onClose={() => setTab("overview")}
+            featureName={featureName} 
+            featureDesc={featureDesc}
+          />
+        )}
 
         <AuthModal 
           isOpen={showAuthModal}
