@@ -63,6 +63,24 @@ EXTENSION_MAP: Dict[str, str] = {
     ".xml": "XML",
 }
 
+SUPPORTED_EXTENSIONS: Set[str] = {
+    ".js", ".jsx", ".ts", ".tsx", ".py", ".java", ".kt", ".go", 
+    ".cpp", ".c", ".h", ".cs", ".php", ".rb", ".swift", ".rs", 
+    ".scala", ".sql", ".html", ".css", ".scss", ".json", ".yaml", 
+    ".yml", ".xml", ".md"
+}
+
+def is_binary_file(file_path: str) -> bool:
+    """Helper to detect if a file is binary by looking for NUL bytes in the first 4KB."""
+    if not os.path.exists(file_path) or os.path.isdir(file_path):
+        return False
+    try:
+        with open(file_path, 'rb') as f:
+            chunk = f.read(4096)
+            return b'\x00' in chunk
+    except Exception:
+        return True # Treat as binary if we can't read it
+
 def detect_language(file_path: str) -> str:
     """Detects the programming language of a file based on its extension."""
     _, ext = os.path.splitext(file_path.lower())
@@ -113,6 +131,17 @@ def scan_repository_files(repo_path: str) -> Tuple[List[str], Dict[str, int], st
             
             # Additional path-based exclude check
             if should_ignore(abs_path, repo_path):
+                continue
+                
+            # Filter by extension allowlist
+            _, ext = os.path.splitext(file.lower())
+            if ext not in SUPPORTED_EXTENSIONS:
+                continue
+                
+            # Filter binary files
+            if is_binary_file(abs_path):
+                rel_path = os.path.relpath(abs_path, repo_path)
+                print(f"Skipping binary file: {rel_path}")
                 continue
                 
             valid_files.append(abs_path)

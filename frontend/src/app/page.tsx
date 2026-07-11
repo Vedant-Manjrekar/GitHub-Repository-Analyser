@@ -1,13 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { GitBranch, CloudArrowDown, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight, X, ShieldWarning, Users, User, Cpu, FolderSimple, Envelope, Lock, SignIn, UserPlus } from "@phosphor-icons/react";
+import { GitBranch, ChartLine, Warning, ArrowsCounterClockwise, CaretRight, CheckCircle, ArrowRight, X, ShieldWarning, Users, User, Cpu, FolderSimple, Envelope, Lock, SignIn, UserPlus } from "@phosphor-icons/react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 
 // Backend APIs
 import {
   cloneRepository,
-  uploadRepositoryZip,
   getAnalysisStatus,
   getDashboardData,
   getComplexityData,
@@ -71,19 +70,16 @@ export default function Home() {
   const [view, setView] = useState<ViewMode>("landing");
   const [tab, setTab] = useState<TabMode>("overview");
   const [selectedRepoId, setSelectedRepoId] = useState<string | null>(null);
-  const [recentRepos, setRecentRepos] = useState<Array<{id: string, name: string, date: string}>>([]);
+  const [recentRepos, setRecentRepos] = useState<Array<{id: string, name: string, date: string | null}>>([]);
   
   const [cloneName, setCloneName] = useState("");
   const [cloneUrl, setCloneUrl] = useState("");
-  const [zipName, setZipName] = useState("");
-  const [zipFile, setZipFile] = useState<File | null>(null);
   
   const [status, setStatus] = useState<string>("pending");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  
+
   // Data State
   const [dashboard, setDashboard] = useState<any>(null);
   const [hotspots, setHotspots] = useState<any[]>([]);
@@ -104,16 +100,18 @@ export default function Home() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   // Redesigned Landing Page Slide Transitions
-  const [activePanel, setActivePanel] = useState<"hero" | "clone" | "zip" | "auth">("hero");
+  const [activePanel, setActivePanel] = useState<"hero" | "clone" | "auth">("hero");
   const [direction, setDirection] = useState(1);
 
-  const navigateTo = (panel: "hero" | "clone" | "zip" | "auth") => {
+  const navigateTo = (panel: "hero" | "clone" | "auth") => {
     if (panel === "hero") {
       setDirection(-1);
     } else {
       setDirection(1);
     }
     setActivePanel(panel);
+    setSubmitError(null);
+    setAuthError(null);
   };
 
   const handleAuthSubmit = async (e: React.FormEvent) => {
@@ -200,14 +198,18 @@ export default function Home() {
     if (view !== "loading" || !selectedRepoId) return;
 
     let timer: NodeJS.Timeout;
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const checkStatus = async () => {
       try {
         const res = await getAnalysisStatus(selectedRepoId);
+        retryCount = 0; // Reset count on successful network response
         setStatus(res.status);
         
         if (res.status === "completed") {
           const dash = await loadDashboard(selectedRepoId);
-          const nameToSave = dash?.repository?.name || cloneName || zipName || "Repository";
+          const nameToSave = dash?.repository?.name || cloneName || "Repository";
           saveToRecents(selectedRepoId, nameToSave);
           setView("dashboard");
         } else if (res.status === "failed") {
@@ -216,12 +218,18 @@ export default function Home() {
           timer = setTimeout(checkStatus, 1500);
         }
       } catch (err: any) {
-        setErrorMessage(err.message || "Connection to backend service lost.");
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.warn(`Polling failed (attempt ${retryCount}/${maxRetries}). Retrying in 2s...`, err);
+          timer = setTimeout(checkStatus, 2000);
+        } else {
+          setErrorMessage(err.message || "Connection to backend service lost.");
+        }
       }
     };
     checkStatus();
     return () => { if (timer) clearTimeout(timer); };
-  }, [view, selectedRepoId, cloneName, zipName]);
+  }, [view, selectedRepoId, cloneName]);
 
   const loadDashboard = async (repoId: string) => {
     try {
@@ -279,27 +287,6 @@ export default function Home() {
     }
   };
 
-  const handleZipSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!zipName || !zipFile) return;
-    setIsSubmitting(true);
-    setSubmitError(null);
-    try {
-      const res = await uploadRepositoryZip(zipName, zipFile, user?.email || undefined);
-      setSelectedRepoId(res.id);
-
-      const url = new URL(window.location.href);
-      url.searchParams.set("repoId", res.id);
-      window.history.pushState({}, "", url.toString());
-
-      setStatus(res.status);
-      setView("loading");
-    } catch (err: any) {
-      setSubmitError(err.message || "Failed to trigger ZIP analysis.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleRecentClick = async (repoId: string, name: string) => {
     setSelectedRepoId(repoId);
@@ -606,12 +593,7 @@ export default function Home() {
                 >
                   Analyze Repository
                 </button>
-                <button
-                  onClick={() => navigateTo("zip")}
-                  className="px-8 py-3.5 bg-transparent border border-[#00d8f6]/30 hover:border-[#00d8f6]/60 text-[#00d8f6] hover:bg-[#00d8f6]/5 rounded-xl text-xs font-bold uppercase tracking-widest transition-all cursor-pointer"
-                >
-                  Upload Repository ZIP
-                </button>
+
               </div>
             </motion.div>
           )}
@@ -650,6 +632,13 @@ export default function Home() {
               </div>
 
               <form onSubmit={handleCloneSubmit} className="space-y-5 w-full bg-neutral-950/40 border border-neutral-800/80 rounded-3xl p-8 shadow-floating">
+                {submitError && (
+                  <div className="p-3.5 rounded-xl border border-critical/20 bg-critical/5 text-left text-xs text-critical flex items-start gap-2.5">
+                    <Warning className="w-4.5 h-4.5 mt-0.5 shrink-0" />
+                    <span className="leading-relaxed">{submitError}</span>
+                  </div>
+                )}
+
                 <div>
                   <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">Repository URL</label>
                   <input 
@@ -671,16 +660,6 @@ export default function Home() {
                 </button>
               </form>
 
-              {/* Quick Toggle Link */}
-              <div className="mt-5 text-center">
-                <button
-                  onClick={() => navigateTo("zip")}
-                  className="text-xs text-neutral-400 hover:text-[#00d8f6] font-semibold transition-colors cursor-pointer"
-                >
-                  Or upload a ZIP codebase file instead
-                </button>
-              </div>
-
               {/* Mini Recent Projects */}
               {recentRepos.length > 0 && (
                 <div className="mt-8 pt-6 border-t border-neutral-900 w-full max-w-md">
@@ -702,127 +681,6 @@ export default function Home() {
             </motion.div>
           )}
 
-          {/* Centered ZIP Upload Screen */}
-          {view === "landing" && activePanel === "zip" && (
-            <motion.div 
-              key="zip"
-              custom={direction}
-              variants={panelVariants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              className="w-full max-w-xl flex flex-col items-center justify-center relative text-white"
-            >
-              {/* Back Trigger */}
-              <button
-                onClick={() => navigateTo("hero")}
-                className="flex items-center gap-2 mb-6 text-[10px] font-mono tracking-[0.2em] text-neutral-400 hover:text-white transition-colors cursor-pointer group"
-              >
-                <ArrowRight className="w-4 h-4 rotate-180 group-hover:-translate-x-0.5 transition-transform" />
-                <span>GO BACK</span>
-              </button>
-
-              {/* Header */}
-              <div className="text-center mb-8">
-                <span className="text-[10px] font-mono tracking-[0.3em] text-[#00d8f6] uppercase">
-                  Transmission
-                </span>
-                <h3 className="font-display font-black text-2xl text-white mt-1.5 uppercase tracking-tight">
-                  Upload ZIP Codebase
-                </h3>
-                <p className="text-xs text-neutral-400 mt-2 max-w-md mx-auto leading-relaxed">
-                  Drag and drop or select a ZIP bundle containing your repository files.
-                </p>
-              </div>
-
-              <form onSubmit={handleZipSubmit} className="space-y-5 w-full bg-neutral-950/40 border border-neutral-800/80 rounded-3xl p-8 shadow-floating">
-                <div>
-                  <label className="text-xs uppercase font-mono font-bold text-neutral-400 tracking-wider block mb-2">Project Name</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. legacy-backend" 
-                    value={zipName}
-                    onChange={e => setZipName(e.target.value)}
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-[#00d8f6] focus:ring-1 focus:ring-[#00d8f6]/30 transition-all placeholder:text-neutral-600"
-                    required
-                  />
-                </div>
-
-                <div 
-                  className={`border border-dashed rounded-xl p-8 text-center cursor-pointer transition-all relative ${
-                    dragOver ? "border-[#00d8f6] bg-[#00d8f6]/5" : "border-neutral-800 hover:border-neutral-700 hover:bg-neutral-900/50"
-                  }`}
-                  onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                  onDragLeave={() => setDragOver(false)}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    setDragOver(false);
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0 && files[0].name.endsWith(".zip")) {
-                      setZipFile(files[0]);
-                      if (!zipName) setZipName(files[0].name.replace(/\.[^/.]+$/, ""));
-                    } else setSubmitError("Only ZIP files are supported.");
-                  }}
-                >
-                  <input 
-                    type="file" 
-                    accept=".zip" 
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={e => {
-                      const files = e.target.files;
-                      if (files && files.length > 0) {
-                        setZipFile(files[0]);
-                        if (!zipName) setZipName(files[0].name.replace(/\.[^/.]+$/, ""));
-                      }
-                    }}
-                  />
-                  <CloudArrowDown className="w-6 h-6 text-neutral-500 mx-auto mb-3.5" />
-                  {zipFile ? (
-                    <p className="text-xs font-semibold text-white truncate px-3">{zipFile.name}</p>
-                  ) : (
-                    <p className="text-xs text-neutral-400 font-medium">Drop ZIP file here or click to browse</p>
-                  )}
-                </div>
-                
-                <button 
-                  type="submit" 
-                  disabled={isSubmitting || !zipFile}
-                  className="w-full h-12 bg-[#00d8f6] hover:bg-[#00b2cc] text-black rounded-xl text-sm font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center shadow-[0_0_15px_rgba(0,216,246,0.2)] disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isSubmitting ? <ArrowsCounterClockwise className="w-4.5 h-4.5 animate-spin" /> : "Upload & Analyze"}
-                </button>
-              </form>
-
-              {/* Quick Toggle Link */}
-              <div className="mt-5 text-center">
-                <button
-                  onClick={() => navigateTo("clone")}
-                  className="text-xs text-neutral-400 hover:text-[#00d8f6] font-semibold transition-colors cursor-pointer"
-                >
-                  Or clone a public repository URL instead
-                </button>
-              </div>
-
-              {/* Mini Recent Projects */}
-              {recentRepos.length > 0 && (
-                <div className="mt-8 pt-6 border-t border-neutral-900 w-full max-w-md">
-                  <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400 block mb-3.5 text-center">Recently Analyzed Repositories</span>
-                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
-                    {recentRepos.map(repo => (
-                      <div 
-                        key={repo.id}
-                        onClick={() => handleRecentClick(repo.id, repo.name)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/40 hover:border-neutral-700/60 cursor-pointer transition-all"
-                      >
-                        <span className="text-xs font-semibold text-neutral-200 truncate">{repo.name}</span>
-                        <CaretRight className="w-4 h-4 text-neutral-500" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          )}
 
           {/* Centered Authentication Screen */}
           {view === "landing" && activePanel === "auth" && (

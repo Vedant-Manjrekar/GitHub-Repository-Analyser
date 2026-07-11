@@ -1,5 +1,4 @@
 import os
-import zipfile
 import shutil
 import git
 
@@ -19,16 +18,6 @@ def cleanup_cloned_repositories(new_repo_id: str):
     """
     if not os.path.exists(UPLOADS_DIR):
         return
-
-    # Clean up any temporary zip files in UPLOADS_DIR
-    for f in os.listdir(UPLOADS_DIR):
-        if f.startswith("temp_") and f.endswith(".zip"):
-            file_path = os.path.join(UPLOADS_DIR, f)
-            try:
-                os.remove(file_path)
-                print(f"Cleaned up temporary zip file {f}")
-            except Exception:
-                pass
 
     # List all subdirectories in UPLOADS_DIR
     dirs = []
@@ -145,42 +134,4 @@ def clone_repository(repo_url: str, repo_id: str, branch: str = None) -> str:
         git.Repo.clone_from(repo_url, target_dir)
     print(f"Successfully cloned {repo_url}.")
     
-    return target_dir
-
-def extract_zip_repository(zip_file_path: str, repo_id: str) -> str:
-    """Extracts a ZIP file containing a Git repository.
-    
-    Args:
-        zip_file_path: Absolute path to the uploaded ZIP file.
-        repo_id: The UUID of the repository.
-        
-    Returns:
-        The absolute path to the root of the extracted repository.
-    """
-    cleanup_cloned_repositories(repo_id)
-    target_dir = get_repo_dir(repo_id)
-    
-    # Clear directory if it exists
-    if os.path.exists(target_dir):
-        shutil.rmtree(target_dir)
-        
-    os.makedirs(target_dir, exist_ok=True)
-    
-    print(f"Extracting zip {zip_file_path} to {target_dir}...")
-    with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
-        zip_ref.extractall(target_dir)
-        
-    # Standard GitHub zip downloads contain a single top-level folder
-    # Let's inspect the directory and flatten it if it contains exactly one subdirectory.
-    contents = os.listdir(target_dir)
-    if len(contents) == 1:
-        single_item_path = os.path.join(target_dir, contents[0])
-        if os.path.isdir(single_item_path):
-            # Move all contents of the subdirectory up one level
-            for item in os.listdir(single_item_path):
-                shutil.move(os.path.join(single_item_path, item), target_dir)
-            # Remove the now empty subdirectory
-            os.rmdir(single_item_path)
-            
-    print(f"Successfully extracted repository to {target_dir}.")
     return target_dir

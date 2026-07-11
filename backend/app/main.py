@@ -1,8 +1,7 @@
 import os
 import uuid
-import shutil
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, UploadFile, File as FastAPIFile, Form, Request, BackgroundTasks
+from fastapi import FastAPI, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -16,17 +15,15 @@ from app.schemas import RepositoryCreate, RepositoryResponse, DashboardResponse,
 from app.workers.tasks import analyze_repository_task
 from app.analyzers.churn import calculate_churn_trends
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOADS_DIR = os.getenv("UPLOADS_DIR", os.path.join(BASE_DIR, "uploads"))
 
 USE_CELERY = os.getenv("USE_CELERY", "false").lower() == "true"
 
-def run_analysis_task(repo_id: str, background_tasks: BackgroundTasks, zip_path: str = None):
+def run_analysis_task(repo_id: str, background_tasks: BackgroundTasks):
     if USE_CELERY:
-        analyze_repository_task.delay(repo_id, zip_path)
+        analyze_repository_task.delay(repo_id)
     else:
         print(f"USE_CELERY=false. Running analysis task in FastAPI BackgroundTasks thread for repo: {repo_id}")
-        background_tasks.add_task(analyze_repository_task, repo_id, zip_path)
+        background_tasks.add_task(analyze_repository_task, repo_id)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -35,8 +32,6 @@ async def lifespan(app: FastAPI):
         init_db()
     except Exception as e:
         print(f"Database initialization failed: {e}")
-    # Ensure uploads directory exists
-    os.makedirs(UPLOADS_DIR, exist_ok=True)
     yield
 
 app = FastAPI(
@@ -55,10 +50,20 @@ app.add_middleware(
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import traceback
     print(f"Unhandled exception: {exc}")
+    traceback.print_exc()
+    
+    if isinstance(exc, HTTPException):
+        status_code = exc.status_code
+        detail = exc.detail
+    else:
+        status_code = 500
+        detail = "Internal server error. Please check backend logs or try again."
+        
     response = JSONResponse(
-        status_code=500,
-        content={"detail": f"Database or Server Error: {str(exc)}"},
+        status_code=status_code,
+        content={"detail": detail},
     )
     # Since Starlette exception handlers bypass standard middleware, manually append CORS headers here
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -138,82 +143,7 @@ def clone_new_repository(
     
     return repo
 
-@app.post("/repositories/upload", response_model=RepositoryResponse)
-def upload_repository_zip(
-    background_tasks: BackgroundTasks,
-    name: str = Form(...),
-    file: UploadFile = FastAPIFile(...),
-    user_email: Optional[str] = Form(None),
-    db: Session = Depends(get_db)
-):
-    """Uploads a repository ZIP file and triggers analysis in the background."""
-    if not file.filename.endswith(".zip"):
-        raise HTTPException(status_code=400, detail="Only ZIP files are supported.")
-        
-    # Check if a completed ZIP repository with the exact same name already exists in the database
-    existing_repo = db.query(Repository).filter(
-        Repository.name == name.strip(),
-        Repository.repo_url == None,
-        Repository.status == "completed"
-    ).first()
-    
-    if existing_repo:
-        # Re-use existing analysis and create/update user-repository association if user_email is provided
-        if user_email:
-            user = db.query(User).filter(User.email == user_email.strip().lower()).first()
-            if user:
-                # Check if association already exists
-                assoc = db.query(UserRepositoryAssociation).filter(
-                    UserRepositoryAssociation.user_id == user.id,
-                    UserRepositoryAssociation.repository_id == existing_repo.id
-                ).first()
-                if not assoc:
-                    new_assoc = UserRepositoryAssociation(
-                        user_id=user.id,
-                        repository_id=existing_repo.id
-                    )
-                    db.add(new_assoc)
-                else:
-                    # Update the analyzed_at timestamp to reflect the re-analysis
-                    assoc.analyzed_at = func.now()
-                db.commit()
-        return existing_repo
-        
-    # Generate unique ID for repo and save the zip temporarily
-    repo_id = uuid.uuid4()
-    os.makedirs(UPLOADS_DIR, exist_ok=True)
-    temp_zip_path = os.path.join(UPLOADS_DIR, f"temp_{repo_id}.zip")
-    
-    try:
-        with open(temp_zip_path, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to write uploaded file: {str(e)}")
-        
-    repo = Repository(
-        id=repo_id,
-        name=name,
-        status="pending"
-    )
-    db.add(repo)
-    db.commit()
-    db.refresh(repo)
-    
-    # Associate the new repository with the user who initiated the analysis
-    if user_email:
-        user = db.query(User).filter(User.email == user_email.strip().lower()).first()
-        if user:
-            new_assoc = UserRepositoryAssociation(
-                user_id=user.id,
-                repository_id=repo.id
-            )
-            db.add(new_assoc)
-            db.commit()
-            
-    # Enqueue background analysis task with ZIP path
-    run_analysis_task(str(repo.id), background_tasks, temp_zip_path)
-    
-    return repo
+
 
 @app.get("/repositories/{repo_id}", response_model=RepositoryResponse)
 def get_repository_details(repo_id: str, db: Session = Depends(get_db)):
@@ -256,26 +186,22 @@ def get_repository_branches(repo_id: str, db: Session = Depends(get_db)):
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found.")
         
-    if repo.repo_url:
-        try:
-            import git
-            g = git.cmd.Git()
-            # Run ls-remote to get heads without cloning
-            output = g.ls_remote('--heads', repo.repo_url)
-            branches = []
-            for line in output.splitlines():
-                if 'refs/heads/' in line:
-                    branch_name = line.split('refs/heads/')[-1].strip()
-                    if branch_name:
-                        branches.append(branch_name)
-            if not branches:
-                branches = [repo.branch or "main"]
-            return {"branches": sorted(list(set(branches)))}
-        except Exception as e:
-            print(f"Error fetching remote branches: {e}")
-            return {"branches": [repo.branch or "main"]}
-    else:
-        # ZIP upload
+    try:
+        import git
+        g = git.cmd.Git()
+        # Run ls-remote to get heads without cloning
+        output = g.ls_remote('--heads', repo.repo_url)
+        branches = []
+        for line in output.splitlines():
+            if 'refs/heads/' in line:
+                branch_name = line.split('refs/heads/')[-1].strip()
+                if branch_name:
+                    branches.append(branch_name)
+        if not branches:
+            branches = [repo.branch or "main"]
+        return {"branches": sorted(list(set(branches)))}
+    except Exception as e:
+        print(f"Error fetching remote branches: {e}")
         return {"branches": [repo.branch or "main"]}
 
 @app.post("/repositories/{repo_id}/branch")
@@ -289,9 +215,6 @@ def switch_repository_branch(
     repo = db.query(Repository).filter(Repository.id == repo_id).first()
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found.")
-        
-    if not repo.repo_url:
-        raise HTTPException(status_code=400, detail="Cannot switch branch of a non-git project.")
         
     try:
         # Update repo branch & trigger analysis rebuild

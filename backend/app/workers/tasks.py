@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import SessionLocal, engine
 from app.models import Repository, Contributor, Commit, File, RepositoryScore
-from app.git.clone import clone_repository, extract_zip_repository, get_repo_dir
+from app.git.clone import clone_repository, get_repo_dir
 from app.git.history import get_git_history
 from app.git.parser import scan_repository_files
 from app.analyzers.complexity import analyze_file_complexity
@@ -26,7 +26,7 @@ REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
 celery_app = Celery("tasks", broker=REDIS_URL, backend=REDIS_URL)
 
 @celery_app.task(name="analyze_repository_task")
-def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
+def analyze_repository_task(repo_id: str) -> bool:
     """Executes the asynchronous repository analysis pipeline."""
     db: Session = SessionLocal()
     
@@ -39,22 +39,32 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
             
         print(f"Starting async analysis pipeline for repository: {repo.name} ({repo_id})")
         
-        # 2. Clone or Extract Ingestion
+        # 2. Clone Ingestion
         repo.status = "cloning"
         db.commit()
         
         repo_dir = None
-        if zip_path:
-            repo.status = "extracting"
-            db.commit()
-            repo_dir = extract_zip_repository(zip_path, str(repo_id))
-            # Delete temporary ZIP file
-            if os.path.exists(zip_path):
-                os.remove(zip_path)
-        elif repo.repo_url:
-            repo_dir = clone_repository(repo.repo_url, str(repo_id), branch=repo.branch)
-        else:
-            raise ValueError("No repository source (URL or ZIP upload) was provided.")
+        try:
+            if repo.repo_url:
+                import git
+                try:
+                    repo_dir = clone_repository(repo.repo_url, str(repo_id), branch=repo.branch)
+                except git.exc.GitCommandError as git_err:
+                    err_str = str(git_err)
+                    if "Repository not found" in err_str or "Could not resolve host" in err_str or "404" in err_str:
+                        raise ValueError("The Git repository could not be found or reached. Please verify the URL is public and correct.")
+                    elif "Authentication failed" in err_str or "Terminal prompts disabled" in err_str or "Could not read from remote repository" in err_str:
+                        raise ValueError("Authentication failed. Ensure the repository is public or credentials are not required.")
+                    elif "Remote branch" in err_str and "not found" in err_str:
+                        raise ValueError(f"The branch '{repo.branch}' was not found in the repository.")
+                    else:
+                        clean_err = git_err.stderr.strip() if git_err.stderr else str(git_err)
+                        clean_err = clean_err.split("\n")[-1] if "\n" in clean_err else clean_err
+                        raise ValueError(f"Git clone failed: {clean_err}")
+            else:
+                raise ValueError("No repository Git URL was provided.")
+        except Exception as ingest_err:
+            raise ValueError(str(ingest_err))
             
         # 3. Scan codebase layout
         repo.status = "analyzing"
@@ -136,7 +146,7 @@ def analyze_repository_task(repo_id: str, zip_path: str = None) -> bool:
                 churn=f["churn"],
                 hotspot_score=f["hotspot_score"],
                 owner=f["owner"],
-                content=content_str
+                content=content_str.replace("\x00", "") if content_str is not None else None
             )
             db.add(file_model)
             files_db_list.append(file_model)

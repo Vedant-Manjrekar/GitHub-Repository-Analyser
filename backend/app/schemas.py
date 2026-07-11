@@ -10,7 +10,7 @@ class BaseSchema(BaseModel):
 # --- Repository Schemas ---
 class RepositoryCreate(BaseSchema):
     name: str
-    repo_url: Optional[str] = None
+    repo_url: str
     user_email: Optional[str] = None
 
 class RepositoryResponse(BaseSchema):
