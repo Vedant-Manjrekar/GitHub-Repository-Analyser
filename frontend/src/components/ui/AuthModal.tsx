@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Envelope, Lock, User, SignIn, UserPlus } from "@phosphor-icons/react";
 import { Button } from "./Button";
+import { registerUser, loginUser } from "../../utils/api";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -29,7 +30,7 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = "login" }:
     };
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -48,40 +49,20 @@ export function AuthModal({ isOpen, onClose, onSuccess, initialMode = "login" }:
       return;
     }
 
-    // Simulate login/signup logic
-    if (mode === "signup") {
-      const users = JSON.parse(localStorage.getItem("simulated_users") || "[]");
-      if (users.some((u: any) => u.email === email)) {
-        setError("User with this email already exists.");
-        return;
-      }
-      const newUser = { name, email, password };
-      users.push(newUser);
-      localStorage.setItem("simulated_users", JSON.stringify(users));
-      localStorage.setItem("current_user", JSON.stringify({ name, email }));
-      onSuccess({ name, email });
-      onClose();
-    } else {
-      const users = JSON.parse(localStorage.getItem("simulated_users") || "[]");
-      const user = users.find((u: any) => u.email === email && u.password === password);
-      
-      // Default fallback demo user for convenience
-      if (email === "demo@example.com" && password === "password") {
-        const demoUser = { name: "Demo User", email: "demo@example.com" };
-        localStorage.setItem("current_user", JSON.stringify(demoUser));
-        onSuccess(demoUser);
+    try {
+      if (mode === "signup") {
+        const registered = await registerUser(email, name, password);
+        localStorage.setItem("current_user", JSON.stringify(registered));
+        onSuccess(registered);
         onClose();
-        return;
+      } else {
+        const loggedIn = await loginUser(email, password);
+        localStorage.setItem("current_user", JSON.stringify(loggedIn));
+        onSuccess(loggedIn);
+        onClose();
       }
-
-      if (!user) {
-        setError("Invalid email or password. Use demo@example.com / password for quick access.");
-        return;
-      }
-
-      localStorage.setItem("current_user", JSON.stringify({ name: user.name, email: user.email }));
-      onSuccess({ name: user.name, email: user.email });
-      onClose();
+    } catch (err: any) {
+      setError(err.message || "Authentication failed.");
     }
   };
 

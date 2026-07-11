@@ -246,16 +246,42 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
       }
     }
     const lines = clean.replace(/`/g, '').replace(/\*\*/g, '').split("\n");
+    const heading = lines[0];
     const checklist = lines.slice(1).map(l => l.replace(/^[\*\-]\s*/, "").trim()).filter(Boolean);
     return (
-      <ul className="text-xs text-text-secondary space-y-2">
-        {checklist.map((c, i) => (
-          <li key={i} className="flex items-start gap-2">
-            <span className="text-border-strong mt-0.5">•</span>
-            <span>{c}</span>
-          </li>
-        ))}
-      </ul>
+      <div className="space-y-4">
+        <div className={cn(
+          "px-4 py-3 rounded-xl border flex items-center gap-2.5",
+          score >= 65 
+            ? "bg-critical/10 text-critical border-critical/20" 
+            : complexity > 8.0 
+              ? "bg-warning/10 text-warning border-warning/20" 
+              : "bg-success/10 text-success border-success/20"
+        )}>
+          <span className="relative flex h-2 w-2">
+            <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", 
+              score >= 65 ? "bg-critical" : complexity > 8.0 ? "bg-warning" : "bg-success"
+            )}></span>
+            <span className={cn("relative inline-flex rounded-full h-2 w-2", 
+              score >= 65 ? "bg-critical" : complexity > 8.0 ? "bg-warning" : "bg-success"
+            )}></span>
+          </span>
+          <p className="text-xs font-semibold uppercase tracking-wider font-mono">
+            {heading}
+          </p>
+        </div>
+        <ul className="space-y-3">
+          {checklist.map((c, i) => (
+            <li key={i} className="flex items-start gap-3 text-xs text-text-primary leading-relaxed bg-surface-1 p-3.5 rounded-xl border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200">
+              <span className={cn(
+                "w-1.5 h-1.5 rounded-full mt-1.5 shrink-0",
+                score >= 65 ? "bg-critical/60" : complexity > 8.0 ? "bg-warning/60" : "bg-success/60"
+              )} />
+              <span>{c}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
     );
   };
 
@@ -695,9 +721,9 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
         width="lg"
       >
         {selectedFile && (
-          <div className="space-y-6">
+          <div className="space-y-6 p-6">
             
-            <div className="bg-surface-2 rounded-2xl p-5 border border-border-base flex items-center gap-4">
+            <div className="bg-surface-2 rounded-2xl p-5 border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/30 transition-all duration-200 flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedFile.hotspot_score >= 70 ? 'bg-critical/10 text-critical border border-critical/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
                 <ShieldWarning className="w-6 h-6" />
               </div>
@@ -710,7 +736,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+              <Card className="bg-surface-1 shadow-sm rounded-2xl border border-border-base hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="space-y-1 min-w-0 flex-1">
                     <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Complexity Score</span>
@@ -723,7 +749,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                 </CardContent>
               </Card>
 
-              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+              <Card className="bg-surface-1 shadow-sm rounded-2xl border border-border-base hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="space-y-1 min-w-0 flex-1">
                     <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Historical Edits</span>
@@ -736,7 +762,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                 </CardContent>
               </Card>
 
-              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+              <Card className="bg-surface-1 shadow-sm rounded-2xl border border-border-base hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="space-y-1 min-w-0 flex-1">
                     <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Est. Lines of Code</span>
@@ -751,7 +777,7 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
                 </CardContent>
               </Card>
 
-              <Card className="bg-surface-1 shadow-sm rounded-2xl ring-1 ring-border-base/50">
+              <Card className="bg-surface-1 shadow-sm rounded-2xl border border-border-base hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200">
                 <CardContent className="p-4 flex items-center justify-between">
                   <div className="space-y-1 min-w-0 flex-1">
                     <span className="text-[10px] uppercase font-mono font-bold text-text-tertiary tracking-wider block">Active Contributors</span>
@@ -782,14 +808,14 @@ export function TechDebtVisualizer({ techDebt, complexityFiles }: TechDebtVisual
 
             <div className="space-y-2">
               <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-text-tertiary">Path</h4>
-              <p className="text-xs font-mono p-3 bg-surface-2 rounded-xl text-text-secondary break-all">
+              <p className="text-xs font-mono p-3 bg-surface-2 rounded-xl border border-border-base shadow-sm text-text-secondary break-all">
                 {selectedFile.path}
               </p>
             </div>
 
             <div className="space-y-3 pt-4 border-t border-border-base">
               <h4 className="text-sm font-semibold font-display text-text-primary">AI Actionable Recommendations</h4>
-              <div className="p-5 bg-surface-2 border border-border-base rounded-2xl">
+              <div className="p-5 bg-surface-2 border border-border-base rounded-2xl shadow-sm">
                 {renderAISuggestion(selectedFile.ai_summary, selectedFile.hotspot_score, selectedFile.complexity)}
               </div>
             </div>

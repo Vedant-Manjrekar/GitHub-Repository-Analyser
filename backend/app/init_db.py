@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import engine, Base
 # Import models to ensure they are registered on Metadata
-from app.models import Repository, Contributor, Commit, File, RepositoryScore
+from app.models import Repository, Contributor, Commit, File, RepositoryScore, User, UserRepositoryAssociation
 
 def init_db():
     print("Initializing database tables...")
@@ -42,8 +42,37 @@ def init_db():
     except Exception as e:
         # Ignore if column already exists
         pass
-        
+
+    # Add analyzed_at column to user_repository_associations if it doesn't exist
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text(
+                "ALTER TABLE user_repository_associations "
+                "ADD COLUMN analyzed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();"
+            ))
+            conn.commit()
+            print("Successfully added analyzed_at column to user_repository_associations table.")
+    except Exception as e:
+        # Ignore if column already exists
+        pass
+
+    # Add unique constraint on (user_id, repository_id) if it doesn't exist
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text(
+                "ALTER TABLE user_repository_associations "
+                "ADD CONSTRAINT uq_user_repository UNIQUE (user_id, repository_id);"
+            ))
+            conn.commit()
+            print("Successfully added unique constraint uq_user_repository.")
+    except Exception as e:
+        # Ignore if constraint already exists
+        pass
+
     print("Database tables initialized successfully!")
+
 
 if __name__ == "__main__":
     init_db()

@@ -7,11 +7,11 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 
 from app.init_db import init_db
 from app.database import get_db
-from app.models import Repository, Contributor, Commit, File as ModelFile, RepositoryScore
+from app.models import Repository, Contributor, Commit, File as ModelFile, RepositoryScore, User, UserRepositoryAssociation
 from app.schemas import RepositoryCreate, RepositoryResponse, DashboardResponse, RepositoryScoreResponse, ContributorResponse, FileResponse
 from app.workers.tasks import analyze_repository_task
 from app.analyzers.churn import calculate_churn_trends
@@ -82,15 +82,57 @@ def clone_new_repository(
     if not payload.repo_url:
         raise HTTPException(status_code=400, detail="Repository URL must be provided.")
         
+    clean_url = payload.repo_url.strip()
+    
+    # Check if this repository has already been successfully analyzed
+    existing_repo = db.query(Repository).filter(
+        Repository.repo_url == clean_url,
+        Repository.status == "completed"
+    ).first()
+    
+    if existing_repo:
+        # Re-use existing analysis and create/update user-repository association if user_email is provided
+        if payload.user_email:
+            user = db.query(User).filter(User.email == payload.user_email.strip().lower()).first()
+            if user:
+                # Check if association already exists
+                assoc = db.query(UserRepositoryAssociation).filter(
+                    UserRepositoryAssociation.user_id == user.id,
+                    UserRepositoryAssociation.repository_id == existing_repo.id
+                ).first()
+                if not assoc:
+                    new_assoc = UserRepositoryAssociation(
+                        user_id=user.id,
+                        repository_id=existing_repo.id
+                    )
+                    db.add(new_assoc)
+                else:
+                    # Update the analyzed_at timestamp to reflect the re-analysis
+                    assoc.analyzed_at = func.now()
+                db.commit()
+        return existing_repo
+        
+    # Otherwise, it's a new repository analysis
     repo = Repository(
         name=payload.name,
-        repo_url=payload.repo_url,
+        repo_url=clean_url,
         status="pending"
     )
     db.add(repo)
     db.commit()
     db.refresh(repo)
     
+    # Associate the new repository with the user who initiated the analysis
+    if payload.user_email:
+        user = db.query(User).filter(User.email == payload.user_email.strip().lower()).first()
+        if user:
+            new_assoc = UserRepositoryAssociation(
+                user_id=user.id,
+                repository_id=repo.id
+            )
+            db.add(new_assoc)
+            db.commit()
+
     # Enqueue background analysis task
     run_analysis_task(str(repo.id), background_tasks)
     
@@ -101,11 +143,41 @@ def upload_repository_zip(
     background_tasks: BackgroundTasks,
     name: str = Form(...),
     file: UploadFile = FastAPIFile(...),
+    user_email: Optional[str] = Form(None),
     db: Session = Depends(get_db)
 ):
     """Uploads a repository ZIP file and triggers analysis in the background."""
     if not file.filename.endswith(".zip"):
         raise HTTPException(status_code=400, detail="Only ZIP files are supported.")
+        
+    # Check if a completed ZIP repository with the exact same name already exists in the database
+    existing_repo = db.query(Repository).filter(
+        Repository.name == name.strip(),
+        Repository.repo_url == None,
+        Repository.status == "completed"
+    ).first()
+    
+    if existing_repo:
+        # Re-use existing analysis and create/update user-repository association if user_email is provided
+        if user_email:
+            user = db.query(User).filter(User.email == user_email.strip().lower()).first()
+            if user:
+                # Check if association already exists
+                assoc = db.query(UserRepositoryAssociation).filter(
+                    UserRepositoryAssociation.user_id == user.id,
+                    UserRepositoryAssociation.repository_id == existing_repo.id
+                ).first()
+                if not assoc:
+                    new_assoc = UserRepositoryAssociation(
+                        user_id=user.id,
+                        repository_id=existing_repo.id
+                    )
+                    db.add(new_assoc)
+                else:
+                    # Update the analyzed_at timestamp to reflect the re-analysis
+                    assoc.analyzed_at = func.now()
+                db.commit()
+        return existing_repo
         
     # Generate unique ID for repo and save the zip temporarily
     repo_id = uuid.uuid4()
@@ -127,6 +199,17 @@ def upload_repository_zip(
     db.commit()
     db.refresh(repo)
     
+    # Associate the new repository with the user who initiated the analysis
+    if user_email:
+        user = db.query(User).filter(User.email == user_email.strip().lower()).first()
+        if user:
+            new_assoc = UserRepositoryAssociation(
+                user_id=user.id,
+                repository_id=repo.id
+            )
+            db.add(new_assoc)
+            db.commit()
+            
     # Enqueue background analysis task with ZIP path
     run_analysis_task(str(repo.id), background_tasks, temp_zip_path)
     
@@ -463,3 +546,78 @@ def get_technical_debt_insights(repo_id: str, db: Session = Depends(get_db)):
         "complex_files_count": complex_files_count,
         "ai_summary": scores.ai_summary if scores else None
     }
+
+# --- Database-backed Authentication & Scoped Recents ---
+
+class RegisterPayload(BaseModel):
+    email: str
+    name: str
+    password: str
+
+@app.post("/auth/register")
+def register_user(payload: RegisterPayload, db: Session = Depends(get_db)):
+    existing = db.query(User).filter(User.email == payload.email.strip().lower()).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="User with this email already registered.")
+    user = User(
+        email=payload.email.strip().lower(),
+        name=payload.name.strip(),
+        password=payload.password
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return {"email": user.email, "name": user.name}
+
+class LoginPayload(BaseModel):
+    email: str
+    password: str
+
+@app.post("/auth/login")
+def login_user(payload: LoginPayload, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email.strip().lower()).first()
+    if not user or user.password != payload.password:
+        raise HTTPException(status_code=401, detail="Invalid email or password.")
+    return {"email": user.email, "name": user.name}
+
+@app.get("/analysis/recents")
+def get_recent_analyses(email: Optional[str] = None, db: Session = Depends(get_db)):
+    """
+    Returns the authenticated user's recently analyzed repositories.
+    Always scoped to the requesting user — never returns data from other users.
+    A newly registered user with no analyses will receive an empty list.
+    """
+    if not email:
+        raise HTTPException(status_code=401, detail="Authentication required to view recent analyses.")
+
+    user = db.query(User).filter(User.email == email.strip().lower()).first()
+    if not user:
+        raise HTTPException(status_code=401, detail="User not found.")
+
+    # Query the user's own association records, joined with the repository details.
+    # This is the ONLY source of truth — we never fall back to the global repositories table.
+    results = (
+        db.query(UserRepositoryAssociation, Repository)
+        .join(Repository, UserRepositoryAssociation.repository_id == Repository.id)
+        .filter(
+            UserRepositoryAssociation.user_id == user.id,
+            Repository.status == "completed"
+        )
+        .order_by(UserRepositoryAssociation.analyzed_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    return [
+        {
+            "id": str(repo.id),
+            "name": repo.name,
+            "repo_url": repo.repo_url,
+            "status": repo.status,
+            # analyzed_at comes from the per-user association — not the global repo timestamp
+            "analyzed_at": assoc.analyzed_at.isoformat() if assoc.analyzed_at else None,
+            "last_analyzed_at": repo.last_analyzed_at.isoformat() if repo.last_analyzed_at else None,
+        }
+        for assoc, repo in results
+    ]
+

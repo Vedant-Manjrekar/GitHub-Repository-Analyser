@@ -94,14 +94,34 @@ export function RiskMap({ hotspots }: RiskMapProps) {
     const bullets = parts.slice(1).map(p => p.replace(/^[\*\-]\s/, "").trim()).filter(Boolean);
 
     return (
-      <div className="space-y-3">
-        <p className={`text-sm leading-relaxed font-bold ${score >= 65 ? 'text-critical' : complexity > 8.0 ? 'text-warning' : 'text-success'}`}>
-          {heading}
-        </p>
-        <ul className="text-xs text-text-secondary space-y-2">
+      <div className="space-y-4">
+        <div className={cn(
+          "px-4 py-3 rounded-xl border flex items-center gap-2.5",
+          score >= 65 
+            ? "bg-critical/10 text-critical border-critical/20" 
+            : complexity > 8.0 
+              ? "bg-warning/10 text-warning border-warning/20" 
+              : "bg-success/10 text-success border-success/20"
+        )}>
+          <span className="relative flex h-2 w-2">
+            <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", 
+              score >= 65 ? "bg-critical" : complexity > 8.0 ? "bg-warning" : "bg-success"
+            )}></span>
+            <span className={cn("relative inline-flex rounded-full h-2 w-2", 
+              score >= 65 ? "bg-critical" : complexity > 8.0 ? "bg-warning" : "bg-success"
+            )}></span>
+          </span>
+          <p className="text-xs font-semibold uppercase tracking-wider font-mono">
+            {heading}
+          </p>
+        </div>
+        <ul className="space-y-3">
           {bullets.map((b, i) => (
-            <li key={i} className="flex items-start gap-2">
-              <span className="text-border-strong mt-0.5">•</span>
+            <li key={i} className="flex items-start gap-3 text-xs text-text-primary leading-relaxed bg-surface-1 p-3.5 rounded-xl border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200">
+              <span className={cn(
+                "w-1.5 h-1.5 rounded-full mt-1.5 shrink-0",
+                score >= 65 ? "bg-critical/60" : complexity > 8.0 ? "bg-warning/60" : "bg-success/60"
+              )} />
               <span>{b}</span>
             </li>
           ))}
@@ -664,9 +684,9 @@ export function RiskMap({ hotspots }: RiskMapProps) {
         width="lg"
       >
         {selectedFile && (
-          <div className="space-y-6">
+          <div className="space-y-6 p-6">
             
-            <div className="bg-surface-2 rounded-2xl p-5 border border-border-base flex items-center gap-4">
+            <div className="bg-surface-2 rounded-2xl p-5 border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/30 transition-all duration-200 flex items-center gap-4">
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${selectedFile.hotspot_score >= 70 ? 'bg-critical/10 text-critical border border-critical/20' : 'bg-warning/10 text-warning border border-warning/20'}`}>
                 <ShieldWarning className="w-6 h-6" />
               </div>
@@ -679,15 +699,17 @@ export function RiskMap({ hotspots }: RiskMapProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
+              <div className="bg-surface-1 p-4 rounded-2xl border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200 flex flex-col justify-between">
                 <div>
                   <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Complexity Score</p>
-                  <p className="font-mono font-bold text-text-primary text-xl">{selectedFile.complexity}</p>
+                  <p className="font-mono font-bold text-text-primary text-xl">
+                    {Number(selectedFile.complexity).toFixed(2)}
+                  </p>
                 </div>
                 <ChartLine className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
+              <div className="bg-surface-1 p-4 rounded-2xl border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200 flex flex-col justify-between">
                 <div>
                   <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Historical Edits</p>
                   <p className="font-mono font-bold text-text-primary text-xl">{selectedFile.churn}</p>
@@ -695,7 +717,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                 <GitCommit className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
+              <div className="bg-surface-1 p-4 rounded-2xl border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200 flex flex-col justify-between">
                 <div>
                   <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Est. Lines of Code</p>
                   <p className="font-mono font-bold text-text-primary text-xl">
@@ -705,7 +727,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                 <Code className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base flex flex-col justify-between">
+              <div className="bg-surface-1 p-4 rounded-2xl border border-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-accent/40 transition-all duration-200 flex flex-col justify-between">
                 <div>
                   <p className="text-[10px] uppercase font-mono text-text-tertiary mb-0.5">Active Contributors</p>
                   <p className="font-mono font-bold text-text-primary text-xl">
@@ -715,7 +737,7 @@ export function RiskMap({ hotspots }: RiskMapProps) {
                 <Users className="w-4 h-4 text-text-tertiary mt-2 self-end" />
               </div>
 
-              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base col-span-2 flex items-center justify-between">
+              <div className="bg-surface-1 p-4 rounded-2xl ring-1 ring-border-base shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:ring-accent/40 transition-all duration-200 col-span-2 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] uppercase font-mono text-text-tertiary">Primary Owner</p>
                   <p className="font-semibold text-text-primary text-sm mt-0.5">{selectedFile.owner.split(" <")[0]}</p>
@@ -726,14 +748,14 @@ export function RiskMap({ hotspots }: RiskMapProps) {
 
             <div className="space-y-2">
               <h4 className="text-xs font-bold font-mono uppercase tracking-wider text-text-tertiary">Path</h4>
-              <p className="text-xs font-mono p-3 bg-surface-2 rounded-xl text-text-secondary break-all">
+              <p className="text-xs font-mono p-3 bg-surface-2 rounded-xl border border-border-base shadow-sm text-text-secondary break-all">
                 {selectedFile.path}
               </p>
             </div>
 
             <div className="space-y-3 pt-4 border-t border-border-base">
               <h4 className="text-sm font-semibold font-display text-text-primary">AI Actionable Recommendations</h4>
-              <div className="p-5 bg-surface-2 border border-border-base rounded-2xl">
+              <div className="p-5 bg-surface-2 border border-border-base rounded-2xl shadow-sm">
                 {renderAISuggestion(selectedFile.ai_summary, selectedFile.hotspot_score, selectedFile.complexity)}
               </div>
             </div>

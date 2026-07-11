@@ -1,12 +1,12 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export async function cloneRepository(name: string, repoUrl: string) {
+export async function cloneRepository(name: string, repoUrl: string, userEmail?: string) {
   const res = await fetch(`${API_BASE_URL}/repositories/clone`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name, repo_url: repoUrl }),
+    body: JSON.stringify({ name, repo_url: repoUrl, user_email: userEmail }),
   });
   if (!res.ok) {
     const err = await res.json();
@@ -15,10 +15,13 @@ export async function cloneRepository(name: string, repoUrl: string) {
   return res.json();
 }
 
-export async function uploadRepositoryZip(name: string, file: File) {
+export async function uploadRepositoryZip(name: string, file: File, userEmail?: string) {
   const formData = new FormData();
   formData.append("name", name);
   formData.append("file", file);
+  if (userEmail) {
+    formData.append("user_email", userEmail);
+  }
 
   const res = await fetch(`${API_BASE_URL}/repositories/upload`, {
     method: "POST",
@@ -113,3 +116,55 @@ export async function restartAnalysis(repoId: string) {
   }
   return res.json();
 }
+
+export async function registerUser(email: string, name: string, password: string) {
+  const res = await fetch(`${API_BASE_URL}/auth/register`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, name, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Registration failed.");
+  }
+  return res.json();
+}
+
+export async function loginUser(email: string, password: string) {
+  const res = await fetch(`${API_BASE_URL}/auth/login`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Login failed.");
+  }
+  return res.json();
+}
+
+export async function getRecentAnalyses(email: string) {
+  const url = `${API_BASE_URL}/analysis/recents?email=${encodeURIComponent(email)}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error("Failed to load recent analyses.");
+  const data: Array<{
+    id: string;
+    name: string;
+    repo_url: string | null;
+    status: string;
+    analyzed_at: string | null;
+    last_analyzed_at: string | null;
+  }> = await res.json();
+  // Map the API response to the shape the UI expects.
+  // analyzed_at is the user-specific association timestamp (source of truth).
+  return data.map(item => ({
+    id: item.id,
+    name: item.name,
+    date: item.analyzed_at ?? item.last_analyzed_at ?? null,
+  }));
+}
+

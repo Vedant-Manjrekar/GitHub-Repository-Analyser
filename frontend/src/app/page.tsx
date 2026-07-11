@@ -15,7 +15,10 @@ import {
   getHotspotsData,
   getBusFactorData,
   getContributorsData,
-  getTechnicalDebtData
+  getTechnicalDebtData,
+  registerUser,
+  loginUser,
+  getRecentAnalyses
 } from "../utils/api";
 
 // Layout & UI
@@ -113,7 +116,7 @@ export default function Home() {
     setActivePanel(panel);
   };
 
-  const handleAuthSubmit = (e: React.FormEvent) => {
+  const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
 
@@ -132,67 +135,25 @@ export default function Home() {
       return;
     }
 
-    // Simulated login/signup logic
-    if (authMode === "signup") {
-      const users = JSON.parse(localStorage.getItem("simulated_users") || "[]");
-      if (users.some((u: any) => u.email === authEmail)) {
-        setAuthError("User with this email already exists.");
-        return;
-      }
-      const newUser = { name: authName, email: authEmail, password: authPassword };
-      users.push(newUser);
-      localStorage.setItem("simulated_users", JSON.stringify(users));
-      localStorage.setItem("current_user", JSON.stringify({ name: authName, email: authEmail }));
-      setUser({ name: authName, email: authEmail });
-      navigateTo("hero");
-    } else {
-      const users = JSON.parse(localStorage.getItem("simulated_users") || "[]");
-      const foundUser = users.find((u: any) => u.email === authEmail && u.password === authPassword);
-      
-      // Default fallback demo user for convenience
-      if (authEmail === "demo@example.com" && authPassword === "password") {
-        const demoUser = { name: "Demo User", email: "demo@example.com" };
-        localStorage.setItem("current_user", JSON.stringify(demoUser));
-        setUser(demoUser);
+    try {
+      if (authMode === "signup") {
+        const registered = await registerUser(authEmail, authName, authPassword);
+        localStorage.setItem("current_user", JSON.stringify(registered));
+        setUser(registered);
         navigateTo("hero");
-        return;
+      } else {
+        const loggedIn = await loginUser(authEmail, authPassword);
+        localStorage.setItem("current_user", JSON.stringify(loggedIn));
+        setUser(loggedIn);
+        navigateTo("hero");
       }
-
-      if (!foundUser) {
-        setAuthError("Invalid email or password. Use demo@example.com / password for quick access.");
-        return;
-      }
-
-      localStorage.setItem("current_user", JSON.stringify({ name: foundUser.name, email: foundUser.email }));
-      setUser({ name: foundUser.name, email: foundUser.email });
-      navigateTo("hero");
+    } catch (err: any) {
+      setAuthError(err.message || "Authentication failed.");
     }
   };
 
+  // Load user context and sync parameters on mount
   useEffect(() => {
-    const saved = localStorage.getItem("recent_repositories");
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const unique: any[] = [];
-          const seenNames = new Set<string>();
-          const seenIds = new Set<string>();
-          for (const item of parsed) {
-            const lowerName = item.name?.toLowerCase()?.trim();
-            if (item.id && item.name && !seenNames.has(lowerName) && !seenIds.has(item.id)) {
-              seenNames.add(lowerName);
-              seenIds.add(item.id);
-              unique.push(item);
-            }
-          }
-          setRecentRepos(unique);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
     const savedUser = localStorage.getItem("current_user");
     if (savedUser) {
       try {
@@ -212,12 +173,27 @@ export default function Home() {
     }
   }, []);
 
+  // Sync recent projects list dynamically based on authentication state
+  const loadRecentAnalysesFromDb = async () => {
+    if (!user || !user.email) {
+      setRecentRepos([]);
+      return;
+    }
+    try {
+      const data = await getRecentAnalyses(user.email);
+      setRecentRepos(data);
+    } catch (e) {
+      console.error("Failed to load recent repositories from db:", e);
+      setRecentRepos([]);
+    }
+  };
+
+  useEffect(() => {
+    loadRecentAnalysesFromDb();
+  }, [user]);
+
   const saveToRecents = (id: string, name: string) => {
-    const list = [...recentRepos];
-    const filtered = list.filter(r => r.id !== id && r.name?.toLowerCase()?.trim() !== name?.toLowerCase()?.trim());
-    const updated = [{ id, name, date: new Date().toLocaleDateString() }, ...filtered].slice(0, 5);
-    setRecentRepos(updated);
-    localStorage.setItem("recent_repositories", JSON.stringify(updated));
+    loadRecentAnalysesFromDb();
   };
 
   useEffect(() => {
@@ -287,7 +263,7 @@ export default function Home() {
       
       setCloneName(repoName);
 
-      const res = await cloneRepository(repoName, cloneUrl);
+      const res = await cloneRepository(repoName, cloneUrl, user?.email || undefined);
       setSelectedRepoId(res.id);
       
       const url = new URL(window.location.href);
@@ -309,7 +285,7 @@ export default function Home() {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const res = await uploadRepositoryZip(zipName, zipFile);
+      const res = await uploadRepositoryZip(zipName, zipFile, user?.email || undefined);
       setSelectedRepoId(res.id);
 
       const url = new URL(window.location.href);
@@ -708,7 +684,7 @@ export default function Home() {
               {/* Mini Recent Projects */}
               {recentRepos.length > 0 && (
                 <div className="mt-8 pt-6 border-t border-neutral-900 w-full max-w-md">
-                  <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400 block mb-3.5 text-center">Recent Projects</span>
+                  <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400 block mb-3.5 text-center">Recently Analyzed Repositories</span>
                   <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
                     {recentRepos.map(repo => (
                       <div 
@@ -826,6 +802,25 @@ export default function Home() {
                   Or clone a public repository URL instead
                 </button>
               </div>
+
+              {/* Mini Recent Projects */}
+              {recentRepos.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-neutral-900 w-full max-w-md">
+                  <span className="text-[10px] font-mono tracking-wider uppercase text-neutral-400 block mb-3.5 text-center">Recently Analyzed Repositories</span>
+                  <div className="space-y-2 max-h-40 overflow-y-auto pr-1">
+                    {recentRepos.map(repo => (
+                      <div 
+                        key={repo.id}
+                        onClick={() => handleRecentClick(repo.id, repo.name)}
+                        className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/40 hover:border-neutral-700/60 cursor-pointer transition-all"
+                      >
+                        <span className="text-xs font-semibold text-neutral-200 truncate">{repo.name}</span>
+                        <CaretRight className="w-4 h-4 text-neutral-500" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
 

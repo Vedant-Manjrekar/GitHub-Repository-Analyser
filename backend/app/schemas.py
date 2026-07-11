@@ -11,6 +11,7 @@ class BaseSchema(BaseModel):
 class RepositoryCreate(BaseSchema):
     name: str
     repo_url: Optional[str] = None
+    user_email: Optional[str] = None
 
 class RepositoryResponse(BaseSchema):
     id: UUID

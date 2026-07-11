@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Text
+from sqlalchemy import Column, String, Integer, Float, DateTime, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -83,3 +83,31 @@ class RepositoryScore(Base):
 
     # Relationships
     repository = relationship("Repository", back_populates="scores")
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String, unique=True, nullable=False, index=True)
+    name = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+
+
+class UserRepositoryAssociation(Base):
+    __tablename__ = "user_repository_associations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    repository_id = Column(UUID(as_uuid=True), ForeignKey("repositories.id", ondelete="CASCADE"), nullable=False)
+    associated_at = Column(DateTime(timezone=True), server_default=func.now())
+    # Explicit timestamp recording when the authenticated user analyzed this repository
+    analyzed_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "repository_id", name="uq_user_repository"),
+    )
+
+    # Relationships
+    user = relationship("User", backref="repository_associations")
+    repository = relationship("Repository", backref="user_associations")
