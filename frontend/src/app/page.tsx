@@ -17,7 +17,8 @@ import {
   getTechnicalDebtData,
   registerUser,
   loginUser,
-  getRecentAnalyses
+  getRecentAnalyses,
+  removeRecentAnalysis
 } from "../utils/api";
 
 // Layout & UI
@@ -298,6 +299,17 @@ export default function Home() {
 
     setStatus("analyzing");
     setView("loading");
+  };
+
+  const handleRemoveRecent = async (e: React.MouseEvent, repoId: string) => {
+    e.stopPropagation();
+    if (!user || !user.email) return;
+    try {
+      await removeRecentAnalysis(repoId, user.email);
+      loadRecentAnalysesFromDb();
+    } catch (err: any) {
+      console.error("Failed to remove recent repository:", err);
+    }
   };
 
   // Pipeline loading visualization helper
@@ -669,10 +681,19 @@ export default function Home() {
                       <div 
                         key={repo.id}
                         onClick={() => handleRecentClick(repo.id, repo.name)}
-                        className="flex items-center justify-between p-3 rounded-xl bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/40 hover:border-neutral-700/60 cursor-pointer transition-all"
+                        className="group flex items-center justify-between p-3 rounded-xl bg-neutral-900/50 hover:bg-neutral-900 border border-neutral-800/40 hover:border-neutral-700/60 cursor-pointer transition-all"
                       >
                         <span className="text-xs font-semibold text-neutral-200 truncate">{repo.name}</span>
-                        <CaretRight className="w-4 h-4 text-neutral-500" />
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => handleRemoveRecent(e, repo.id)}
+                            className="p-1 rounded-md text-neutral-500 hover:text-rose-400 hover:bg-rose-950/20 transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
+                            title="Remove from recents"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                          <CaretRight className="w-4 h-4 text-neutral-500 transition-transform group-hover:translate-x-0.5" />
+                        </div>
                       </div>
                     ))}
                   </div>

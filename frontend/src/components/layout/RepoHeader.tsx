@@ -365,6 +365,17 @@ export function RepoHeader({ dashboard, contributors = [] }: RepoHeaderProps) {
                   <AnimatePresence><BranchMenu align="right" /></AnimatePresence>
                 </div>
 
+                {repo.repo_url && (
+                  <button
+                    onClick={handleReanalyze}
+                    disabled={isReanalyzing}
+                    className="px-3 py-1.5 text-[10px] rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-white font-mono flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <ArrowsCounterClockwise className={cn("w-3.5 h-3.5 text-zinc-400", isReanalyzing && "animate-spin")} />
+                    <span>Refresh</span>
+                  </button>
+                )}
+
                 <button
                   onClick={e => { e.stopPropagation(); setIsExpanded(false); }}
                   className="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-white flex items-center justify-center border border-white/10 transition-colors cursor-pointer"

@@ -134,3 +134,12 @@ export async function getRecentAnalyses(email: string) {
     date: item.analyzed_at ?? item.last_analyzed_at ?? null,
   }));
 }
+
+export async function removeRecentAnalysis(repoId: string, email: string) {
+  const url = `${API_BASE_URL}/analysis/${repoId}?email=${encodeURIComponent(email)}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+  });
+  return handleResponse(res, "Failed to remove repository from recently analyzed.");
+}
+

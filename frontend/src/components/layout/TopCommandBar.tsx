@@ -71,11 +71,6 @@ export function TopCommandBar({ repoName, onBackToWorkspace, className, user, on
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        <button className="p-2 rounded-xl text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors relative cursor-pointer">
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-accent animate-pulse-slow"></span>
-        </button>
-
         {!user && (
           <button
             onClick={onLoginClick}

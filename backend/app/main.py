@@ -544,3 +544,25 @@ def get_recent_analyses(email: Optional[str] = None, db: Session = Depends(get_d
         for assoc, repo in results
     ]
 
+@app.delete("/analysis/{repo_id}")
+def remove_recent_analysis(repo_id: str, email: str, db: Session = Depends(get_db)):
+    """
+    Removes the repository from the user's recently analyzed list by deleting the association.
+    """
+    user = db.query(User).filter(User.email == email.strip().lower()).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+        
+    assoc = db.query(UserRepositoryAssociation).filter(
+        UserRepositoryAssociation.user_id == user.id,
+        UserRepositoryAssociation.repository_id == repo_id
+    ).first()
+    
+    if not assoc:
+        raise HTTPException(status_code=404, detail="Repository association not found.")
+        
+    db.delete(assoc)
+    db.commit()
+    return {"status": "success", "message": "Repository removed from recents."}
+
+
