@@ -110,26 +110,6 @@ export function Sidebar({
 
       {/* Navigation List Container */}
       <div className={cn("flex-1 p-4 overflow-y-auto custom-scrollbar", isCollapsed && "p-3")}>
-        
-        {/* Search Mockup */}
-        <div className={cn("relative mb-6", isCollapsed && "flex justify-center")}>
-          {isCollapsed ? (
-            <button className="w-9 h-9 rounded-xl border border-border-base bg-surface-2 hover:bg-surface-3 flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors cursor-pointer shadow-subtle">
-              <MagnifyingGlass className="w-4 h-4" />
-            </button>
-          ) : (
-            <div className="relative w-full">
-              <MagnifyingGlass className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-tertiary" />
-              <input
-                type="text"
-                readOnly
-                placeholder="Search"
-                className="w-full pl-9.5 pr-8 py-2 rounded-xl border border-border-base bg-surface-2 text-xs font-medium text-text-secondary placeholder-text-tertiary focus:outline-none cursor-pointer hover:bg-surface-3 transition-colors"
-              />
-              <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono font-bold bg-surface-1 border border-border-base px-1.5 py-0.5 rounded text-text-tertiary shadow-subtle">K</kbd>
-            </div>
-          )}
-        </div>
 
         {/* Navigation buttons */}
         <nav className="space-y-1.5">
@@ -166,24 +146,7 @@ export function Sidebar({
 
       {/* Footer Support / Options */}
       <div className={cn("p-4 border-t border-border-base bg-surface-2/40 space-y-1", isCollapsed && "p-3 flex flex-col items-center")}>
-        {/* Support Link */}
-        <button className={cn(
-          "w-full flex items-center rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer",
-          isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 gap-3.5"
-        )}>
-          <Question className="w-4.5 h-4.5 text-text-tertiary shrink-0" />
-          {!isCollapsed && <span className="text-text-secondary hover:text-text-primary">Support / Help</span>}
-        </button>
-
-        {/* Workspace Settings Link */}
-        <button className={cn(
-          "w-full flex items-center rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-2 transition-colors cursor-pointer",
-          isCollapsed ? "justify-center p-2.5" : "px-3 py-2.5 gap-3.5"
-        )}>
-          <Gear className="w-4.5 h-4.5 text-text-tertiary shrink-0" />
-          {!isCollapsed && <span className="text-text-secondary hover:text-text-primary">Settings</span>}
-        </button>
-
+       
         {/* Toggle Collapse Menu Button */}
         <button 
           onClick={onToggleCollapse}
