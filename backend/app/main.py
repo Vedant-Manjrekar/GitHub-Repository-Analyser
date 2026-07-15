@@ -485,12 +485,13 @@ def register_user(payload: RegisterPayload, db: Session = Depends(get_db)):
     user = User(
         email=payload.email.strip().lower(),
         name=payload.name.strip(),
-        password=payload.password
+        password=payload.password,
+        role="USER"
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    return {"email": user.email, "name": user.name}
+    return {"email": user.email, "name": user.name, "role": user.role}
 
 class LoginPayload(BaseModel):
     email: str
@@ -501,7 +502,37 @@ def login_user(payload: LoginPayload, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email.strip().lower()).first()
     if not user or user.password != payload.password:
         raise HTTPException(status_code=401, detail="Invalid email or password.")
-    return {"email": user.email, "name": user.name}
+    return {"email": user.email, "name": user.name, "role": user.role}
+
+def get_current_admin(email: str, db: Session):
+    if not email:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+    user = db.query(User).filter(User.email == email.strip().lower()).first()
+    if not user or user.role != "ADMIN":
+        raise HTTPException(status_code=403, detail="Access denied. Administrator privileges required.")
+    return user
+
+@app.get("/admin/users")
+def list_users(admin_email: str, db: Session = Depends(get_db)):
+    get_current_admin(admin_email, db)
+    users = db.query(User).order_by(User.name).all()
+    return [{"id": str(u.id), "name": u.name, "email": u.email, "role": u.role} for u in users]
+
+class UpdateRolePayload(BaseModel):
+    role: str
+
+@app.post("/admin/users/{user_id}/role")
+def update_user_role(user_id: str, payload: UpdateRolePayload, admin_email: str, db: Session = Depends(get_db)):
+    get_current_admin(admin_email, db)
+    if payload.role not in ["USER", "ADMIN"]:
+        raise HTTPException(status_code=400, detail="Invalid role specified.")
+    target_user = db.query(User).filter(User.id == user_id).first()
+    if not target_user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    target_user.role = payload.role
+    db.commit()
+    return {"status": "success", "message": f"User role updated to {payload.role}."}
+
 
 @app.get("/analysis/recents")
 def get_recent_analyses(email: Optional[str] = None, db: Session = Depends(get_db)):

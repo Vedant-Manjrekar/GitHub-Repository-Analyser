@@ -9,7 +9,7 @@ interface AppShellProps {
   repoName?: string;
   onBackToWorkspace: () => void;
   children: React.ReactNode;
-  user: { name: string; email: string } | null;
+  user: { name: string; email: string; role?: string } | null;
   onLoginClick: () => void;
   onLogout: () => void;
 }

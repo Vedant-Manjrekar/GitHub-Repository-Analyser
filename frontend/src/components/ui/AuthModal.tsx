@@ -7,7 +7,7 @@ import { registerUser, loginUser } from "../../utils/api";
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (user: { name: string; email: string }) => void;
+  onSuccess: (user: { name: string; email: string; role?: string }) => void;
   initialMode?: "login" | "signup";
 }
 

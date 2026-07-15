@@ -71,6 +71,17 @@ def init_db():
         # Ignore if constraint already exists
         pass
 
+    # Add role column to users if it doesn't exist
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR DEFAULT 'USER' NOT NULL;"))
+            conn.commit()
+            print("Successfully added role column to users table.")
+    except Exception as e:
+        # Ignore if column already exists
+        pass
+
     print("Database tables initialized successfully!")
 
 

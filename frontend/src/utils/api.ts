@@ -143,3 +143,20 @@ export async function removeRecentAnalysis(repoId: string, email: string) {
   return handleResponse(res, "Failed to remove repository from recently analyzed.");
 }
 
+export async function getAdminUsers(adminEmail: string) {
+  const res = await fetch(`${API_BASE_URL}/admin/users?admin_email=${encodeURIComponent(adminEmail)}`);
+  return handleResponse(res, "Failed to fetch users list.");
+}
+
+export async function updateUserRole(userId: string, newRole: string, adminEmail: string) {
+  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role?admin_email=${encodeURIComponent(adminEmail)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ role: newRole }),
+  });
+  return handleResponse(res, "Failed to update user role.");
+}
+
+

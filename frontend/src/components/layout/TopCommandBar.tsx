@@ -6,7 +6,7 @@ interface TopCommandBarProps {
   repoName?: string;
   onBackToWorkspace: () => void;
   className?: string;
-  user: { name: string; email: string } | null;
+  user: { name: string; email: string; role?: string } | null;
   onLoginClick: () => void;
 }
 

@@ -90,7 +90,7 @@ export default function Home() {
   const [complexityFiles, setComplexityFiles] = useState<any[]>([]);
 
   // Authentication State
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<{ name: string; email: string; role?: string } | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Auth Form State for sliding screen
@@ -606,6 +606,16 @@ export default function Home() {
                   Analyze Repository
                 </button>
 
+                {user?.role === "ADMIN" && (
+                  <button
+                    onClick={() => {
+                      window.location.href = "/admin";
+                    }}
+                    className="px-8 py-3.5 bg-neutral-900 hover:bg-neutral-800 text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-all border border-neutral-800 hover:border-neutral-700 cursor-pointer"
+                  >
+                    Admin Panel
+                  </button>
+                )}
               </div>
             </motion.div>
           )}
