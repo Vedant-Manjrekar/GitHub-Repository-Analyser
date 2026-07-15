@@ -15,6 +15,8 @@ from app.schemas import RepositoryCreate, RepositoryResponse, DashboardResponse,
 from app.workers.tasks import analyze_repository_task
 from app.analyzers.churn import calculate_churn_trends
 
+from app.routers import auth_router
+from app.utils.auth_middleware import get_current_user, get_optional_current_user, RoleChecker
 
 USE_CELERY = os.getenv("USE_CELERY", "false").lower() == "true"
 
@@ -40,9 +42,20 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Restricted origins for CORS supporting credentials
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
+if allowed_origins_env:
+    origins.extend([o.strip() for o in allowed_origins_env.split(",") if o.strip()])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -66,10 +79,42 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": detail},
     )
     # Since Starlette exception handlers bypass standard middleware, manually append CORS headers here
-    response.headers["Access-Control-Allow-Origin"] = "*"
+    origin = request.headers.get("origin")
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        response.headers["Access-Control-Allow-Origin"] = origins[0] if origins else ""
+    response.headers["Access-Control-Allow-Credentials"] = "true"
     response.headers["Access-Control-Allow-Methods"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "*"
     return response
+
+from fastapi.exceptions import RequestValidationError
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    errors = []
+    for error in exc.errors():
+        loc = " -> ".join([str(x) for x in error["loc"] if x != "body"])
+        msg = error["msg"]
+        errors.append(f"{loc}: {msg}" if loc else msg)
+    
+    detail_msg = "; ".join(errors)
+    response = JSONResponse(
+        status_code=422,
+        content={"detail": detail_msg},
+    )
+    origin = request.headers.get("origin")
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+    else:
+        response.headers["Access-Control-Allow-Origin"] = origins[0] if origins else ""
+    response.headers["Access-Control-Allow-Credentials"] = "true"
+    response.headers["Access-Control-Allow-Methods"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    return response
+
+app.include_router(auth_router.router)
 
 @app.get("/")
 def read_root():
@@ -81,6 +126,7 @@ def read_root():
 def clone_new_repository(
     payload: RepositoryCreate, 
     background_tasks: BackgroundTasks,
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """Clones a Git repository from a URL and triggers analysis in the background."""
@@ -95,26 +141,29 @@ def clone_new_repository(
         Repository.status == "completed"
     ).first()
     
+    # Identify the user to associate with
+    user = current_user
+    if not user and payload.user_email:
+        user = db.query(User).filter(User.email == payload.user_email.strip().lower()).first()
+    
     if existing_repo:
-        # Re-use existing analysis and create/update user-repository association if user_email is provided
-        if payload.user_email:
-            user = db.query(User).filter(User.email == payload.user_email.strip().lower()).first()
-            if user:
-                # Check if association already exists
-                assoc = db.query(UserRepositoryAssociation).filter(
-                    UserRepositoryAssociation.user_id == user.id,
-                    UserRepositoryAssociation.repository_id == existing_repo.id
-                ).first()
-                if not assoc:
-                    new_assoc = UserRepositoryAssociation(
-                        user_id=user.id,
-                        repository_id=existing_repo.id
-                    )
-                    db.add(new_assoc)
-                else:
-                    # Update the analyzed_at timestamp to reflect the re-analysis
-                    assoc.analyzed_at = func.now()
-                db.commit()
+        # Re-use existing analysis and create/update user-repository association if user is identified
+        if user:
+            # Check if association already exists
+            assoc = db.query(UserRepositoryAssociation).filter(
+                UserRepositoryAssociation.user_id == user.id,
+                UserRepositoryAssociation.repository_id == existing_repo.id
+            ).first()
+            if not assoc:
+                new_assoc = UserRepositoryAssociation(
+                    user_id=user.id,
+                    repository_id=existing_repo.id
+                )
+                db.add(new_assoc)
+            else:
+                # Update the analyzed_at timestamp to reflect the re-analysis
+                assoc.analyzed_at = func.now()
+            db.commit()
         return existing_repo
         
     # Otherwise, it's a new repository analysis
@@ -128,15 +177,13 @@ def clone_new_repository(
     db.refresh(repo)
     
     # Associate the new repository with the user who initiated the analysis
-    if payload.user_email:
-        user = db.query(User).filter(User.email == payload.user_email.strip().lower()).first()
-        if user:
-            new_assoc = UserRepositoryAssociation(
-                user_id=user.id,
-                repository_id=repo.id
-            )
-            db.add(new_assoc)
-            db.commit()
+    if user:
+        new_assoc = UserRepositoryAssociation(
+            user_id=user.id,
+            repository_id=repo.id
+        )
+        db.add(new_assoc)
+        db.commit()
 
     # Enqueue background analysis task
     run_analysis_task(str(repo.id), background_tasks)
@@ -472,49 +519,11 @@ def get_technical_debt_insights(repo_id: str, db: Session = Depends(get_db)):
 
 # --- Database-backed Authentication & Scoped Recents ---
 
-class RegisterPayload(BaseModel):
-    email: str
-    name: str
-    password: str
-
-@app.post("/auth/register")
-def register_user(payload: RegisterPayload, db: Session = Depends(get_db)):
-    existing = db.query(User).filter(User.email == payload.email.strip().lower()).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="User with this email already registered.")
-    user = User(
-        email=payload.email.strip().lower(),
-        name=payload.name.strip(),
-        password=payload.password,
-        role="USER"
-    )
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return {"email": user.email, "name": user.name, "role": user.role}
-
-class LoginPayload(BaseModel):
-    email: str
-    password: str
-
-@app.post("/auth/login")
-def login_user(payload: LoginPayload, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == payload.email.strip().lower()).first()
-    if not user or user.password != payload.password:
-        raise HTTPException(status_code=401, detail="Invalid email or password.")
-    return {"email": user.email, "name": user.name, "role": user.role}
-
-def get_current_admin(email: str, db: Session):
-    if not email:
-        raise HTTPException(status_code=401, detail="Authentication required.")
-    user = db.query(User).filter(User.email == email.strip().lower()).first()
-    if not user or user.role != "ADMIN":
-        raise HTTPException(status_code=403, detail="Access denied. Administrator privileges required.")
-    return user
-
 @app.get("/admin/users")
-def list_users(admin_email: str, db: Session = Depends(get_db)):
-    get_current_admin(admin_email, db)
+def list_users(
+    current_admin: User = Depends(RoleChecker(["ADMIN"])), 
+    db: Session = Depends(get_db)
+):
     users = db.query(User).order_by(User.name).all()
     return [{"id": str(u.id), "name": u.name, "email": u.email, "role": u.role} for u in users]
 
@@ -522,8 +531,12 @@ class UpdateRolePayload(BaseModel):
     role: str
 
 @app.post("/admin/users/{user_id}/role")
-def update_user_role(user_id: str, payload: UpdateRolePayload, admin_email: str, db: Session = Depends(get_db)):
-    get_current_admin(admin_email, db)
+def update_user_role(
+    user_id: str, 
+    payload: UpdateRolePayload, 
+    current_admin: User = Depends(RoleChecker(["ADMIN"])), 
+    db: Session = Depends(get_db)
+):
     if payload.role not in ["USER", "ADMIN"]:
         raise HTTPException(status_code=400, detail="Invalid role specified.")
     target_user = db.query(User).filter(User.id == user_id).first()
@@ -535,26 +548,21 @@ def update_user_role(user_id: str, payload: UpdateRolePayload, admin_email: str,
 
 
 @app.get("/analysis/recents")
-def get_recent_analyses(email: Optional[str] = None, db: Session = Depends(get_db)):
+def get_recent_analyses(
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     """
     Returns the authenticated user's recently analyzed repositories.
     Always scoped to the requesting user — never returns data from other users.
     A newly registered user with no analyses will receive an empty list.
     """
-    if not email:
-        raise HTTPException(status_code=401, detail="Authentication required to view recent analyses.")
-
-    user = db.query(User).filter(User.email == email.strip().lower()).first()
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found.")
-
     # Query the user's own association records, joined with the repository details.
-    # This is the ONLY source of truth — we never fall back to the global repositories table.
     results = (
         db.query(UserRepositoryAssociation, Repository)
         .join(Repository, UserRepositoryAssociation.repository_id == Repository.id)
         .filter(
-            UserRepositoryAssociation.user_id == user.id,
+            UserRepositoryAssociation.user_id == current_user.id,
             Repository.status == "completed"
         )
         .order_by(UserRepositoryAssociation.analyzed_at.desc())
@@ -576,16 +584,16 @@ def get_recent_analyses(email: Optional[str] = None, db: Session = Depends(get_d
     ]
 
 @app.delete("/analysis/{repo_id}")
-def remove_recent_analysis(repo_id: str, email: str, db: Session = Depends(get_db)):
+def remove_recent_analysis(
+    repo_id: str, 
+    current_user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db)
+):
     """
     Removes the repository from the user's recently analyzed list by deleting the association.
     """
-    user = db.query(User).filter(User.email == email.strip().lower()).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found.")
-        
     assoc = db.query(UserRepositoryAssociation).filter(
-        UserRepositoryAssociation.user_id == user.id,
+        UserRepositoryAssociation.user_id == current_user.id,
         UserRepositoryAssociation.repository_id == repo_id
     ).first()
     
@@ -595,5 +603,6 @@ def remove_recent_analysis(repo_id: str, email: str, db: Session = Depends(get_d
     db.delete(assoc)
     db.commit()
     return {"status": "success", "message": "Repository removed from recents."}
+
 
 

@@ -98,7 +98,7 @@ export function AdminPanel({ currentUser }: AdminPanelProps) {
 
       {/* Stats Cards (Enterprise SaaS Minimal Style) */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-surface-1 border border-border-base rounded-xl shadow-subtle p-5 flex items-center gap-4 hover:shadow-elevated transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-surface-1 border border-border-strong rounded-xl shadow-elevated p-5 flex items-center gap-4 hover:shadow-floating transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-accent/30">
           <div className="w-10 h-10 rounded-lg bg-accent/5 border border-accent/15 flex items-center justify-center text-accent shrink-0">
             <Users className="w-5 h-5" />
           </div>
@@ -111,7 +111,7 @@ export function AdminPanel({ currentUser }: AdminPanelProps) {
           </div>
         </div>
 
-        <div className="bg-surface-1 border border-border-base rounded-xl shadow-subtle p-5 flex items-center gap-4 hover:shadow-elevated transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-surface-1 border border-border-strong rounded-xl shadow-elevated p-5 flex items-center gap-4 hover:shadow-floating transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-emerald-500/30">
           <div className="w-10 h-10 rounded-lg bg-emerald-500/5 border border-emerald-500/15 flex items-center justify-center text-emerald-500 shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
@@ -124,7 +124,7 @@ export function AdminPanel({ currentUser }: AdminPanelProps) {
           </div>
         </div>
 
-        <div className="bg-surface-1 border border-border-base rounded-xl shadow-subtle p-5 flex items-center gap-4 hover:shadow-elevated transition-all duration-200 hover:-translate-y-0.5">
+        <div className="bg-surface-1 border border-border-strong rounded-xl shadow-elevated p-5 flex items-center gap-4 hover:shadow-floating transition-all duration-200 hover:-translate-y-1 hover:scale-[1.01] hover:border-zinc-500/30">
           <div className="w-10 h-10 rounded-lg bg-zinc-500/5 border border-zinc-500/15 flex items-center justify-center text-zinc-400 shrink-0">
             <User className="w-5 h-5" />
           </div>

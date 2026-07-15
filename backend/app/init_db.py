@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.database import engine, Base
 # Import models to ensure they are registered on Metadata
-from app.models import Repository, Contributor, Commit, File, RepositoryScore, User, UserRepositoryAssociation
+from app.models import Repository, Contributor, Commit, File, RepositoryScore, User, UserRepositoryAssociation, UserRefreshToken
 
 def init_db():
     print("Initializing database tables...")
@@ -81,6 +81,35 @@ def init_db():
     except Exception as e:
         # Ignore if column already exists
         pass
+
+    # Rename password to password_hash if necessary
+    try:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            conn.execute(text("ALTER TABLE users RENAME COLUMN password TO password_hash;"))
+            conn.commit()
+            print("Successfully renamed password column to password_hash.")
+    except Exception as e:
+        pass
+
+    # Add other user fields
+    for col, definition in [
+        ("is_verified", "BOOLEAN DEFAULT FALSE NOT NULL"),
+        ("verification_token", "VARCHAR"),
+        ("verification_token_expires_at", "TIMESTAMP WITH TIME ZONE"),
+        ("reset_token", "VARCHAR"),
+        ("reset_token_expires_at", "TIMESTAMP WITH TIME ZONE"),
+        ("created_at", "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"),
+        ("updated_at", "TIMESTAMP WITH TIME ZONE DEFAULT NOW()"),
+    ]:
+        try:
+            with engine.connect() as conn:
+                from sqlalchemy import text
+                conn.execute(text(f"ALTER TABLE users ADD COLUMN {col} {definition};"))
+                conn.commit()
+                print(f"Successfully added column {col} to users table.")
+        except Exception as e:
+            pass
 
     print("Database tables initialized successfully!")
 

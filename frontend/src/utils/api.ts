@@ -1,5 +1,52 @@
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
+async function authenticatedFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+  const headers = new Headers(options.headers || {});
+  
+  if (token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+  
+  // Ensure cookies (refresh token) are sent/received
+  options.credentials = "include";
+  options.headers = headers;
+  
+  let res = await fetch(url, options);
+  
+  // If unauthorized (access token expired)
+  if (res.status === 401 && !url.endsWith("/auth/login") && !url.endsWith("/auth/refresh") && !url.endsWith("/auth/register")) {
+    try {
+      const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        credentials: "include",
+      });
+      
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        if (refreshData.access_token) {
+          localStorage.setItem("access_token", refreshData.access_token);
+          
+          const retryHeaders = new Headers(options.headers);
+          retryHeaders.set("Authorization", `Bearer ${refreshData.access_token}`);
+          options.headers = retryHeaders;
+          res = await fetch(url, options);
+        }
+      } else {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("current_user");
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("local-storage-auth-clear"));
+        }
+      }
+    } catch (err) {
+      console.error("Token refresh failed", err);
+    }
+  }
+  
+  return res;
+}
+
 async function handleResponse(res: Response, defaultError: string) {
   if (!res.ok) {
     let errMsg = defaultError;
@@ -18,7 +65,7 @@ async function handleResponse(res: Response, defaultError: string) {
 }
 
 export async function cloneRepository(name: string, repoUrl: string, userEmail?: string) {
-  const res = await fetch(`${API_BASE_URL}/repositories/clone`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/repositories/clone`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -28,54 +75,53 @@ export async function cloneRepository(name: string, repoUrl: string, userEmail?:
   return handleResponse(res, "Failed to clone repository.");
 }
 
-
 export async function getAnalysisStatus(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/status`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/status`);
   return handleResponse(res, "Failed to check analysis status.");
 }
 
 export async function getDashboardData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/dashboard`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/dashboard`);
   return handleResponse(res, "Failed to load dashboard data.");
 }
 
 export async function getComplexityData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/complexity`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/complexity`);
   return handleResponse(res, "Failed to load complexity details.");
 }
 
 export async function getChurnData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/churn`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/churn`);
   return handleResponse(res, "Failed to load churn details.");
 }
 
 export async function getHotspotsData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/hotspots`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/hotspots`);
   return handleResponse(res, "Failed to load hotspot details.");
 }
 
 export async function getBusFactorData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/bus-factor`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/bus-factor`);
   return handleResponse(res, "Failed to load bus factor details.");
 }
 
 export async function getContributorsData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/contributors`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/contributors`);
   return handleResponse(res, "Failed to load contributor details.");
 }
 
 export async function getTechnicalDebtData(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}/technical-debt`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}/technical-debt`);
   return handleResponse(res, "Failed to load technical debt details.");
 }
 
 export async function getRepositoryBranches(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/repositories/${repoId}/branches`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/repositories/${repoId}/branches`);
   return handleResponse(res, "Failed to load branches.");
 }
 
 export async function switchRepositoryBranch(repoId: string, branch: string) {
-  const res = await fetch(`${API_BASE_URL}/repositories/${repoId}/branch`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/repositories/${repoId}/branch`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -86,7 +132,7 @@ export async function switchRepositoryBranch(repoId: string, branch: string) {
 }
 
 export async function restartAnalysis(repoId: string) {
-  const res = await fetch(`${API_BASE_URL}/analysis/${repoId}`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/analysis/${repoId}`, {
     method: "POST",
   });
   return handleResponse(res, "Failed to restart analysis.");
@@ -111,12 +157,26 @@ export async function loginUser(email: string, password: string) {
     },
     body: JSON.stringify({ email, password }),
   });
-  return handleResponse(res, "Login failed.");
+  
+  const data = await handleResponse(res, "Login failed.");
+  if (data.access_token) {
+    localStorage.setItem("access_token", data.access_token);
+  }
+  return data.user;
+}
+
+export async function logoutUser() {
+  const res = await authenticatedFetch(`${API_BASE_URL}/auth/logout`, {
+    method: "POST",
+  });
+  localStorage.removeItem("access_token");
+  localStorage.removeItem("current_user");
+  return handleResponse(res, "Logout failed.");
 }
 
 export async function getRecentAnalyses(email: string) {
-  const url = `${API_BASE_URL}/analysis/recents?email=${encodeURIComponent(email)}`;
-  const res = await fetch(url);
+  const url = `${API_BASE_URL}/analysis/recents`;
+  const res = await authenticatedFetch(url);
   if (!res.ok) {
     throw new Error("Failed to load recent analyses.");
   }
@@ -136,20 +196,20 @@ export async function getRecentAnalyses(email: string) {
 }
 
 export async function removeRecentAnalysis(repoId: string, email: string) {
-  const url = `${API_BASE_URL}/analysis/${repoId}?email=${encodeURIComponent(email)}`;
-  const res = await fetch(url, {
+  const url = `${API_BASE_URL}/analysis/${repoId}`;
+  const res = await authenticatedFetch(url, {
     method: "DELETE",
   });
   return handleResponse(res, "Failed to remove repository from recently analyzed.");
 }
 
 export async function getAdminUsers(adminEmail: string) {
-  const res = await fetch(`${API_BASE_URL}/admin/users?admin_email=${encodeURIComponent(adminEmail)}`);
+  const res = await authenticatedFetch(`${API_BASE_URL}/admin/users`);
   return handleResponse(res, "Failed to fetch users list.");
 }
 
 export async function updateUserRole(userId: string, newRole: string, adminEmail: string) {
-  const res = await fetch(`${API_BASE_URL}/admin/users/${userId}/role?admin_email=${encodeURIComponent(adminEmail)}`, {
+  const res = await authenticatedFetch(`${API_BASE_URL}/admin/users/${userId}/role`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -158,5 +218,3 @@ export async function updateUserRole(userId: string, newRole: string, adminEmail
   });
   return handleResponse(res, "Failed to update user role.");
 }
-
-
