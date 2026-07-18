@@ -48,6 +48,7 @@ origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
+    "https://repo-lytics.vercel.app",
 ]
 allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
 if allowed_origins_env:
