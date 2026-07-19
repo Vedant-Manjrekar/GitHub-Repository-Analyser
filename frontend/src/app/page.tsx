@@ -584,12 +584,12 @@ export default function Home() {
               </div>
 
               {/* Title Header */}
-              <h1 className="text-5xl md:text-7xl lg:text-[80px] font-display font-black tracking-tight leading-[1.05] text-center mt-2 select-none">
+              <h1 className="text-5xl md:text-7xl lg:text-[70px] font-display font-black tracking-tight leading-[1.05] text-center mt-2 select-none">
                 <span className="block md:whitespace-nowrap">
                   <span className="text-white">Deep </span>
                   <span className="text-[#00d8f6]">Codebase Insights</span>
                 </span>
-                <span className="text-neutral-400 block mt-2 text-3xl md:text-5xl lg:text-6xl">Beyond Git History</span>
+                <span className="text-neutral-400 block mt-2 text-2xl md:text-5xl lg:text-6xl">Beyond Git History</span>
               </h1>
 
               {/* Subheading/Description */}
