@@ -82,3 +82,4 @@ cloned_repos/
 backend/cloned_repos/
 backend/app/workers/cloned_repos/
 backend/app/uploads/
+.DS_Store
